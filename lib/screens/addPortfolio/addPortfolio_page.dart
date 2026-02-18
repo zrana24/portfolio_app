@@ -44,10 +44,6 @@ class AddPortfolioPage extends StatelessWidget {
     );
   }
 
-  // ─────────────────────────────────────────────
-  // APP BAR
-  // ─────────────────────────────────────────────
-
   Widget _buildAppBar(BuildContext context, Size size) {
     return Padding(
       padding: EdgeInsets.symmetric(
@@ -59,7 +55,7 @@ class AddPortfolioPage extends StatelessWidget {
         children: [
           const Align(
             alignment: Alignment.centerLeft,
-            child: BackButtonWidget(),   // ← reusable widget
+            child: BackButtonWidget(),   
           ),
           Text(
             "Portföy Ekle",
@@ -73,10 +69,6 @@ class AddPortfolioPage extends StatelessWidget {
       ),
     );
   }
-
-  // ─────────────────────────────────────────────
-  // SKELETON LOADING
-  // ─────────────────────────────────────────────
 
   Widget _buildSkeletonLoading(Size size) {
     return ListView.separated(
@@ -92,10 +84,6 @@ class AddPortfolioPage extends StatelessWidget {
     );
   }
 
-  // ─────────────────────────────────────────────
-  // LOADED LIST
-  // ─────────────────────────────────────────────
-
   Widget _buildList(List<PortfolioType> types, Size size) {
     return ListView.separated(
       padding: EdgeInsets.only(
@@ -110,10 +98,6 @@ class AddPortfolioPage extends StatelessWidget {
     );
   }
 }
-
-// ─────────────────────────────────────────────
-// PORTFOLIO TYPE CARD
-// ─────────────────────────────────────────────
 
 class _PortfolioTypeCard extends StatelessWidget {
   final PortfolioType type;
@@ -172,10 +156,6 @@ class _PortfolioTypeCard extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────
-// SKELETON CARD
-// ─────────────────────────────────────────────
-
 class _SkeletonCard extends StatelessWidget {
   final Size size;
 
@@ -216,10 +196,6 @@ class _SkeletonCard extends StatelessWidget {
     );
   }
 }
-
-// ─────────────────────────────────────────────
-// SHIMMER BOX
-// ─────────────────────────────────────────────
 
 class _ShimmerBox extends StatefulWidget {
   final double width;
