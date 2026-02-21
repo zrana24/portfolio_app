@@ -10,7 +10,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       await Future.delayed(const Duration(seconds: 2));
 
       final List<PortfolioItem> mockPortfolios = [
-        /*PortfolioItem(
+        PortfolioItem(
           name: "EMTİA",
           value: 70198,
           dailyChange: -596,
@@ -27,7 +27,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
           value: 70198,
           dailyChange: -596,
           dailyChangePct: 0.8,
-        ),*/
+        ),
       ];
 
       if (mockPortfolios.isEmpty) {

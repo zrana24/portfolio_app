@@ -69,8 +69,10 @@ class CebeciBottomNav extends StatelessWidget {
                             Navigator.pushReplacementNamed(context, AppRoutes.add);
                             break;
                           case 2:
+                            Navigator.pushReplacementNamed(context, AppRoutes.livePrices);
                             break;
                           case 3:
+                            Navigator.pushReplacementNamed(context, AppRoutes.news);
                             break;
                         }
                       },

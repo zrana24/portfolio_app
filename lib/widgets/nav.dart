@@ -10,6 +10,7 @@ class CebeciAppBar extends StatelessWidget implements PreferredSizeWidget {
   Widget build(BuildContext context) {
     return AppBar(
       backgroundColor: Colors.white,
+      surfaceTintColor: Colors.transparent,
       elevation: 0,
       centerTitle: true,
       title: Image.asset(

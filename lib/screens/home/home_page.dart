@@ -289,9 +289,9 @@ class HomePage extends StatelessWidget {
           Text(
             title,
             style: TextStyle(
-              color: const Color(0xFF2E1A8B),
+              color: const Color(0xFF35238A),
               fontWeight: FontWeight.bold,
-              fontSize: size.width * 0.04,
+              fontSize: size.width * 0.05,
             ),
           ),
           if (hasArrows)
