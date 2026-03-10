@@ -1,4 +1,4 @@
-package com.example.portfoy_app
+package com.aifasoft.cebeci
 
 import io.flutter.embedding.android.FlutterActivity
 

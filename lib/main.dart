@@ -1,6 +1,14 @@
 import 'package:flutter/material.dart';
-import 'app/app.dart';
+import '../app/app.dart';
+import 'services/token_service.dart';
+import 'app/routes.dart';
 
-void main() {
-  runApp(const MyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  String? token = await TokenService.getToken();
+
+  String initialRoute = (token != null) ? AppRoutes.home : AppRoutes.login;
+
+  runApp(MyApp(initialRoute: initialRoute));
 }

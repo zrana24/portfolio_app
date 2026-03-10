@@ -1,8 +1,4 @@
-// lib/bloc/livePrices/livePrices_event.dart
-
 import 'package:equatable/equatable.dart';
-
-// ─── Modeller ────────────────────────────────────────────────────────────────
 
 enum ViewMode { list, table }
 
@@ -46,7 +42,6 @@ class PriceItem {
   int get hashCode => code.hashCode;
 }
 
-// ─── Events ──────────────────────────────────────────────────────────────────
 
 abstract class LivePricesEvent extends Equatable {
   const LivePricesEvent();
@@ -63,7 +58,6 @@ class RefreshLivePrices extends LivePricesEvent {
   const RefreshLivePrices();
 }
 
-/// Gerçek zamanlı fiyat güncellemesi (WebSocket vb.)
 class LivePriceUpdated extends LivePricesEvent {
   final PriceItem updatedItem;
 

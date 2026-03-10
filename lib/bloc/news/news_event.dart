@@ -1,8 +1,4 @@
-// lib/bloc/news/news_event.dart
-
 import 'package:equatable/equatable.dart';
-
-// ─── Model ───────────────────────────────────────────────────────────────────
 
 class NewsArticle {
   final String id;
@@ -24,7 +20,6 @@ class NewsArticle {
   });
 }
 
-// ─── Events ──────────────────────────────────────────────────────────────────
 
 abstract class NewsEvent extends Equatable {
   const NewsEvent();

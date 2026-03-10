@@ -1,11 +1,7 @@
-// lib/bloc/livePrices/livePrices_bloc.dart
-
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'livePrices_event.dart';
 import 'livePrices_state.dart';
-
-// ─── Mock Repository ─────────────────────────────────────────────────────────
 
 class _MockPricesRepository {
   Future<List<PriceItem>> fetchAll() async {
@@ -28,8 +24,6 @@ class _MockPricesRepository {
     ];
   }
 }
-
-// ─── Bloc ─────────────────────────────────────────────────────────────────────
 
 class LivePricesBloc extends Bloc<LivePricesEvent, LivePricesState> {
   final _MockPricesRepository _repo = _MockPricesRepository();

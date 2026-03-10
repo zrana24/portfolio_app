@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'routes.dart';
+import '../app/routes.dart';
 import '../bloc/home/home_bloc.dart';
+import '../bloc/auth/auth_bloc.dart';
 import '../bloc/addPortfolio/addPortfolio_bloc.dart';
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final String initialRoute;
+
+  const MyApp({super.key, required this.initialRoute});
 
   @override
   Widget build(BuildContext context) {
@@ -17,6 +20,9 @@ class MyApp extends StatelessWidget {
         BlocProvider<AddPortfolioBloc>(
           create: (context) => AddPortfolioBloc(),
         ),
+        BlocProvider<AuthBloc>(
+          create: (context) => AuthBloc(),
+        ),
       ],
       child: MaterialApp(
         title: 'Cebeci',
@@ -24,9 +30,14 @@ class MyApp extends StatelessWidget {
           primarySwatch: Colors.blue,
           useMaterial3: true,
           scaffoldBackgroundColor: Colors.white,
+          appBarTheme: const AppBarTheme(
+            backgroundColor: Colors.white,
+            elevation: 0,
+            iconTheme: IconThemeData(color: Colors.black),
+          ),
         ),
         debugShowCheckedModeBanner: false,
-        initialRoute: AppRoutes.home,
+        initialRoute: initialRoute,
         routes: AppRoutes.getRoutes(),
       ),
     );

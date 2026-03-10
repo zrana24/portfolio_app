@@ -1,5 +1,3 @@
-// lib/bloc/livePrices/livePrices_state.dart
-
 import 'package:equatable/equatable.dart';
 import 'livePrices_event.dart';
 
@@ -31,7 +29,6 @@ class LivePricesLoaded extends LivePricesState {
     this.searchQuery = '',
   });
 
-  /// Arama sorgusuna göre filtrelenmiş liste.
   List<PriceItem> get displayedItems {
     if (searchQuery.isEmpty) return allItems;
     final q = searchQuery.toLowerCase();
@@ -60,7 +57,6 @@ class LivePricesLoaded extends LivePricesState {
   List<Object?> get props => [allItems, viewMode, searchQuery, lastUpdated];
 }
 
-/// Arka planda yenileme — mevcut veri görünür kalmaya devam eder.
 class LivePricesRefreshing extends LivePricesLoaded {
   const LivePricesRefreshing({
     required super.allItems,
