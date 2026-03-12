@@ -3,22 +3,34 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../bloc/auth/auth_bloc.dart';
 import '../../bloc/auth/auth_event.dart';
 import '../../bloc/auth/auth_state.dart';
-import '../../app/routes.dart'; // AppRoutes'u import etmeyi unutma
+import '../../app/routes.dart';
 
-class LoginPage extends StatelessWidget {
+class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final emailController = TextEditingController();
-    final passwordController = TextEditingController();
+  State<LoginPage> createState() => _LoginPageState();
+}
 
+class _LoginPageState extends State<LoginPage> {
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
+  bool _obscurePassword = true;
+
+  @override
+  void dispose() {
+    emailController.dispose();
+    passwordController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       body: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is AuthSuccess) {
-            // Yönlendirmeyi AppRoutes üzerinden yapıyoruz
             Navigator.pushReplacementNamed(context, AppRoutes.home);
           } else if (state is AuthFailure) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -31,7 +43,7 @@ class LoginPage extends StatelessWidget {
           }
         },
         child: SafeArea(
-          child: SingleChildScrollView( // Tüm yapıyı kaydırılabilir yaptık
+          child: SingleChildScrollView(
             padding: const EdgeInsets.all(24.0),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -65,31 +77,28 @@ class LoginPage extends StatelessWidget {
 
                 const SizedBox(height: 20),
 
-                _buildTextField(
+                _buildPasswordField(
                   controller: passwordController,
                   label: "Şifre",
                   icon: Icons.lock_outline,
-                  isPassword: true,
                 ),
 
-                /*const SizedBox(height: 12),
+                const SizedBox(height: 12),
 
-                Align(
+                /*Align(
                   alignment: Alignment.centerRight,
                   child: TextButton(
                     onPressed: () {
-                      // Şifre sıfırlama mantığı buraya
+                      Navigator.pushNamed(context, AppRoutes.forgotPassword);
                     },
                     child: const Text(
                       "Şifremi Unuttum?",
                       style: TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.w600),
                     ),
                   ),
-                ),
+                ),*/
 
-                const SizedBox(height: 30),*/
-
-                const SizedBox(height: 40),
+                const SizedBox(height: 30),
 
                 BlocBuilder<AuthBloc, AuthState>(
                   builder: (context, state) {
@@ -147,9 +156,8 @@ class LoginPage extends StatelessWidget {
                   },
                 ),
 
-                const SizedBox(height: 30), // Buton ile link arası boşluk
+                const SizedBox(height: 30),
 
-                // --- Kayıt Ol Linki Artık Burada (Butonun Altında) ---
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -178,12 +186,10 @@ class LoginPage extends StatelessWidget {
     );
   }
 
-  // Yardımcı widget ve fonksiyonlar aynı kalıyor...
   Widget _buildTextField({
     required TextEditingController controller,
     required String label,
     required IconData icon,
-    bool isPassword = false,
     TextInputType keyboardType = TextInputType.text,
   }) {
     return Container(
@@ -194,12 +200,47 @@ class LoginPage extends StatelessWidget {
       ),
       child: TextField(
         controller: controller,
-        obscureText: isPassword,
         keyboardType: keyboardType,
         decoration: InputDecoration(
           labelText: label,
           labelStyle: const TextStyle(color: Colors.grey, fontSize: 14),
           prefixIcon: Icon(icon, color: Colors.blueGrey),
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPasswordField({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFFF5F7FA),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE0E0E0), width: 1),
+      ),
+      child: TextField(
+        controller: controller,
+        obscureText: _obscurePassword,
+        decoration: InputDecoration(
+          labelText: label,
+          labelStyle: const TextStyle(color: Colors.grey, fontSize: 14),
+          prefixIcon: Icon(icon, color: Colors.blueGrey),
+          suffixIcon: IconButton(
+            icon: Icon(
+              _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+              color: Colors.blueGrey,
+            ),
+            onPressed: () {
+              setState(() {
+                _obscurePassword = !_obscurePassword;
+              });
+            },
+          ),
           border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         ),

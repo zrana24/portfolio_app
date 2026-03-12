@@ -6,6 +6,12 @@ class HomeLoading extends HomeState {}
 
 class HomeEmpty extends HomeState {}
 
+class HomeError extends HomeState {
+  final String message;
+
+  HomeError(this.message);
+}
+
 class HomeLoaded extends HomeState {
   final double totalValue;
   final double percentage;

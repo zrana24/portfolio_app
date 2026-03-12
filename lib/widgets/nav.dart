@@ -13,6 +13,7 @@ class CebeciAppBar extends StatelessWidget implements PreferredSizeWidget {
       surfaceTintColor: Colors.transparent,
       elevation: 0,
       centerTitle: true,
+      automaticallyImplyLeading: false,
       title: Image.asset(
         'assets/logo.png',
         height: 40,

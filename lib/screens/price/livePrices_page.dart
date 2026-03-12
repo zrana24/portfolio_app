@@ -1,5 +1,3 @@
-// lib/screens/livePrices/livePrices_page.dart
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -38,7 +36,7 @@ class _LivePricesView extends StatelessWidget {
       value: SystemUiOverlayStyle.dark,
       child: Scaffold(
         backgroundColor: Colors.white,
-        bottomNavigationBar: const CebeciBottomNav(currentIndex: 2),
+        bottomNavigationBar: const CebeciBottomNav(currentIndex: 1),
         body: SafeArea(
           child: Column(
             children: [
@@ -73,8 +71,6 @@ class _LivePricesView extends StatelessWidget {
                                 _buildTopBar(context, state, size),
                                 SizedBox(height: size.height * 0.018),
                                 _buildUpdateRow(state, size),
-                                SizedBox(height: size.height * 0.005),
-                                _buildSubtitle(size),
                                 SizedBox(height: size.height * 0.022),
                                 _buildBody(context, state, size),
                                 SizedBox(height: size.height * 0.025),
@@ -118,8 +114,6 @@ class _LivePricesView extends StatelessWidget {
         ? _buildListView(items, size)
         : _buildTableView(items, size);
   }
-
-  // ── Top Bar ───────────────────────────────────────────────────────────────
 
   Widget _buildTopBar(BuildContext context, LivePricesState state, Size size) {
     final isTable =
@@ -181,8 +175,6 @@ class _LivePricesView extends StatelessWidget {
     );
   }
 
-  // ── Update Row ────────────────────────────────────────────────────────────
-
   Widget _buildUpdateRow(LivePricesState state, Size size) {
     String timeStr = '--:--:--';
     bool isRefreshing = false;
@@ -225,13 +217,6 @@ class _LivePricesView extends StatelessWidget {
       ],
     );
   }
-
-  Widget _buildSubtitle(Size size) => Text(
-    '*Ücretsiz fiyat yayını 15 dk gecikmeli.',
-    style: TextStyle(fontSize: size.width * 0.03, color: Colors.grey),
-  );
-
-  // ── Liste Görünümü ────────────────────────────────────────────────────────
 
   Widget _buildListView(List<PriceItem> items, Size size) {
     return Column(
@@ -335,8 +320,6 @@ class _LivePricesView extends StatelessWidget {
       ),
     );
   }
-
-  // ── Tablo Görünümü ────────────────────────────────────────────────────────
 
   Widget _buildTableView(List<PriceItem> items, Size size) {
     return Container(
@@ -447,8 +430,6 @@ class _LivePricesView extends StatelessWidget {
     );
   }
 
-  // ── Diğer State Widget'ları ───────────────────────────────────────────────
-
   Widget _buildSkeletonLoading(Size size) {
     return Column(
       children: List.generate(
@@ -504,16 +485,38 @@ class _LivePricesView extends StatelessWidget {
   Widget _buildEmptyState(Size size) {
     return Center(
       child: Padding(
-        padding: EdgeInsets.symmetric(vertical: size.height * 0.06),
+        padding: EdgeInsets.symmetric(
+          vertical: size.height * 0.06,
+          horizontal: size.width * 0.08,
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.inbox_rounded,
-                size: size.width * 0.12, color: Colors.grey.shade300),
-            SizedBox(height: size.height * 0.015),
-            Text('Veri bulunamadı',
-                style: TextStyle(
-                    fontSize: size.width * 0.038, color: Colors.black45)),
+            Container(
+              width: size.width * 0.24,
+              height: size.width * 0.24,
+              decoration: BoxDecoration(
+                color: _cardBg,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.trending_up_rounded,
+                size: size.width * 0.12,
+                color: Colors.grey.shade400,
+              ),
+            ),
+            SizedBox(height: size.height * 0.025),
+
+            Text(
+              'Henüz Canlı Fiyat Verisi Yok',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: size.width * 0.05,
+                fontWeight: FontWeight.w700,
+                color: const Color(0xFF1A1A1A),
+              ),
+            ),
+            SizedBox(height: size.height * 0.012),
           ],
         ),
       ),
@@ -580,8 +583,6 @@ class _LivePricesView extends StatelessWidget {
       .replaceAllMapped(
       RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.');
 }
-
-// ─── Shimmer ──────────────────────────────────────────────────────────────────
 
 class _ShimmerBox extends StatefulWidget {
   final double width;

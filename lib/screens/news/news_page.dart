@@ -45,7 +45,7 @@ class _NewsViewState extends State<_NewsView> {
 
     return Scaffold(
       backgroundColor: Colors.white,
-      bottomNavigationBar: const CebeciBottomNav(currentIndex: 3),
+      bottomNavigationBar: const CebeciBottomNav(currentIndex: 2),
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

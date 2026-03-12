@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 
+
 enum ViewMode { list, table }
 
 class PriceItem {
@@ -36,12 +37,13 @@ class PriceItem {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-          other is PriceItem && runtimeType == other.runtimeType && code == other.code;
+          other is PriceItem &&
+              runtimeType == other.runtimeType &&
+              code == other.code;
 
   @override
   int get hashCode => code.hashCode;
 }
-
 
 abstract class LivePricesEvent extends Equatable {
   const LivePricesEvent();

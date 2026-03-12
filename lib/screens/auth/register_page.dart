@@ -78,7 +78,33 @@ class RegisterPage extends StatelessWidget {
                   isPassword: true,
                 ),
 
-                const SizedBox(height: 40),
+                const SizedBox(height: 12),
+
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.withOpacity(0.05),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.blue.withOpacity(0.2)),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.info_outline, size: 20, color: Colors.blue[700]),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          "Şifreniz en az 8 karakter olmalıdır",
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Colors.blue[700],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 30),
 
                 BlocBuilder<AuthBloc, AuthState>(
                   builder: (context, state) {
@@ -104,12 +130,17 @@ class RegisterPage extends StatelessWidget {
                       ),
                       child: ElevatedButton(
                         onPressed: () {
+                          if (passwordController.text.length < 8) {
+                            _showSnackBar(context, "Şifreniz en az 8 karakter olmalıdır!", Colors.orange[800]!);
+                            return;
+                          }
+
                           if (passwordController.text != confirmPasswordController.text) {
                             _showSnackBar(context, "Şifreler birbiriyle eşleşmiyor!", Colors.orange[800]!);
                             return;
                           }
 
-                          if (emailController.text.isEmpty || passwordController.text.isEmpty) {
+                          if (emailController.text.isEmpty || passwordController.text.isEmpty || nameController.text.isEmpty) {
                             _showSnackBar(context, "Lütfen gerekli alanları doldurun", Colors.orange[800]!);
                             return;
                           }

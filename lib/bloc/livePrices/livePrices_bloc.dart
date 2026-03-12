@@ -1,35 +1,17 @@
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../services/price_services.dart';
+import '../../models/price_item.dart' as api;
 import 'livePrices_event.dart';
 import 'livePrices_state.dart';
 
-class _MockPricesRepository {
-  Future<List<PriceItem>> fetchAll() async {
-    await Future.delayed(const Duration(milliseconds: 800));
-    return [
-      const PriceItem(code: 'ALTIN (GRAM)',        name: 'Gram Altın',           buy: 51808, sell: 51950, changePct: 0.0),
-      const PriceItem(code: 'CUMHURİYET ALTINI',  name: 'Cumhuriyet Altını',    buy: 51808, sell: 52100, changePct: 0.2),
-      const PriceItem(code: 'KULPLU REŞAT ALTIN', name: 'Kulplu Reşat Altın',  buy: 51808, sell: 51980, changePct: -0.1),
-      const PriceItem(code: 'ÇEYREK ALTIN',        name: 'Çeyrek Altın',         buy: 51808, sell: 51960, changePct: 0.0),
-      const PriceItem(code: 'YARIM ALTIN',         name: 'Yarım Altın',          buy: 51808, sell: 51970, changePct: 0.3),
-      const PriceItem(code: 'TAM ALTIN',           name: 'Tam Altın',            buy: 51808, sell: 51990, changePct: -0.2),
-      const PriceItem(code: 'ATA ALTIN',           name: 'Ata Altın',            buy: 51808, sell: 52050, changePct: 0.0),
-      const PriceItem(code: 'USD',                 name: 'Amerikan Doları',      buy: 43709, sell: 43850, changePct: -0.1),
-      const PriceItem(code: 'EUR',                 name: 'Avro',                 buy: 43709, sell: 43900, changePct: -0.1),
-      const PriceItem(code: 'GBP',                 name: 'İngiliz Poundu',       buy: 43709, sell: 43950, changePct: 0.0),
-      const PriceItem(code: 'CHF',                 name: 'İsviçre Frangı',       buy: 43709, sell: 43880, changePct: 0.1),
-      const PriceItem(code: 'AED',                 name: 'BAE Dirhemi',          buy: 43709, sell: 43820, changePct: 0.0),
-      const PriceItem(code: 'SAR',                 name: 'Suudi Riyali',         buy: 43709, sell: 43810, changePct: 0.2),
-      const PriceItem(code: 'JPY',                 name: 'Japon Yeni',           buy: 43709, sell: 43760, changePct: -0.3),
-    ];
-  }
-}
-
 class LivePricesBloc extends Bloc<LivePricesEvent, LivePricesState> {
-  final _MockPricesRepository _repo = _MockPricesRepository();
+  final PriceService _priceService;
   Timer? _clockTimer;
 
-  LivePricesBloc() : super(const LivePricesInitial()) {
+  LivePricesBloc({PriceService? priceService})
+      : _priceService = priceService ?? PriceService(),
+        super(const LivePricesInitial()) {
     on<LoadLivePrices>(_onLoad);
     on<RefreshLivePrices>(_onRefresh);
     on<LivePriceUpdated>(_onLivePriceUpdated);
@@ -45,11 +27,27 @@ class LivePricesBloc extends Bloc<LivePricesEvent, LivePricesState> {
       ) async {
     emit(const LivePricesLoading());
     try {
-      final items = await _repo.fetchAll();
-      emit(LivePricesLoaded(allItems: items, lastUpdated: DateTime.now()));
+      final items = await _priceService.fetchAllPrices();
+
+      final blocItems = items.map((item) => PriceItem(
+        code: item.symbol,
+        name: item.name ?? item.symbol,
+        buy: item.buy,
+        sell: item.sell,
+        changePct: item.changePct,
+      )).toList();
+
+      emit(LivePricesLoaded(
+        allItems: blocItems,
+        lastUpdated: DateTime.now(),
+      ));
       _startClock();
-    } catch (e) {
-      emit(LivePricesError(message: e.toString()));
+    }
+    on PriceServiceException catch (e) {
+      emit(LivePricesError(message: e.message));
+    }
+    catch (e) {
+      emit(LivePricesError(message: 'Beklenmeyen hata: $e'));
     }
   }
 
@@ -71,15 +69,32 @@ class LivePricesBloc extends Bloc<LivePricesEvent, LivePricesState> {
     }
 
     try {
-      final items = await _repo.fetchAll();
+      final items = await _priceService.fetchAllPrices();
+
+      final blocItems = items.map((item) => PriceItem(
+        code: item.symbol,
+        name: item.name ?? item.symbol,
+        buy: item.buy,
+        sell: item.sell,
+        changePct: item.changePct,
+      )).toList();
+
       final now = DateTime.now();
       if (previous != null) {
-        emit(previous.copyWith(allItems: items, lastUpdated: now));
-      } else {
-        emit(LivePricesLoaded(allItems: items, lastUpdated: now));
+        emit(previous.copyWith(allItems: blocItems, lastUpdated: now));
       }
-    } catch (e) {
-      emit(LivePricesError(message: e.toString(), previousState: previous));
+      else {
+        emit(LivePricesLoaded(allItems: blocItems, lastUpdated: now));
+      }
+    }
+    on PriceServiceException catch (e) {
+      emit(LivePricesError(message: e.message, previousState: previous));
+    }
+    catch (e) {
+      emit(LivePricesError(
+        message: 'Beklenmeyen hata: $e',
+        previousState: previous,
+      ));
     }
   }
 
@@ -142,6 +157,7 @@ class LivePricesBloc extends Bloc<LivePricesEvent, LivePricesState> {
   @override
   Future<void> close() {
     _clockTimer?.cancel();
+    _priceService.dispose();
     return super.close();
   }
 }

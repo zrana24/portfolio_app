@@ -14,13 +14,13 @@ class CebeciBottomNav extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-    final canPop = Navigator.of(context).canPop();
 
     const items = [
       _NavItem(label: 'Portfoyum',      icon: Icons.pie_chart_rounded),
-      _NavItem(label: 'Ekle',           icon: Icons.add_circle_rounded),
+     // _NavItem(label: 'Ekle',           icon: Icons.add_circle_rounded),
       _NavItem(label: 'Canlı Fiyatlar', icon: Icons.bar_chart_rounded),
       _NavItem(label: 'Haberler',       icon: Icons.newspaper_rounded),
+      _NavItem(label: 'Profil',         icon: Icons.people),
     ];
 
     return Container(
@@ -49,73 +49,55 @@ class CebeciBottomNav extends StatelessWidget {
               ],
             ),
             child: Row(
-              children: [
-                if (canPop)
-                  _BackNavButton(size: size),
-
-                ...List.generate(items.length, (index) {
-                  final isActive = index == currentIndex;
-                  return Expanded(
-                    child: GestureDetector(
-                      behavior: HitTestBehavior.opaque,
-                      onTap: () {
-                        if (onTap != null) onTap!(index);
-                        if (index == currentIndex) return;
-                        switch (index) {
-                          case 0:
-                            Navigator.pushReplacementNamed(context, AppRoutes.home);
-                            break;
-                          case 1:
-                            Navigator.pushReplacementNamed(context, AppRoutes.add);
-                            break;
-                          case 2:
-                            Navigator.pushReplacementNamed(context, AppRoutes.livePrices);
-                            break;
-                          case 3:
-                            Navigator.pushReplacementNamed(context, AppRoutes.news);
-                            break;
-                        }
-                      },
-                      child: _NavItemWidget(
-                        item: items[index],
-                        isActive: isActive,
-                        size: size,
-                      ),
+              children: List.generate(items.length, (index) {
+                final isActive = index == currentIndex;
+                return Expanded(
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () {
+                      if (onTap != null) onTap!(index);
+                      if (index == currentIndex) return;
+                      switch (index) {
+                        /*case 0:
+                          Navigator.pushReplacementNamed(context, AppRoutes.home);
+                          break;
+                        case 1:
+                          Navigator.pushReplacementNamed(context, AppRoutes.add);
+                          break;
+                        case 2:
+                          Navigator.pushReplacementNamed(context, AppRoutes.livePrices);
+                          break;
+                        case 3:
+                          Navigator.pushReplacementNamed(context, AppRoutes.news);
+                          break;
+                        case 4:
+                          Navigator.pushReplacementNamed(context, AppRoutes.profile);
+                          break;
+                         */
+                        case 0:
+                          Navigator.pushReplacementNamed(context, AppRoutes.home);
+                          break;
+                        case 1:
+                          Navigator.pushReplacementNamed(context, AppRoutes.livePrices);
+                          break;
+                        case 2:
+                          Navigator.pushReplacementNamed(context, AppRoutes.news);
+                          break;
+                        case 3:
+                          Navigator.pushReplacementNamed(context, AppRoutes
+                              .profile);
+                          break;
+                      }
+                    },
+                    child: _NavItemWidget(
+                      item: items[index],
+                      isActive: isActive,
+                      size: size,
                     ),
-                  );
-                }),
-              ],
+                  ),
+                );
+              }),
             ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _BackNavButton extends StatelessWidget {
-  final Size size;
-
-  const _BackNavButton({required this.size});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: () => Navigator.of(context).pop(),
-      child: Container(
-        width: size.width * 0.14,
-        height: double.infinity,
-        margin: EdgeInsets.only(left: size.width * 0.03),
-        decoration: BoxDecoration(
-          color: const Color(0xFFF3F4F6),
-          borderRadius: BorderRadius.circular(size.height * 0.04),
-        ),
-        child: Center(
-          child: Icon(
-            Icons.arrow_back_ios_new_rounded,
-            size: size.width * 0.045,
-            color: Colors.black87,
           ),
         ),
       ),

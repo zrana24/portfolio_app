@@ -39,7 +39,9 @@ class HomePage extends StatelessWidget {
                         else if (state is HomeLoaded)
                           _buildMainContent(state, size)
                         else if (state is HomeEmpty)
-                            _buildEmptyState(size),
+                            _buildEmptyState(size)
+                          else if (state is HomeError)
+                              _buildErrorState(state.message, context, size),
 
                         SizedBox(height: size.height * 0.05),
                       ]),
@@ -54,7 +56,6 @@ class HomePage extends StatelessWidget {
     );
   }
 
-
   Widget _buildHeader(Size size) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -67,7 +68,7 @@ class HomePage extends StatelessWidget {
             color: const Color(0xFF1A1A1A),
           ),
         ),
-        Row(
+        /*Row(
           children: [
             _circularIcon(Icons.currency_lira, size),
             SizedBox(width: size.width * 0.02),
@@ -75,11 +76,10 @@ class HomePage extends StatelessWidget {
             SizedBox(width: size.width * 0.02),
             _circularIcon(Icons.visibility_outlined, size),
           ],
-        ),
+        ),*/
       ],
     );
   }
-
 
   Widget _buildSkeletonLoading(Size size) {
     return Column(
@@ -135,7 +135,6 @@ class HomePage extends StatelessWidget {
     );
   }
 
-
   Widget _buildMainContent(HomeLoaded state, Size size) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -170,9 +169,11 @@ class HomePage extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    "${state.dailyChange}",
+                    "${state.dailyChange.toStringAsFixed(0)}",
                     style: TextStyle(
-                      color: Colors.red.shade400,
+                      color: state.dailyChange >= 0
+                          ? Colors.green.shade400
+                          : Colors.red.shade400,
                       fontWeight: FontWeight.bold,
                       fontSize: size.width * 0.03,
                     ),
@@ -193,9 +194,13 @@ class HomePage extends StatelessWidget {
                     ),
                   ),
                   Icon(
-                    Icons.trending_down,
+                    state.dailyChangePct >= 0
+                        ? Icons.trending_up
+                        : Icons.trending_down,
                     size: size.width * 0.04,
-                    color: Colors.red.shade400,
+                    color: state.dailyChangePct >= 0
+                        ? Colors.green.shade400
+                        : Colors.red.shade400,
                   ),
                 ],
               ),
@@ -212,8 +217,9 @@ class HomePage extends StatelessWidget {
           child: _contentCard(
             p.name,
             p.value.toStringAsFixed(0),
-            "${p.dailyChange}",
+            "${p.dailyChange.toStringAsFixed(0)}",
             "%${p.dailyChangePct.toStringAsFixed(1).replaceAll('.', ',')}",
+            p.dailyChangePct,
             size,
           ),
         )),
@@ -314,8 +320,11 @@ class HomePage extends StatelessWidget {
       String value,
       String diff,
       String perc,
+      double percValue,
       Size size,
       ) {
+    final isPositive = percValue >= 0;
+
     return Container(
       padding: EdgeInsets.all(size.width * 0.05),
       decoration: BoxDecoration(
@@ -346,7 +355,10 @@ class HomePage extends StatelessWidget {
                     ),
                   ),
                   SizedBox(width: size.width * 0.02),
-                  Icon(Icons.keyboard_arrow_down, size: size.width * 0.05),
+                  Icon(
+                    isPositive ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                    size: size.width * 0.05,
+                  ),
                 ],
               ),
             ],
@@ -358,7 +370,7 @@ class HomePage extends StatelessWidget {
               Text(
                 diff,
                 style: TextStyle(
-                  color: Colors.red.shade400,
+                  color: isPositive ? Colors.green.shade400 : Colors.red.shade400,
                   fontWeight: FontWeight.w500,
                   fontSize: size.width * 0.035,
                 ),
@@ -379,7 +391,6 @@ class HomePage extends StatelessWidget {
     );
   }
 
-
   Widget _buildEmptyState(Size size) {
     final chartSize = size.width * 0.75;
     return Column(
@@ -393,7 +404,7 @@ class HomePage extends StatelessWidget {
           ),
         ),
         SizedBox(height: size.height * 0.18),
-        SizedBox(
+        /*SizedBox(
           width: double.infinity,
           child: ElevatedButton(
             onPressed: () {},
@@ -411,6 +422,59 @@ class HomePage extends StatelessWidget {
                 fontSize: size.width * 0.04,
                 fontWeight: FontWeight.bold,
               ),
+            ),
+          ),
+        ),*/
+      ],
+    );
+  }
+
+  Widget _buildErrorState(String message, BuildContext context, Size size) {
+    return Column(
+      children: [
+        SizedBox(height: size.height * 0.1),
+        Icon(
+          Icons.error_outline,
+          size: size.width * 0.2,
+          color: Colors.red.shade300,
+        ),
+        SizedBox(height: size.height * 0.03),
+        Text(
+          "Bir hata oluştu",
+          style: TextStyle(
+            fontSize: size.width * 0.05,
+            fontWeight: FontWeight.bold,
+            color: Colors.black87,
+          ),
+        ),
+        SizedBox(height: size.height * 0.015),
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: size.width * 0.1),
+          child: Text(
+            message,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: size.width * 0.035,
+              color: Colors.grey,
+            ),
+          ),
+        ),
+        SizedBox(height: size.height * 0.04),
+        ElevatedButton.icon(
+          onPressed: () {
+            context.read<HomeBloc>().add(LoadHomeData());
+          },
+          icon: const Icon(Icons.refresh),
+          label: const Text("Tekrar Dene"),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF1A1060),
+            foregroundColor: Colors.white,
+            padding: EdgeInsets.symmetric(
+              horizontal: size.width * 0.08,
+              vertical: size.height * 0.018,
+            ),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(size.width * 0.08),
             ),
           ),
         ),
@@ -531,7 +595,8 @@ class EmptyDonutPainter extends CustomPainter {
       textDirection: TextDirection.ltr,
     );
     tp.layout(maxWidth: size.width * 0.55);
-    tp.paint(canvas, Offset(center.dx - tp.width / 2, center.dy - tp.height / 2));
+    tp.paint(
+        canvas, Offset(center.dx - tp.width / 2, center.dy - tp.height / 2));
   }
 
   @override
