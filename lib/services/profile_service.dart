@@ -98,4 +98,39 @@ class ProfileService {
       throw responseData['message'] ?? 'Sunucu hatası oluştu.';
     }
   }
+
+  Future<Map<String, dynamic>> deleteAccount({
+    required String token,
+    required String password,
+    required String confirmation,
+  }) async {
+    final response = await http.delete(
+      Uri.parse(ApiUrls.deleteAccount),
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({
+        'password': password,
+        'confirmation': confirmation,
+      }),
+    );
+
+    final responseData = jsonDecode(response.body);
+
+    if (response.statusCode == 200) {
+      return responseData;
+    } else if (response.statusCode == 422) {
+      final errors = responseData['errors'] as Map<String, dynamic>?;
+      if (errors != null && errors.isNotEmpty) {
+        throw errors.values.first[0];
+      }
+      throw responseData['message'] ?? 'Hesap silinemedi.';
+    } else if (response.statusCode == 403) {
+      throw responseData['message'] ?? 'Şifre yanlış veya onay kodu hatalı.';
+    } else {
+      throw responseData['message'] ?? 'Sunucu hatası oluştu.';
+    }
+  }
 }

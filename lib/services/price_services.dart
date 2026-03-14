@@ -9,8 +9,6 @@ class PriceService {
   PriceService({http.Client? client}) : _client = client ?? http.Client();
 
   Future<List<PriceItem>> fetchAllPrices() async {
-    print('🔵 [PriceService] fetchAllPrices başladı');
-    print('🔵 [PriceService] URL: ${ApiUrls.prices}');
 
     try {
       final response = await _client.get(
@@ -22,35 +20,35 @@ class PriceService {
       ).timeout(
         const Duration(seconds: 10),
         onTimeout: () {
-          print('❌ [PriceService] Timeout - 10 saniye içinde yanıt gelmedi');
+          print('Timeout - 10 saniye içinde yanıt gelmedi');
           throw PriceServiceException('İstek zaman aşımına uğradı');
         },
       );
 
-      print('🔵 [PriceService] HTTP Status: ${response.statusCode}');
-      print('🔵 [PriceService] Response: ${response.body}');
+      print('HTTP Status: ${response.statusCode}');
+      print('Response: ${response.body}');
 
       if (response.statusCode == 200) {
         final jsonData = json.decode(response.body);
-        print('🔵 [PriceService] JSON decode başarılı');
+        print('JSON decode başarılı');
 
         final dynamic data = jsonData['data'];
 
         if (data == null) {
-          print('❌ [PriceService] data field null');
+          print('data field null');
           throw PriceServiceException('API yanıtında "data" alanı bulunamadı');
         }
 
         if (data is List) {
-          print('🔵 [PriceService] Array formatında ${data.length} item bulundu');
+          print('Array formatında ${data.length} item bulundu');
 
           if (data.isEmpty) {
-            print('⚠️ [PriceService] Veri listesi boş! API henüz fiyat verisi döndürmuyor.');
+            print('Veri listesi boş! API henüz fiyat verisi döndürmuyor.');
             return [];
           }
 
           final symbols = await _fetchSymbols();
-          print('🔵 [PriceService] ${symbols.length} sembol bilgisi çekildi');
+          print('${symbols.length} sembol bilgisi çekildi');
 
           final List<PriceItem> items = [];
 
@@ -72,23 +70,23 @@ class PriceService {
               );
               items.add(item);
             } catch (e) {
-              print('⚠️ [PriceService] Item parse edilemedi: $e');
+              print('Item parse edilemedi: $e');
             }
           }
 
-          print('✅ [PriceService] ${items.length} fiyat başarıyla parse edildi');
+          print('${items.length} fiyat başarıyla parse edildi');
           return items;
 
         } else if (data is Map<String, dynamic>) {
-          print('🔵 [PriceService] Map formatında ${data.length} fiyat bulundu');
+          print('Map formatında ${data.length} fiyat bulundu');
 
           if (data.isEmpty) {
-            print('⚠️ [PriceService] Veri map\'i boş!');
+            print('Veri map\'i boş!');
             return [];
           }
 
           final symbols = await _fetchSymbols();
-          print('🔵 [PriceService] ${symbols.length} sembol bilgisi çekildi');
+          print('${symbols.length} sembol bilgisi çekildi');
 
           final List<PriceItem> items = [];
 
@@ -107,45 +105,45 @@ class PriceService {
               );
               items.add(item);
             } catch (e) {
-              print('⚠️ [PriceService] $symbol parse edilemedi: $e');
+              print('$symbol parse edilemedi: $e');
             }
           });
 
-          print('✅ [PriceService] ${items.length} fiyat başarıyla parse edildi');
+          print('${items.length} fiyat başarıyla parse edildi');
           return items;
 
         } else {
-          print('❌ [PriceService] data field beklenmeyen tipte: ${data.runtimeType}');
+          print('data field beklenmeyen tipte: ${data.runtimeType}');
           throw PriceServiceException('API yanıtı beklenmeyen formatta');
         }
 
       } else if (response.statusCode == 429) {
-        print('❌ [PriceService] Rate limit aşıldı');
+        print('Rate limit aşıldı');
         throw PriceServiceException('Rate limit aşıldı. Lütfen bekleyin.');
       } else {
-        print('❌ [PriceService] HTTP ${response.statusCode} hatası');
-        print('❌ [PriceService] Response: ${response.body}');
+        print('HTTP ${response.statusCode} hatası');
+        print('Response: ${response.body}');
         throw PriceServiceException(
           'Fiyatlar yüklenemedi. HTTP ${response.statusCode}',
         );
       }
     } on http.ClientException catch (e) {
-      print('❌ [PriceService] Network hatası: ${e.message}');
-      print('❌ [PriceService] Uri: ${e.uri}');
+      print('Network hatası: ${e.message}');
+      print('Uri: ${e.uri}');
       throw PriceServiceException('Bağlantı hatası: ${e.message}');
     } on FormatException catch (e) {
-      print('❌ [PriceService] JSON parse hatası: $e');
+      print('JSON parse hatası: $e');
       throw PriceServiceException('Veri formatı hatalı');
     } catch (e) {
-      print('❌ [PriceService] Beklenmeyen hata: $e');
-      print('❌ [PriceService] Hata tipi: ${e.runtimeType}');
+      print('Beklenmeyen hata: $e');
+      print('Hata tipi: ${e.runtimeType}');
       if (e is PriceServiceException) rethrow;
       throw PriceServiceException('Beklenmeyen hata: $e');
     }
   }
 
   Future<PriceItem> fetchPriceBySymbol(String symbol) async {
-    print('🔵 [PriceService] fetchPriceBySymbol başladı: $symbol');
+    print('fetchPriceBySymbol başladı: $symbol');
 
     try {
       final response = await _client.get(
@@ -156,7 +154,7 @@ class PriceService {
         },
       );
 
-      print('🔵 [PriceService] HTTP Status: ${response.statusCode}');
+      print('HTTP Status: ${response.statusCode}');
 
       if (response.statusCode == 200) {
         final jsonData = json.decode(response.body);
@@ -173,7 +171,7 @@ class PriceService {
           timestamp: priceData['timestamp'] ?? 0,
         );
       } else if (response.statusCode == 404) {
-        print('❌ [PriceService] Sembol bulunamadı: $symbol');
+        print(' Sembol bulunamadı: $symbol');
         throw PriceServiceException('Sembol bulunamadı: $symbol');
       } else if (response.statusCode == 429) {
         throw PriceServiceException('Rate limit aşıldı. Lütfen bekleyin.');
@@ -183,17 +181,17 @@ class PriceService {
         );
       }
     } on http.ClientException catch (e) {
-      print('❌ [PriceService] Bağlantı hatası: ${e.message}');
+      print('Bağlantı hatası: ${e.message}');
       throw PriceServiceException('Bağlantı hatası: ${e.message}');
     } catch (e) {
-      print('❌ [PriceService] Beklenmeyen hata: $e');
+      print('Beklenmeyen hata: $e');
       if (e is PriceServiceException) rethrow;
       throw PriceServiceException('Beklenmeyen hata: $e');
     }
   }
 
   Future<Map<String, dynamic>> _fetchSymbols() async {
-    print('🔵 [PriceService] _fetchSymbols başladı');
+    print('_fetchSymbols başladı');
 
     try {
       final response = await _client.get(
@@ -205,12 +203,12 @@ class PriceService {
       ).timeout(
         const Duration(seconds: 5),
         onTimeout: () {
-          print('⚠️ [PriceService] Symbols timeout - devam ediliyor');
+          print('Symbols timeout - devam ediliyor');
           return http.Response('{"data": []}', 200);
         },
       );
 
-      print('🔵 [PriceService] Symbols HTTP Status: ${response.statusCode}');
+      print('Symbols HTTP Status: ${response.statusCode}');
 
       if (response.statusCode == 200) {
         final jsonData = json.decode(response.body);
@@ -227,20 +225,20 @@ class PriceService {
           }
         }
 
-        print('✅ [PriceService] ${symbolsMap.length} sembol bilgisi alındı');
+        print('${symbolsMap.length} sembol bilgisi alındı');
         return symbolsMap;
       } else {
-        print('⚠️ [PriceService] Symbols alınamadı, boş map dönüyor');
+        print('Symbols alınamadı, boş map dönüyor');
         return {};
       }
     } catch (e) {
-      print('⚠️ [PriceService] Symbols hatası (görmezden geliniyor): $e');
+      print('Symbols hatası$e');
       return {};
     }
   }
 
   void dispose() {
-    print('🔵 [PriceService] dispose edildi');
+    print('dispose edildi');
     _client.close();
   }
 }

@@ -1,15 +1,20 @@
-abstract class ProfileState {}
+abstract class ProfileState {
+  const ProfileState();
+}
 
 class ProfileInitial extends ProfileState {}
 
 class ProfileLoading extends ProfileState {}
+
+// Kullanıcı giriş yapmamışsa bu state kullanılacak
+class ProfileUnauthenticated extends ProfileState {}
 
 class ProfileLoaded extends ProfileState {
   final String name;
   final String email;
   final String phone;
 
-  ProfileLoaded({
+  const ProfileLoaded({
     required this.name,
     required this.email,
     required this.phone,
@@ -32,3 +37,8 @@ class ProfileFailure extends ProfileState {
 }
 
 class LogoutSuccess extends ProfileState {}
+
+class AccountDeleteSuccess extends ProfileState {
+  final String message;
+  AccountDeleteSuccess(this.message);
+}

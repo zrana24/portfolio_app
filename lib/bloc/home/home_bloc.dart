@@ -10,51 +10,96 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
 
       try {
         final summaryResponse = await HomeService.getPortfolioSummary();
+
+        if (summaryResponse['data'] == null) {
+          emit(HomeEmpty());
+          return;
+        }
+
         final data = summaryResponse['data'];
 
-        if (data['portfolio_count'] == 0 || data['total_assets'] == 0) {
+        final portfolioCount = _toInt(data['portfolio_count']);
+        final totalAssets = _toInt(data['total_assets']);
+
+        if (portfolioCount == 0 || totalAssets == 0) {
           emit(HomeEmpty());
           return;
         }
 
         final List<PortfolioItem> portfolioItems = [];
+        final List<CategoryDistribution> categoryDistribution = [];
 
-        if (data['portfolios'] != null) {
+        if (data['portfolios'] != null && data['portfolios'] is List) {
           for (var portfolio in data['portfolios']) {
-            portfolioItems.add(PortfolioItem(
-              name: portfolio['name'] ?? 'Portföy',
-              value: (portfolio['current_value'] ?? 0.0).toDouble(),
-              dailyChange: (portfolio['profit_loss'] ?? 0.0).toDouble(),
-              dailyChangePct: (portfolio['pnl_percent'] ?? 0.0).toDouble(),
-            ));
+            final item = PortfolioItem(
+              name: portfolio['name']?.toString() ?? 'Portföy',
+              value: _toDouble(portfolio['current_value']),
+              dailyChange: _toDouble(portfolio['profit_loss']),
+              dailyChangePct: _toDouble(portfolio['pnl_percent']),
+            );
+            portfolioItems.add(item);
           }
         }
 
+        if (data['category_distribution'] != null &&
+            data['category_distribution'] is List) {
+          for (var category in data['category_distribution']) {
+            final cat = CategoryDistribution(
+              category: category['category']?.toString() ?? '',
+              label: category['label']?.toString() ?? '',
+              currentValue: _toDouble(category['current_value']),
+              percentage: _toDouble(category['percentage']),
+            );
+            categoryDistribution.add(cat);
+          }
+        }
+
+        final totalValue = _toDouble(data['total_current_value']);
+        final totalPnL = _toDouble(data['total_profit_loss']);
+        final totalPnLPercent = _toDouble(data['total_pnl_percent']);
+
         emit(HomeLoaded(
-          totalValue: (data['total_current_value'] ?? 0.0).toDouble(),
-          percentage: (data['total_pnl_percent'] ?? 0.0).toDouble(),
-          dailyChange: (data['total_profit_loss'] ?? 0.0).toDouble(),
-          dailyChangePct: (data['total_pnl_percent'] ?? 0.0).toDouble(),
+          totalValue: totalValue,
+          percentage: totalPnLPercent,
+          dailyChange: totalPnL,
+          dailyChangePct: totalPnLPercent,
           portfolios: portfolioItems,
+          categoryDistribution: categoryDistribution,
         ));
-      }
-      catch (e) {
-        String errorMessage = 'Bir hata oluştu. Lütfen daha sonra tekrar deneyin.';
+
+      } catch (e, stackTrace) {
+        print('Portföy yükleme hatası: $e');
 
         if (e.toString().contains('Token bulunamadı')) {
-          errorMessage = 'Oturum açmanız gerekiyor. Lütfen giriş yapın.';
-        }
-        else if (e.toString().contains('Oturum süresi dolmuş')) {
-          errorMessage = 'Oturum süreniz dolmuş. Lütfen tekrar giriş yapın.';
-        }
-        else if (e.toString().contains('SocketException') ||
-            e.toString().contains('Failed host lookup')) {
-          errorMessage = 'İnternet bağlantınızı kontrol edin.';
+          emit(HomeEmpty());
+          return;
         }
 
-        print('Portföy yükleme hatası: $e');
-        emit(HomeError(errorMessage));
+        if (e.toString().contains('SocketException') || e.toString().contains('Failed host lookup')) {
+          emit(HomeEmpty());
+          return;
+        }
+        else if (e.toString().contains('401')) {
+          emit(HomeEmpty());
+          return;
+        }
       }
     });
+  }
+
+  int _toInt(dynamic value) {
+    if (value == null) return 0;
+    if (value is int) return value;
+    if (value is double) return value.toInt();
+    if (value is String) return int.tryParse(value) ?? 0;
+    return 0;
+  }
+
+  double _toDouble(dynamic value) {
+    if (value == null) return 0.0;
+    if (value is double) return value;
+    if (value is int) return value.toDouble();
+    if (value is String) return double.tryParse(value) ?? 0.0;
+    return 0.0;
   }
 }

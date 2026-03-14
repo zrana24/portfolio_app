@@ -61,22 +61,13 @@ class HomePage extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
-          "Portfoyum",
+          "Portföyüm",
           style: TextStyle(
             fontSize: size.width * 0.07,
             fontWeight: FontWeight.w900,
             color: const Color(0xFF1A1A1A),
           ),
         ),
-        /*Row(
-          children: [
-            _circularIcon(Icons.currency_lira, size),
-            SizedBox(width: size.width * 0.02),
-            _circularIcon(Icons.swap_vert, size),
-            SizedBox(width: size.width * 0.02),
-            _circularIcon(Icons.visibility_outlined, size),
-          ],
-        ),*/
       ],
     );
   }
@@ -139,8 +130,10 @@ class HomePage extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildDonutChartSection(size),
-        SizedBox(height: size.height * 0.05),
+        if (state.categoryDistribution.isNotEmpty) ...[
+          _buildDonutChartSection(state, size),
+          SizedBox(height: size.height * 0.05),
+        ],
 
         _buildSectionTitle("Portföyler Toplamı", size, hasArrows: true),
         Text(
@@ -169,7 +162,7 @@ class HomePage extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    "${state.dailyChange.toStringAsFixed(0)}",
+                    "${state.dailyChange >= 0 ? '+' : ''}${state.dailyChange.toStringAsFixed(0)}",
                     style: TextStyle(
                       color: state.dailyChange >= 0
                           ? Colors.green.shade400
@@ -187,7 +180,7 @@ class HomePage extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    "%${state.dailyChangePct.toStringAsFixed(1).replaceAll('.', ',')}  ",
+                    "${state.dailyChangePct >= 0 ? '+' : ''}%${state.dailyChangePct.toStringAsFixed(1).replaceAll('.', ',')}  ",
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: size.width * 0.03,
@@ -208,27 +201,33 @@ class HomePage extends StatelessWidget {
           ],
         ),
         SizedBox(height: size.height * 0.04),
+        if (state.portfolios.isNotEmpty) ...[
+          _buildSectionTitle("İçerik", size, hasSort: true),
+          SizedBox(height: size.height * 0.02),
 
-        _buildSectionTitle("İçerik", size, hasSort: true),
-        SizedBox(height: size.height * 0.02),
-
-        ...state.portfolios.map((p) => Padding(
-          padding: EdgeInsets.only(bottom: size.height * 0.015),
-          child: _contentCard(
-            p.name,
-            p.value.toStringAsFixed(0),
-            "${p.dailyChange.toStringAsFixed(0)}",
-            "%${p.dailyChangePct.toStringAsFixed(1).replaceAll('.', ',')}",
-            p.dailyChangePct,
-            size,
-          ),
-        )),
+          ...state.portfolios.map((p) => Padding(
+            padding: EdgeInsets.only(bottom: size.height * 0.015),
+            child: _contentCard(
+              p.name,
+              p.value.toStringAsFixed(0),
+              "${p.dailyChange >= 0 ? '+' : ''}${p.dailyChange.toStringAsFixed(0)}",
+              "${p.dailyChangePct >= 0 ? '+' : ''}%${p.dailyChangePct.toStringAsFixed(1).replaceAll('.', ',')}",
+              p.dailyChangePct,
+              size,
+            ),
+          )),
+        ],
       ],
     );
   }
 
-  Widget _buildDonutChartSection(Size size) {
+  Widget _buildDonutChartSection(HomeLoaded state, Size size) {
     final chartSize = size.width * 0.55;
+
+    if (state.categoryDistribution.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
     return Center(
       child: Stack(
         alignment: Alignment.center,
@@ -236,19 +235,44 @@ class HomePage extends StatelessWidget {
           SizedBox(
             width: chartSize,
             height: chartSize,
-            child: CustomPaint(painter: DonutChartPainter()),
+            child: CustomPaint(
+              painter: DonutChartPainter(
+                categories: state.categoryDistribution,
+              ),
+            ),
           ),
           Column(
             mainAxisSize: MainAxisSize.min,
-            children: [
-              _legendItem(const Color(0xFFFFD700), "Döviz", "%15,1", size),
-              SizedBox(height: size.height * 0.01),
-              _legendItem(const Color(0xFF00C4B4), "Emtia", "%84,9", size),
-            ],
+            children: state.categoryDistribution.map((cat) {
+              return Padding(
+                padding: EdgeInsets.only(bottom: size.height * 0.01),
+                child: _legendItem(
+                  _getCategoryColor(cat.category),
+                  cat.label,
+                  "%${cat.percentage.toStringAsFixed(1).replaceAll('.', ',')}",
+                  size,
+                ),
+              );
+            }).toList(),
           ),
         ],
       ),
     );
+  }
+
+  Color _getCategoryColor(String category) {
+    switch (category) {
+      case 'doviz':
+        return const Color(0xFFFFD700);
+      case 'emtia':
+        return const Color(0xFF00C4B4);
+      case 'hisse':
+        return const Color(0xFF6366F1);
+      case 'kripto':
+        return const Color(0xFFF59E0B);
+      default:
+        return Colors.grey;
+    }
   }
 
   Widget _legendItem(Color color, String label, String value, Size size) {
@@ -356,7 +380,9 @@ class HomePage extends StatelessWidget {
                   ),
                   SizedBox(width: size.width * 0.02),
                   Icon(
-                    isPositive ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                    isPositive
+                        ? Icons.keyboard_arrow_up
+                        : Icons.keyboard_arrow_down,
                     size: size.width * 0.05,
                   ),
                 ],
@@ -370,7 +396,9 @@ class HomePage extends StatelessWidget {
               Text(
                 diff,
                 style: TextStyle(
-                  color: isPositive ? Colors.green.shade400 : Colors.red.shade400,
+                  color: isPositive
+                      ? Colors.green.shade400
+                      : Colors.red.shade400,
                   fontWeight: FontWeight.w500,
                   fontSize: size.width * 0.035,
                 ),
@@ -392,7 +420,7 @@ class HomePage extends StatelessWidget {
   }
 
   Widget _buildEmptyState(Size size) {
-    final chartSize = size.width * 0.75;
+    final chartSize = size.width * 0.65;
     return Column(
       children: [
         SizedBox(height: size.height * 0.05),
@@ -403,28 +431,7 @@ class HomePage extends StatelessWidget {
             child: CustomPaint(painter: EmptyDonutPainter()),
           ),
         ),
-        SizedBox(height: size.height * 0.18),
-        /*SizedBox(
-          width: double.infinity,
-          child: ElevatedButton(
-            onPressed: () {},
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF1A1060),
-              foregroundColor: Colors.white,
-              padding: EdgeInsets.symmetric(vertical: size.height * 0.022),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(size.width * 0.08),
-              ),
-            ),
-            child: Text(
-              "Hemen Ekle",
-              style: TextStyle(
-                fontSize: size.width * 0.04,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-        ),*/
+        SizedBox(height: size.height * 0.05),
       ],
     );
   }
@@ -604,6 +611,10 @@ class EmptyDonutPainter extends CustomPainter {
 }
 
 class DonutChartPainter extends CustomPainter {
+  final List<CategoryDistribution> categories;
+
+  DonutChartPainter({required this.categories});
+
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
@@ -614,32 +625,44 @@ class DonutChartPainter extends CustomPainter {
       radius: radius - strokeWidth / 2,
     );
 
-    final paintEmtia = Paint()
-      ..color = const Color(0xFF00C4B4)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = strokeWidth;
+    double startAngle = -math.pi / 2;
 
-    final paintDoviz = Paint()
-      ..color = const Color(0xFFFFD700)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = strokeWidth;
+    for (var category in categories) {
+      final paint = Paint()
+        ..color = _getCategoryColor(category.category)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = strokeWidth
+        ..strokeCap = StrokeCap.round;
 
-    canvas.drawArc(
-      rect,
-      -math.pi / 2.2,
-      2 * math.pi * 0.849,
-      false,
-      paintEmtia,
-    );
-    canvas.drawArc(
-      rect,
-      2 * math.pi * 0.849 - (math.pi / 2.2) + 0.05,
-      2 * math.pi * 0.151 - 0.05,
-      false,
-      paintDoviz,
-    );
+      final sweepAngle = 2 * math.pi * (category.percentage / 100);
+
+      canvas.drawArc(
+        rect,
+        startAngle,
+        sweepAngle - 0.02,
+        false,
+        paint,
+      );
+
+      startAngle += sweepAngle;
+    }
+  }
+
+  Color _getCategoryColor(String category) {
+    switch (category) {
+      case 'doviz':
+        return const Color(0xFFFFD700);
+      case 'emtia':
+        return const Color(0xFF00C4B4);
+      case 'hisse':
+        return const Color(0xFF6366F1);
+      case 'kripto':
+        return const Color(0xFFF59E0B);
+      default:
+        return Colors.grey;
+    }
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }

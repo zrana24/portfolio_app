@@ -1,26 +1,5 @@
 import 'package:equatable/equatable.dart';
 
-class NewsArticle {
-  final String id;
-  final String title;
-  final String category;
-  final String content;
-  final String imageUrl;
-  final DateTime publishedAt;
-  final String source;
-
-  const NewsArticle({
-    required this.id,
-    required this.title,
-    required this.category,
-    required this.content,
-    required this.imageUrl,
-    required this.publishedAt,
-    required this.source,
-  });
-}
-
-
 abstract class NewsEvent extends Equatable {
   const NewsEvent();
 
@@ -37,5 +16,10 @@ class RefreshNews extends NewsEvent {
 }
 
 class LoadMoreNews extends NewsEvent {
-  const LoadMoreNews();
+  final String? category;
+
+  const LoadMoreNews({this.category});
+
+  @override
+  List<Object?> get props => [category];
 }

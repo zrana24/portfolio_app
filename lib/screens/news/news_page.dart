@@ -3,8 +3,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../bloc/news/news_bloc.dart';
 import '../../bloc/news/news_event.dart';
 import '../../bloc/news/news_state.dart';
+import '../../services/news_service.dart';
 import '../../widgets/nav.dart';
 import '../../widgets/footer.dart';
+import '../../widgets/news_shimmer.dart';
 import 'newsDetail_page.dart';
 
 class NewsPage extends StatelessWidget {
@@ -31,7 +33,7 @@ class _NewsViewState extends State<_NewsView> {
   final PageController _pageController = PageController();
 
   static const Color _primary = Color(0xFF1A0B52);
-  static const Color _cardBg  = Color(0xFFF3F4F6);
+  static const Color _cardBg = Color(0xFFF3F4F6);
 
   @override
   void dispose() {
@@ -83,12 +85,12 @@ class _NewsViewState extends State<_NewsView> {
                           ),
                         ),
                         if (state is NewsLoading)
-                          SliverToBoxAdapter(child: _buildSkeleton(size))
+                          const SliverToBoxAdapter(child: NewsShimmer())
                         else if (state is NewsLoaded)
                           ..._buildLoadedContent(context, state, size)
                         else if (state is NewsError)
                             SliverToBoxAdapter(
-                                child: _buildError(context, size)),
+                                child: _buildError(context, size, state.message)),
                       ],
                     ),
                   );
@@ -103,50 +105,94 @@ class _NewsViewState extends State<_NewsView> {
 
   List<Widget> _buildLoadedContent(
       BuildContext context, NewsLoaded state, Size size) {
+    if (state.featured.isEmpty && state.sections.isEmpty) {
+      return [
+        SliverFillRemaining(
+          child: Center(
+            child: Padding(
+              padding: EdgeInsets.all(size.width * 0.08),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.article_outlined,
+                    size: size.width * 0.2,
+                    color: Colors.grey.shade300,
+                  ),
+                  SizedBox(height: size.height * 0.025),
+                  Text(
+                    'Henüz Haber Yok',
+                    style: TextStyle(
+                      fontSize: size.width * 0.055,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF1A1A1A),
+                    ),
+                  ),
+                  SizedBox(height: size.height * 0.012),
+                  Text(
+                    'Haberler yakında burada görünecek.\nLütfen daha sonra tekrar kontrol edin.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: size.width * 0.036,
+                      color: Colors.grey.shade600,
+                      height: 1.5,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ];
+    }
+
     final Map<String, List<NewsArticle>> grouped = {};
-    for (final a in state.sections) {
-      grouped.putIfAbsent(a.category, () => []).add(a);
+    for (final article in state.sections) {
+      grouped.putIfAbsent(article.category, () => []).add(article);
     }
 
     return [
-      SliverToBoxAdapter(
-        child: SizedBox(
-          height: size.height * 0.28,
-          child: PageView.builder(
-            controller: _pageController,
-            itemCount: state.featured.length,
-            onPageChanged: (i) => setState(() => _featuredIndex = i),
-            itemBuilder: (_, i) =>
-                _featuredCard(context, state.featured[i], size),
+      if (state.featured.isNotEmpty)
+        SliverToBoxAdapter(
+          child: SizedBox(
+            height: size.height * 0.28,
+            child: PageView.builder(
+              controller: _pageController,
+              itemCount: state.featured.length,
+              onPageChanged: (i) => setState(() => _featuredIndex = i),
+              itemBuilder: (_, i) =>
+                  _featuredCard(context, state.featured[i], size),
+            ),
           ),
         ),
-      ),
 
-      SliverToBoxAdapter(
-        child: Padding(
-          padding: EdgeInsets.only(top: size.height * 0.012,
-              bottom: size.height * 0.025),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: List.generate(state.featured.length, (i) {
-              final active = i == _featuredIndex;
-              return AnimatedContainer(
-                duration: const Duration(milliseconds: 250),
-                margin: EdgeInsets.symmetric(horizontal: size.width * 0.01),
-                width: active ? size.width * 0.05 : size.width * 0.02,
-                height: size.width * 0.02,
-                decoration: BoxDecoration(
-                  color: active ? _primary : Colors.grey.shade300,
-                  borderRadius: BorderRadius.circular(size.width * 0.01),
-                ),
-              );
-            }),
+      if (state.featured.isNotEmpty)
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: EdgeInsets.only(
+                top: size.height * 0.012, bottom: size.height * 0.025),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(state.featured.length, (i) {
+                final active = i == _featuredIndex;
+                return AnimatedContainer(
+                  duration: const Duration(milliseconds: 250),
+                  margin: EdgeInsets.symmetric(horizontal: size.width * 0.01),
+                  width: active ? size.width * 0.05 : size.width * 0.02,
+                  height: size.width * 0.02,
+                  decoration: BoxDecoration(
+                    color: active ? _primary : Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(size.width * 0.01),
+                  ),
+                );
+              }),
+            ),
           ),
         ),
-      ),
 
-      ...grouped.entries.map((entry) => _buildSection(
-          context, entry.key, entry.value, size)),
+      ...grouped.entries.map(
+            (entry) => _buildSection(context, entry.key, entry.value, size),
+      ),
 
       SliverToBoxAdapter(child: SizedBox(height: size.height * 0.04)),
     ];
@@ -173,12 +219,21 @@ class _NewsViewState extends State<_NewsView> {
                     color: Colors.grey.shade300,
                     borderRadius: BorderRadius.vertical(
                         top: Radius.circular(size.width * 0.05)),
+                    image: article.imageUrl.isNotEmpty
+                        ? DecorationImage(
+                      image: NetworkImage(article.imageUrl),
+                      fit: BoxFit.cover,
+                    )
+                        : null,
                   ),
                   width: double.infinity,
-                  child: Center(
+                  child: article.imageUrl.isEmpty
+                      ? Center(
                     child: Icon(Icons.image_outlined,
-                        size: size.width * 0.1, color: Colors.grey.shade400),
-                  ),
+                        size: size.width * 0.1,
+                        color: Colors.grey.shade400),
+                  )
+                      : null,
                 ),
               ),
               Expanded(
@@ -188,16 +243,42 @@ class _NewsViewState extends State<_NewsView> {
                     horizontal: size.width * 0.04,
                     vertical: size.height * 0.008,
                   ),
-                  child: Text(
-                    article.title,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: size.width * 0.038,
-                      fontWeight: FontWeight.w700,
-                      color: const Color(0xFF1A1A1A),
-                      height: 1.3,
-                    ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: size.width * 0.025,
+                          vertical: size.height * 0.004,
+                        ),
+                        decoration: BoxDecoration(
+                          color: _getCategoryColor(article.categoryColor)
+                              .withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(size.width * 0.015),
+                        ),
+                        child: Text(
+                          article.categoryLabel,
+                          style: TextStyle(
+                            fontSize: size.width * 0.028,
+                            fontWeight: FontWeight.w600,
+                            color: _getCategoryColor(article.categoryColor),
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: size.height * 0.006),
+                      Text(
+                        article.title,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: size.width * 0.038,
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF1A1A1A),
+                          height: 1.3,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -210,6 +291,8 @@ class _NewsViewState extends State<_NewsView> {
 
   Widget _buildSection(BuildContext context, String category,
       List<NewsArticle> articles, Size size) {
+    final categoryLabel = articles.first.categoryLabel;
+
     return SliverToBoxAdapter(
       child: Padding(
         padding: EdgeInsets.only(
@@ -220,7 +303,7 @@ class _NewsViewState extends State<_NewsView> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Başlık (${category} Başlığı olabilir)',
+              categoryLabel,
               style: TextStyle(
                 fontSize: size.width * 0.042,
                 fontWeight: FontWeight.w800,
@@ -237,8 +320,7 @@ class _NewsViewState extends State<_NewsView> {
                   padding: EdgeInsets.only(bottom: size.height * 0.012),
                   child: Row(
                     children: [
-                      Expanded(
-                          child: _smallCard(context, left, size)),
+                      Expanded(child: _smallCard(context, left, size)),
                       SizedBox(width: size.width * 0.03),
                       Expanded(
                           child: right != null
@@ -256,8 +338,7 @@ class _NewsViewState extends State<_NewsView> {
     );
   }
 
-  Widget _smallCard(
-      BuildContext context, NewsArticle article, Size size) {
+  Widget _smallCard(BuildContext context, NewsArticle article, Size size) {
     return GestureDetector(
       onTap: () => _openDetail(context, article),
       child: Container(
@@ -274,12 +355,21 @@ class _NewsViewState extends State<_NewsView> {
                 color: Colors.grey.shade300,
                 borderRadius: BorderRadius.vertical(
                     top: Radius.circular(size.width * 0.04)),
+                image: article.imageUrl.isNotEmpty
+                    ? DecorationImage(
+                  image: NetworkImage(article.imageUrl),
+                  fit: BoxFit.cover,
+                )
+                    : null,
               ),
               width: double.infinity,
-              child: Center(
+              child: article.imageUrl.isEmpty
+                  ? Center(
                 child: Icon(Icons.image_outlined,
-                    size: size.width * 0.07, color: Colors.grey.shade400),
-              ),
+                    size: size.width * 0.07,
+                    color: Colors.grey.shade400),
+              )
+                  : null,
             ),
             Padding(
               padding: EdgeInsets.all(size.width * 0.03),
@@ -302,7 +392,7 @@ class _NewsViewState extends State<_NewsView> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        _formatDate(article.publishedAt),
+                        article.timeAgo,
                         style: TextStyle(
                           fontSize: size.width * 0.026,
                           color: Colors.grey,
@@ -322,40 +412,7 @@ class _NewsViewState extends State<_NewsView> {
     );
   }
 
-  Widget _buildSkeleton(Size size) {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: size.width * 0.06),
-      child: Column(
-        children: [
-          _ShimmerBox(
-              width: double.infinity,
-              height: size.height * 0.28,
-              borderRadius: size.width * 0.05),
-          SizedBox(height: size.height * 0.03),
-          _ShimmerBox(
-              width: size.width * 0.4,
-              height: size.height * 0.025,
-              borderRadius: 8),
-          SizedBox(height: size.height * 0.015),
-          Row(children: [
-            Expanded(
-                child: _ShimmerBox(
-                    width: double.infinity,
-                    height: size.height * 0.2,
-                    borderRadius: size.width * 0.04)),
-            SizedBox(width: size.width * 0.03),
-            Expanded(
-                child: _ShimmerBox(
-                    width: double.infinity,
-                    height: size.height * 0.2,
-                    borderRadius: size.width * 0.04)),
-          ]),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildError(BuildContext context, Size size) {
+  Widget _buildError(BuildContext context, Size size, String message) {
     return Center(
       child: Padding(
         padding: EdgeInsets.symmetric(vertical: size.height * 0.1),
@@ -364,21 +421,10 @@ class _NewsViewState extends State<_NewsView> {
             Icon(Icons.wifi_off_rounded,
                 size: size.width * 0.15, color: Colors.grey.shade300),
             SizedBox(height: size.height * 0.02),
-            Text('Haberler yüklenemedi',
-                style: TextStyle(fontSize: size.width * 0.04,
-                    color: Colors.black54)),
-            SizedBox(height: size.height * 0.025),
-            ElevatedButton(
-              onPressed: () =>
-                  context.read<NewsBloc>().add(const LoadNews()),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: _primary,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(size.width * 0.06)),
-              ),
-              child: const Text('Tekrar Dene'),
-            ),
+            Text(message,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                    fontSize: size.width * 0.04, color: Colors.black54)),
           ],
         ),
       ),
@@ -394,60 +440,11 @@ class _NewsViewState extends State<_NewsView> {
     );
   }
 
-  String _formatDate(DateTime d) =>
-      '${d.day.toString().padLeft(2, '0')} '
-          '${['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'][d.month - 1]} '
-          '${d.year}';
-}
-
-class _ShimmerBox extends StatefulWidget {
-  final double width;
-  final double height;
-  final double borderRadius;
-
-  const _ShimmerBox(
-      {required this.width, required this.height, this.borderRadius = 12});
-
-  @override
-  State<_ShimmerBox> createState() => _ShimmerBoxState();
-}
-
-class _ShimmerBoxState extends State<_ShimmerBox>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _ctrl;
-  late Animation<double> _anim;
-
-  @override
-  void initState() {
-    super.initState();
-    _ctrl = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 1200))
-      ..repeat(reverse: true);
-    _anim = Tween<double>(begin: 0.35, end: 1.0)
-        .animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut));
-  }
-
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _anim,
-      builder: (_, __) => Opacity(
-        opacity: _anim.value,
-        child: Container(
-          width: widget.width,
-          height: widget.height,
-          decoration: BoxDecoration(
-            color: const Color(0xFFE5E7EB),
-            borderRadius: BorderRadius.circular(widget.borderRadius),
-          ),
-        ),
-      ),
-    );
+  Color _getCategoryColor(String hexColor) {
+    try {
+      return Color(int.parse(hexColor.replaceFirst('#', '0xFF')));
+    } catch (e) {
+      return const Color(0xFF3B82F6);
+    }
   }
 }

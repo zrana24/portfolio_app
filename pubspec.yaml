@@ -1,8 +1,6 @@
 name: portfoy_app
 description: "A new Flutter project."
-
 publish_to: 'none'
-
 version: 1.0.0+1
 
 environment:
@@ -20,6 +18,7 @@ dependencies:
   shared_preferences: ^2.2.2
   socket_io_client: ^3.0.0
   rename: ^3.1.0
+  flutter_native_splash: ^2.4.0
 
 dev_dependencies:
   flutter_test:
@@ -27,8 +26,25 @@ dev_dependencies:
 
   flutter_lints: ^6.0.0
   change_app_package_name: ^1.5.0
+  flutter_launcher_icons: ^0.13.1
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/playstore.png"
+  min_sdk_android: 21
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: "assets/playstore.png"
+
+flutter_native_splash:
+  color: "#FFFFFF"
+  image: assets/playstore.png
+  android: true
+  ios: true
+  fullscreen: true
 
 flutter:
   assets:
     - assets/logo.png
+    - assets/playstore.png
   uses-material-design: true

@@ -18,6 +18,7 @@ class HomeLoaded extends HomeState {
   final double dailyChange;
   final double dailyChangePct;
   final List<PortfolioItem> portfolios;
+  final List<CategoryDistribution> categoryDistribution;
 
   HomeLoaded({
     required this.totalValue,
@@ -25,6 +26,7 @@ class HomeLoaded extends HomeState {
     required this.dailyChange,
     required this.dailyChangePct,
     required this.portfolios,
+    required this.categoryDistribution,
   });
 }
 
@@ -39,5 +41,19 @@ class PortfolioItem {
     required this.value,
     required this.dailyChange,
     required this.dailyChangePct,
+  });
+}
+
+class CategoryDistribution {
+  final String category;
+  final String label;
+  final double currentValue;
+  final double percentage;
+
+  CategoryDistribution({
+    required this.category,
+    required this.label,
+    required this.currentValue,
+    required this.percentage,
   });
 }

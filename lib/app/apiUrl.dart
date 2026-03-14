@@ -9,6 +9,8 @@ class ApiUrls {
   static const String updateProfile = '$baseUrl/auth/me';
   static const String changePassword = '$baseUrl/auth/change-password';
 
+  static const String deleteAccount = '$baseUrl/auth/account';
+
   static const String prices = "$baseUrl/prices";
   static const String symbols = "$baseUrl/symbols";
   static String priceDetail(String symbol) => "$baseUrl/prices/$symbol";
@@ -23,6 +25,9 @@ class ApiUrls {
   static const String favorites = "$baseUrl/favorites";
   static String favoriteDetail(String symbol) => "$baseUrl/favorites/$symbol";
 
+  static const String mobileNews = "$baseUrl/mobile/news";
+  static const String mobileTrending = "$baseUrl/mobile/news/trending";
+  static String mobileNewsDetail(int id) => "$baseUrl/mobile/news/$id";
   static const String news = "$baseUrl/news";
   static String newsDetail(int id) => "$baseUrl/news/$id";
 }

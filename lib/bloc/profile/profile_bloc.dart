@@ -10,26 +10,23 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
   final AuthService _authService = AuthService();
 
   ProfileBloc() : super(ProfileInitial()) {
-
     on<LoadUserProfile>((event, emit) async {
       emit(ProfileLoading());
       try {
         final token = await TokenService.getToken();
-        if (token == null) {
-          emit(ProfileFailure('Token bulunamadı.'));
+        if (token == null || token.isEmpty) {
+          emit(ProfileUnauthenticated());
           return;
         }
-
         final result = await _profileService.getProfile(token);
         final user = result['user'] ?? result['data'];
-
         emit(ProfileLoaded(
           name: user['name'] ?? '',
           email: user['email'] ?? '',
           phone: user['phone'] ?? '',
         ));
       } catch (e) {
-        emit(ProfileFailure(e.toString()));
+        emit(ProfileUnauthenticated());
       }
     });
 
@@ -37,19 +34,9 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
       emit(ProfileLoading());
       try {
         final token = await TokenService.getToken();
-        if (token == null) {
-          emit(ProfileFailure('Token bulunamadı.'));
-          return;
-        }
-
-        await _profileService.updateProfile(
-          token: token,
-          name: event.name,
-          phone: event.phone,
-        );
-
+        if (token == null) { emit(ProfileUnauthenticated()); return; }
+        await _profileService.updateProfile(token: token, name: event.name, phone: event.phone);
         emit(ProfileUpdateSuccess('Profil başarıyla güncellendi.'));
-
         add(LoadUserProfile());
       } catch (e) {
         emit(ProfileFailure(e.toString()));
@@ -57,27 +44,17 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
     });
 
     on<ChangePassword>((event, emit) async {
-      if (event.newPassword != event.confirmPassword) {
-        emit(ProfileFailure('Yeni şifreler eşleşmiyor!'));
-        return;
-      }
-
       emit(ProfileLoading());
       try {
         final token = await TokenService.getToken();
-        if (token == null) {
-          emit(ProfileFailure('Token bulunamadı.'));
-          return;
-        }
-
+        if (token == null) { emit(ProfileUnauthenticated()); return; }
         await _profileService.changePassword(
           token: token,
           currentPassword: event.currentPassword,
           newPassword: event.newPassword,
           confirmPassword: event.confirmPassword,
         );
-
-        emit(PasswordChangeSuccess('Şifre başarıyla değiştirildi.'));
+        emit(PasswordChangeSuccess('Şifre başarıyla güncellendi.'));
       } catch (e) {
         emit(ProfileFailure(e.toString()));
       }
@@ -86,15 +63,27 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
     on<LogoutRequested>((event, emit) async {
       try {
         final token = await TokenService.getToken();
-        if (token != null) {
-          await _authService.logout(token);
-        }
+        if (token != null) await _authService.logout(token);
+      } finally {
         await TokenService.removeToken();
         emit(LogoutSuccess());
       }
-      catch (e) {
+    });
+
+    on<DeleteAccountRequested>((event, emit) async {
+      emit(ProfileLoading());
+      try {
+        final token = await TokenService.getToken();
+        if (token == null) return;
+        final result = await _profileService.deleteAccount(
+          token: token,
+          password: event.password,
+          confirmation: event.confirmation,
+        );
         await TokenService.removeToken();
-        emit(LogoutSuccess());
+        emit(AccountDeleteSuccess(result['message'] ?? 'Hesabınız silindi.'));
+      } catch (e) {
+        emit(ProfileFailure(e.toString()));
       }
     });
   }

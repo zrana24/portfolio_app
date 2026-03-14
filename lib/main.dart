@@ -8,7 +8,9 @@ void main() async {
 
   String? token = await TokenService.getToken();
 
-  String initialRoute = (token != null) ? AppRoutes.home : AppRoutes.login;
+  //String initialRoute = (token != null) ? AppRoutes.home : AppRoutes.login;
+
+  String initialRoute = AppRoutes.home;
 
   runApp(MyApp(initialRoute: initialRoute));
 }

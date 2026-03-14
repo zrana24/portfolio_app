@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import 'news_event.dart';
+import '../../services/news_service.dart';
 
 abstract class NewsState extends Equatable {
   const NewsState();

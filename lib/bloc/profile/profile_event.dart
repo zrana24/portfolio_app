@@ -5,11 +5,7 @@ class LoadUserProfile extends ProfileEvent {}
 class UpdateUserProfile extends ProfileEvent {
   final String name;
   final String phone;
-
-  UpdateUserProfile({
-    required this.name,
-    required this.phone,
-  });
+  UpdateUserProfile({required this.name, required this.phone});
 }
 
 class ChangePassword extends ProfileEvent {
@@ -25,3 +21,9 @@ class ChangePassword extends ProfileEvent {
 }
 
 class LogoutRequested extends ProfileEvent {}
+
+class DeleteAccountRequested extends ProfileEvent {
+  final String password;
+  final String confirmation;
+  DeleteAccountRequested({required this.password, required this.confirmation});
+}
