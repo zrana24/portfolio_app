@@ -106,8 +106,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       _buildSectionTitle("Ayarlar", size),
                       _buildMenuButton("Şifre Değiştir", Icons.lock_open_rounded, () => Navigator.pushNamed(context, AppRoutes.changePassword), size),
                       SizedBox(height: size.height * 0.015),
-                      /*_buildMenuButton("Hesabı Sil", Icons
-                .delete_forever_rounded, () => _showDeleteAccountDialog(context), size, isDestructive: true),
+                      /*_buildMenuButton("Hesabı Sil", Icons.delete_forever_rounded, () => _showDeleteAccountDialog(context), size, isDestructive: true),
                       SizedBox(height: size.height * 0.06),*/
                       _buildLogoutButton(size),
                       const SizedBox(height: 50),
@@ -135,6 +134,31 @@ class _ProfilePageState extends State<ProfilePage> {
               "Profilinizi görüntülemek için\nlütfen giriş yapın.",
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 16, color: Colors.grey.shade600, fontWeight: FontWeight.w500),
+            ),
+            const SizedBox(height: 30),
+            SizedBox(
+              width: size.width * 0.6,
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.pushNamed(context, AppRoutes.login);
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF1A1060),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 2,
+                ),
+                child: const Text(
+                  'Giriş Yap',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
             ),
           ],
         ),
@@ -240,7 +264,6 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
     );
   }
-
 
   void _showDeleteAccountDialog(BuildContext context) {
     _passwordController.clear();

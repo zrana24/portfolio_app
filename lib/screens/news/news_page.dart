@@ -155,13 +155,13 @@ class _NewsViewState extends State<_NewsView> {
       if (state.featured.isNotEmpty)
         SliverToBoxAdapter(
           child: SizedBox(
-            height: size.height * 0.28,
+            height: size.height * 0.32,
             child: PageView.builder(
               controller: _pageController,
               itemCount: state.featured.length,
               onPageChanged: (i) => setState(() => _featuredIndex = i),
               itemBuilder: (_, i) =>
-                  _featuredCard(context, state.featured[i], size),
+                  _newsCard(context, state.featured[i], size),
             ),
           ),
         ),
@@ -198,88 +198,80 @@ class _NewsViewState extends State<_NewsView> {
     ];
   }
 
-  Widget _featuredCard(
-      BuildContext context, NewsArticle article, Size size) {
+  Widget _newsCard(BuildContext context, NewsArticle article, Size size) {
     return GestureDetector(
       onTap: () => _openDetail(context, article),
       child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: size.width * 0.06),
+        padding: EdgeInsets.symmetric(horizontal: size.width * 0),
         child: Container(
           decoration: BoxDecoration(
             color: _cardBg,
-            borderRadius: BorderRadius.circular(size.width * 0.05),
+            borderRadius: BorderRadius.circular(size.width * 0.02),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                flex: 6,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade300,
-                    borderRadius: BorderRadius.vertical(
-                        top: Radius.circular(size.width * 0.05)),
-                    image: article.imageUrl.isNotEmpty
-                        ? DecorationImage(
-                      image: NetworkImage(article.imageUrl),
-                      fit: BoxFit.cover,
-                    )
-                        : null,
-                  ),
-                  width: double.infinity,
-                  child: article.imageUrl.isEmpty
-                      ? Center(
-                    child: Icon(Icons.image_outlined,
-                        size: size.width * 0.1,
-                        color: Colors.grey.shade400),
+              Container(
+                height: size.height * 0.15,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(size.width * 0.04)),
+                  image: article.imageUrl.isNotEmpty
+                      ? DecorationImage(
+                    image: NetworkImage(article.imageUrl),
+                    fit: BoxFit.cover,
+                    onError: (exception, stackTrace) {
+                    },
                   )
                       : null,
                 ),
+                width: double.infinity,
+                child: article.imageUrl.isEmpty
+                    ? Center(
+                  child: Icon(Icons.image_outlined,
+                      size: size.width * 0.1,
+                      color: Colors.grey.shade400),
+                )
+                    : null,
               ),
-              Expanded(
-                flex: 3,
-                child: Padding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: size.width * 0.04,
-                    vertical: size.height * 0.008,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: size.width * 0.025,
-                          vertical: size.height * 0.004,
-                        ),
-                        decoration: BoxDecoration(
-                          color: _getCategoryColor(article.categoryColor)
-                              .withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(size.width * 0.015),
-                        ),
-                        child: Text(
-                          article.categoryLabel,
-                          style: TextStyle(
-                            fontSize: size.width * 0.028,
-                            fontWeight: FontWeight.w600,
-                            color: _getCategoryColor(article.categoryColor),
-                          ),
-                        ),
+              Padding(
+                padding: EdgeInsets.all(size.width * 0.04),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: size.width * 0.025,
+                        vertical: size.height * 0.004,
                       ),
-                      SizedBox(height: size.height * 0.006),
-                      Text(
-                        article.title,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
+                      decoration: BoxDecoration(
+                        color: _getCategoryColor(article.categoryColor)
+                            .withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(size.width * 0.015),
+                      ),
+                      child: Text(
+                        article.categoryLabel,
                         style: TextStyle(
-                          fontSize: size.width * 0.038,
-                          fontWeight: FontWeight.w700,
-                          color: const Color(0xFF1A1A1A),
-                          height: 1.3,
+                          fontSize: size.width * 0.028,
+                          fontWeight: FontWeight.w600,
+                          color: _getCategoryColor(article.categoryColor),
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                    SizedBox(height: size.height * 0.008),
+                    Text(
+                      article.title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: size.width * 0.038,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF1A1A1A),
+                        height: 1.3,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -317,14 +309,14 @@ class _NewsViewState extends State<_NewsView> {
                 final left = articles[i];
                 final right = i + 1 < articles.length ? articles[i + 1] : null;
                 pairs.add(Padding(
-                  padding: EdgeInsets.only(bottom: size.height * 0.012),
+                  padding: EdgeInsets.only(bottom: size.height * 0.010),
                   child: Row(
                     children: [
-                      Expanded(child: _smallCard(context, left, size)),
+                      Expanded(child: _newsCard(context, left, size)),
                       SizedBox(width: size.width * 0.03),
                       Expanded(
                           child: right != null
-                              ? _smallCard(context, right, size)
+                              ? _newsCard(context, right, size)
                               : const SizedBox()),
                     ],
                   ),
@@ -332,80 +324,6 @@ class _NewsViewState extends State<_NewsView> {
               }
               return pairs;
             }(),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _smallCard(BuildContext context, NewsArticle article, Size size) {
-    return GestureDetector(
-      onTap: () => _openDetail(context, article),
-      child: Container(
-        decoration: BoxDecoration(
-          color: _cardBg,
-          borderRadius: BorderRadius.circular(size.width * 0.04),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              height: size.height * 0.12,
-              decoration: BoxDecoration(
-                color: Colors.grey.shade300,
-                borderRadius: BorderRadius.vertical(
-                    top: Radius.circular(size.width * 0.04)),
-                image: article.imageUrl.isNotEmpty
-                    ? DecorationImage(
-                  image: NetworkImage(article.imageUrl),
-                  fit: BoxFit.cover,
-                )
-                    : null,
-              ),
-              width: double.infinity,
-              child: article.imageUrl.isEmpty
-                  ? Center(
-                child: Icon(Icons.image_outlined,
-                    size: size.width * 0.07,
-                    color: Colors.grey.shade400),
-              )
-                  : null,
-            ),
-            Padding(
-              padding: EdgeInsets.all(size.width * 0.03),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    article.title,
-                    maxLines: 3,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: size.width * 0.032,
-                      fontWeight: FontWeight.w600,
-                      color: const Color(0xFF1A1A1A),
-                      height: 1.35,
-                    ),
-                  ),
-                  SizedBox(height: size.height * 0.008),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        article.timeAgo,
-                        style: TextStyle(
-                          fontSize: size.width * 0.026,
-                          color: Colors.grey,
-                        ),
-                      ),
-                      Icon(Icons.chevron_right_rounded,
-                          size: size.width * 0.04,
-                          color: Colors.grey.shade400),
-                    ],
-                  ),
-                ],
-              ),
-            ),
           ],
         ),
       ),
