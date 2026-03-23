@@ -36,7 +36,7 @@ class _LivePricesView extends StatelessWidget {
       value: SystemUiOverlayStyle.dark,
       child: Scaffold(
         backgroundColor: Colors.white,
-        bottomNavigationBar: const CebeciBottomNav(currentIndex: 1),
+        bottomNavigationBar: const CebeciBottomNav(currentIndex:0),
         body: SafeArea(
           child: Column(
             children: [

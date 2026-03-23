@@ -90,7 +90,7 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
 
     return Scaffold(
       backgroundColor: Colors.white,
-      bottomNavigationBar: const CebeciBottomNav(currentIndex: 3),
+      bottomNavigationBar: const CebeciBottomNav(currentIndex: 1),
       body: SafeArea(
         child: Column(
           children: [
@@ -112,7 +112,7 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
 
     return Scaffold(
       backgroundColor: Colors.white,
-      bottomNavigationBar: const CebeciBottomNav(currentIndex: 3),
+      bottomNavigationBar: const CebeciBottomNav(currentIndex: 1),
       body: SafeArea(
         child: Column(
           children: [
@@ -204,7 +204,7 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
 
     return Scaffold(
       backgroundColor: Colors.white,
-      bottomNavigationBar: const CebeciBottomNav(currentIndex: 3),
+      bottomNavigationBar: const CebeciBottomNav(currentIndex: 1),
       body: SafeArea(
         child: Column(
           children: [

@@ -18,7 +18,7 @@ class HomePage extends StatelessWidget {
       create: (context) => HomeBloc()..add(LoadHomeData()),
       child: Scaffold(
         backgroundColor: Colors.white,
-        bottomNavigationBar: const CebeciBottomNav(currentIndex: 0),
+        bottomNavigationBar: const CebeciBottomNav(currentIndex: 2),
         body: SafeArea(
           child: BlocBuilder<HomeBloc, HomeState>(
             builder: (context, state) {
