@@ -31,6 +31,8 @@ class _NewsView extends StatefulWidget {
 class _NewsViewState extends State<_NewsView> {
   int _featuredIndex = 0;
   final PageController _pageController = PageController();
+  final ScrollController _scrollController = ScrollController();
+  final Map<String, GlobalKey> _categoryKeys = {};
 
   static const Color _primary = Color(0xFF1A0B52);
   static const Color _cardBg = Color(0xFFF3F4F6);
@@ -38,7 +40,27 @@ class _NewsViewState extends State<_NewsView> {
   @override
   void dispose() {
     _pageController.dispose();
+    _scrollController.dispose();
     super.dispose();
+  }
+
+  Map<String, List<NewsArticle>> _getGroupedArticles(List<NewsArticle> articles) {
+    final Map<String, List<NewsArticle>> grouped = {};
+    for (final article in articles) {
+      grouped.putIfAbsent(article.category, () => []).add(article);
+    }
+    return grouped;
+  }
+
+  void _scrollToCategory(String category) {
+    final key = _categoryKeys[category];
+    if (key != null && key.currentContext != null) {
+      Scrollable.ensureVisible(
+        key.currentContext!,
+        duration: const Duration(milliseconds: 600),
+        curve: Curves.easeInOut,
+      );
+    }
   }
 
   @override
@@ -76,7 +98,7 @@ class _NewsViewState extends State<_NewsView> {
                           child: Padding(
                             padding: EdgeInsets.symmetric(
                                 horizontal: size.width * 0.06,
-                                vertical: size.height * 0.012),
+                                vertical: size.height * 0.006),
                             child: Text(
                               'Haberler',
                               style: TextStyle(
@@ -87,6 +109,10 @@ class _NewsViewState extends State<_NewsView> {
                             ),
                           ),
                         ),
+
+                        if (state is NewsLoaded)
+                          _buildCategoryNav(_getGroupedArticles(state.sections), size),
+
                         if (state is NewsLoading)
                           const SliverToBoxAdapter(child: NewsShimmer())
                         else if (state is NewsLoaded)
@@ -101,6 +127,34 @@ class _NewsViewState extends State<_NewsView> {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCategoryNav(Map<String, List<NewsArticle>> grouped, Size size) {
+    return SliverToBoxAdapter(
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        padding: EdgeInsets.symmetric(horizontal: size.width * 0.06, vertical: 10),
+        child: Row(
+          children: grouped.keys.map((category) {
+            final label = grouped[category]!.first.categoryLabel;
+            return Padding(
+              padding: EdgeInsets.only(right: size.width * 0.02),
+              child: ActionChip(
+                label: Text(label),
+                backgroundColor: _cardBg,
+                labelStyle: TextStyle(
+                  color: _primary,
+                  fontWeight: FontWeight.bold,
+                  fontSize: size.width * 0.032,
+                ),
+                shape: StadiumBorder(side: BorderSide(color: Colors.grey.shade200)),
+                onPressed: () => _scrollToCategory(category),
+              ),
+            );
+          }).toList(),
         ),
       ),
     );
@@ -294,8 +348,10 @@ class _NewsViewState extends State<_NewsView> {
   Widget _buildSection(BuildContext context, String category,
       List<NewsArticle> articles, Size size) {
     final categoryLabel = articles.first.categoryLabel;
+    _categoryKeys.putIfAbsent(category, () => GlobalKey());
 
     return SliverToBoxAdapter(
+      key: _categoryKeys[category],
       child: Padding(
         padding: EdgeInsets.only(
             left: size.width * 0.06,

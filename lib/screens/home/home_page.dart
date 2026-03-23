@@ -33,7 +33,7 @@ class HomePage extends StatelessWidget {
                     padding: EdgeInsets.symmetric(horizontal: size.width * 0.06),
                     sliver: SliverList(
                       delegate: SliverChildListDelegate([
-                        SizedBox(height: size.height * 0.012),
+                        SizedBox(height: size.height * 0.006),
                         _buildHeader(size),
                         SizedBox(height: size.height * 0.035),
 

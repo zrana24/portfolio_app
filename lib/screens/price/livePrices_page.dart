@@ -31,7 +31,8 @@ class _LivePricesView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-    final bottomPadding = MediaQuery.of(context).padding.bottom; // Safe area bottom padding
+    final bottomPadding = MediaQuery.of(context).padding.bottom;
+    final topPadding = MediaQuery.of(context).padding.top;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.dark,
@@ -39,65 +40,64 @@ class _LivePricesView extends StatelessWidget {
         backgroundColor: Colors.white,
         extendBody: true,
         bottomNavigationBar: const CebeciBottomNav(currentIndex: 0),
-        body: SafeArea(
-          bottom: false, // Bottom safe area'yı devre dışı bırak
-          child: Column(
-            children: [
-              const CebeciAppBar(),
-              Expanded(
-                child: BlocConsumer<LivePricesBloc, LivePricesState>(
-                  listener: (context, state) {},
-                  builder: (context, state) {
-                    return RefreshIndicator(
-                      color: _primary,
-                      onRefresh: () async {
-                        context
-                            .read<LivePricesBloc>()
-                            .add(const RefreshLivePrices());
-                        await context
-                            .read<LivePricesBloc>()
-                            .stream
-                            .firstWhere((s) =>
-                        s is LivePricesLoaded || s is LivePricesError);
-                      },
-                      child: CustomScrollView(
-                        physics: const AlwaysScrollableScrollPhysics(
-                          parent: BouncingScrollPhysics(),
-                        ),
-                        slivers: [
-                          SliverPadding(
-                            padding: EdgeInsets.symmetric(
-                                horizontal: size.width * 0.06),
-                            sliver: SliverList(
-                              delegate: SliverChildListDelegate([
-                                SizedBox(height: size.height * 0.012),
-                                _buildTopBar(context, state, size),
-                                SizedBox(height: size.height * 0.018),
-                                _buildUpdateRow(state, size),
-                                SizedBox(height: size.height * 0.022),
-                                _buildBody(context, state, size),
-                                SizedBox(height: size.height * 0.025),
-                                if (state is LivePricesLoaded ||
-                                    state is LivePricesError)
-                                  _buildInfoCard(size),
-                                // Bottom navigation için boşluk bırak
-                                SizedBox(
-                                  height: size.height * 0.082 + // Bottom nav yüksekliği
-                                      size.height * 0.015 + // Bottom padding
-                                      bottomPadding + // Safe area
-                                      size.height * 0.02, // Ekstra boşluk
-                                ),
-                              ]),
-                            ),
-                          ),
-                        ],
+        body: Column(
+          children: [
+            SafeArea(
+              bottom: false,
+              child: const CebeciAppBar(),
+            ),
+            Expanded(
+              child: BlocConsumer<LivePricesBloc, LivePricesState>(
+                listener: (context, state) {},
+                builder: (context, state) {
+                  return RefreshIndicator(
+                    color: _primary,
+                    onRefresh: () async {
+                      context
+                          .read<LivePricesBloc>()
+                          .add(const RefreshLivePrices());
+                      await context
+                          .read<LivePricesBloc>()
+                          .stream
+                          .firstWhere((s) =>
+                      s is LivePricesLoaded || s is LivePricesError);
+                    },
+                    child: CustomScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(
+                        parent: BouncingScrollPhysics(),
                       ),
-                    );
-                  },
-                ),
+                      slivers: [
+                        SliverPadding(
+                          padding: EdgeInsets.symmetric(
+                              horizontal: size.width * 0.06),
+                          sliver: SliverList(
+                            delegate: SliverChildListDelegate([
+                              SizedBox(height: size.height * 0.006),
+                              _buildTopBar(context, state, size),
+                              SizedBox(height: size.height * 0.018),
+                              _buildUpdateRow(state, size),
+                              SizedBox(height: size.height * 0.022),
+                              _buildBody(context, state, size),
+                              SizedBox(height: size.height * 0.025),
+                              if (state is LivePricesLoaded ||
+                                  state is LivePricesError)
+                                _buildInfoCard(size),
+                              SizedBox(
+                                height: size.height * 0.082 +
+                                    size.height * 0.015 +
+                                    bottomPadding +
+                                    size.height * 0.02,
+                              ),
+                            ]),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -308,7 +308,7 @@ class _LivePricesView extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    'A',
+                    'Alış',
                     style: TextStyle(
                       fontSize: size.width * 0.024,
                       fontWeight: FontWeight.w600,
@@ -333,7 +333,7 @@ class _LivePricesView extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    'S',
+                    'Satış',
                     style: TextStyle(
                       fontSize: size.width * 0.024,
                       fontWeight: FontWeight.w600,
@@ -358,7 +358,7 @@ class _LivePricesView extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    'F',
+                    'Fark',
                     style: TextStyle(
                       fontSize: size.width * 0.024,
                       fontWeight: FontWeight.w600,

@@ -8,6 +8,7 @@ import 'livePrices_state.dart';
 class LivePricesBloc extends Bloc<LivePricesEvent, LivePricesState> {
   final PriceService _priceService;
   Timer? _clockTimer;
+  Timer? _pollingTimer;
 
   LivePricesBloc({PriceService? priceService})
       : _priceService = priceService ?? PriceService(),
@@ -19,6 +20,14 @@ class LivePricesBloc extends Bloc<LivePricesEvent, LivePricesState> {
     on<SetViewMode>(_onSetViewMode);
     on<SearchPrices>(_onSearch);
     on<ClockTicked>(_onClockTicked);
+  }
+
+  void _startPolling() {
+    _pollingTimer?.cancel();
+    _pollingTimer = Timer.periodic(const Duration(seconds: 2), (_) {
+      add(const RefreshLivePrices());
+    });
+    print('🔄 Polling başlatıldı: Her 5 saniyede bir veri çekilecek.');
   }
 
   Future<void> _onLoad(
@@ -86,6 +95,7 @@ class LivePricesBloc extends Bloc<LivePricesEvent, LivePricesState> {
       print('└─ LastUpdated: ${loadedState.lastUpdated}');
 
       _startClock();
+      _startPolling();
       print('⏰ Clock timer başlatıldı');
     }
     on PriceServiceException catch (e) {
@@ -264,6 +274,7 @@ class LivePricesBloc extends Bloc<LivePricesEvent, LivePricesState> {
     print('\n🛑 LivePricesBloc CLOSING');
     _clockTimer?.cancel();
     print('├─ Clock timer cancelled');
+    _pollingTimer?.cancel();
     _priceService.dispose();
     print('└─ PriceService disposed');
     return super.close();
