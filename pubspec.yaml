@@ -1,7 +1,7 @@
 name: portfoy_app
-description: "A new Flutter project."
+description: "Cebeci"
 publish_to: 'none'
-version: 1.0.0+19
+version: 1.0.0+20
 
 environment:
   sdk: ^3.10.0
