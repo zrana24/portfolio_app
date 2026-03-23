@@ -10,7 +10,7 @@ void main() async {
 
   //String initialRoute = (token != null) ? AppRoutes.home : AppRoutes.login;
 
-  String initialRoute = AppRoutes.home;
+  String initialRoute = AppRoutes.livePrices;
 
   runApp(MyApp(initialRoute: initialRoute));
 }

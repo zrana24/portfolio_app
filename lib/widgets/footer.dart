@@ -16,11 +16,9 @@ class CebeciBottomNav extends StatelessWidget {
     final size = MediaQuery.of(context).size;
 
     const items = [
-      _NavItem(label: 'Portfoyum',      icon: Icons.pie_chart_rounded),
-     // _NavItem(label: 'Ekle',           icon: Icons.add_circle_rounded),
       _NavItem(label: 'Canlı Fiyatlar', icon: Icons.bar_chart_rounded),
       _NavItem(label: 'Haberler',       icon: Icons.newspaper_rounded),
-      _NavItem(label: 'Profil',         icon: Icons.people),
+      _NavItem(label: 'Portföyüm',      icon: Icons.pie_chart_rounded),
     ];
 
     return Container(
@@ -58,34 +56,14 @@ class CebeciBottomNav extends StatelessWidget {
                       if (onTap != null) onTap!(index);
                       if (index == currentIndex) return;
                       switch (index) {
-                        /*case 0:
-                          Navigator.pushReplacementNamed(context, AppRoutes.home);
-                          break;
-                        case 1:
-                          Navigator.pushReplacementNamed(context, AppRoutes.add);
-                          break;
-                        case 2:
-                          Navigator.pushReplacementNamed(context, AppRoutes.livePrices);
-                          break;
-                        case 3:
-                          Navigator.pushReplacementNamed(context, AppRoutes.news);
-                          break;
-                        case 4:
-                          Navigator.pushReplacementNamed(context, AppRoutes.profile);
-                          break;
-                         */
                         case 0:
-                          Navigator.pushReplacementNamed(context, AppRoutes.home);
-                          break;
-                        case 1:
                           Navigator.pushReplacementNamed(context, AppRoutes.livePrices);
                           break;
-                        case 2:
+                        case 1:
                           Navigator.pushReplacementNamed(context, AppRoutes.news);
                           break;
-                        case 3:
-                          Navigator.pushReplacementNamed(context, AppRoutes
-                              .profile);
+                        case 2:
+                          Navigator.pushReplacementNamed(context, AppRoutes.home);
                           break;
                       }
                     },
