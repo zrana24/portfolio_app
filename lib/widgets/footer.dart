@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import '../app/routes.dart';
+import '../screens/home/home_page.dart';
+import '../screens/price/livePrices_page.dart';
+import '../screens/news/news_page.dart';
 
 class CebeciBottomNav extends StatelessWidget {
   final int currentIndex;
@@ -10,6 +13,16 @@ class CebeciBottomNav extends StatelessWidget {
     this.currentIndex = 0,
     this.onTap,
   });
+
+  void _navigateWithoutAnimation(BuildContext context, Widget page) {
+    Navigator.of(context).pushReplacement(
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) => page,
+        transitionDuration: Duration.zero,
+        reverseTransitionDuration: Duration.zero,
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -22,7 +35,7 @@ class CebeciBottomNav extends StatelessWidget {
     ];
 
     return Container(
-      color: Colors.transparent,
+      color: Colors.transparent, // Arka plan şeffaf
       child: SafeArea(
         top: false,
         child: Padding(
@@ -55,17 +68,23 @@ class CebeciBottomNav extends StatelessWidget {
                     onTap: () {
                       if (onTap != null) onTap!(index);
                       if (index == currentIndex) return;
+
+                      Widget page;
                       switch (index) {
                         case 0:
-                          Navigator.pushReplacementNamed(context, AppRoutes.livePrices);
+                          page = const LivePricesPage();
                           break;
                         case 1:
-                          Navigator.pushReplacementNamed(context, AppRoutes.news);
+                          page = const NewsPage();
                           break;
                         case 2:
-                          Navigator.pushReplacementNamed(context, AppRoutes.home);
+                          page = const HomePage();
                           break;
+                        default:
+                          return;
                       }
+
+                      _navigateWithoutAnimation(context, page);
                     },
                     child: _NavItemWidget(
                       item: items[index],

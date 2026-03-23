@@ -44,11 +44,14 @@ class _NewsViewState extends State<_NewsView> {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
+    final bottomPadding = MediaQuery.of(context).padding.bottom;
 
     return Scaffold(
       backgroundColor: Colors.white,
+      extendBody: true,
       bottomNavigationBar: const CebeciBottomNav(currentIndex: 1),
       body: SafeArea(
+        bottom: false,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -73,7 +76,7 @@ class _NewsViewState extends State<_NewsView> {
                           child: Padding(
                             padding: EdgeInsets.symmetric(
                                 horizontal: size.width * 0.06,
-                                vertical: size.height * 0.025),
+                                vertical: size.height * 0.012),
                             child: Text(
                               'Haberler',
                               style: TextStyle(
@@ -87,7 +90,7 @@ class _NewsViewState extends State<_NewsView> {
                         if (state is NewsLoading)
                           const SliverToBoxAdapter(child: NewsShimmer())
                         else if (state is NewsLoaded)
-                          ..._buildLoadedContent(context, state, size)
+                          ..._buildLoadedContent(context, state, size, bottomPadding)
                         else if (state is NewsError)
                             SliverToBoxAdapter(
                                 child: _buildError(context, size, state.message)),
@@ -104,7 +107,7 @@ class _NewsViewState extends State<_NewsView> {
   }
 
   List<Widget> _buildLoadedContent(
-      BuildContext context, NewsLoaded state, Size size) {
+      BuildContext context, NewsLoaded state, Size size, double bottomPadding) {
     if (state.featured.isEmpty && state.sections.isEmpty) {
       return [
         SliverFillRemaining(
@@ -194,7 +197,14 @@ class _NewsViewState extends State<_NewsView> {
             (entry) => _buildSection(context, entry.key, entry.value, size),
       ),
 
-      SliverToBoxAdapter(child: SizedBox(height: size.height * 0.04)),
+      SliverToBoxAdapter(
+        child: SizedBox(
+          height: size.height * 0.082 +
+              size.height * 0.015 +
+              bottomPadding +
+              size.height * 0.02,
+        ),
+      ),
     ];
   }
 

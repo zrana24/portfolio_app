@@ -90,8 +90,10 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
 
     return Scaffold(
       backgroundColor: Colors.white,
+      extendBody: true,
       bottomNavigationBar: const CebeciBottomNav(currentIndex: 1),
       body: SafeArea(
+        bottom: false,
         child: Column(
           children: [
             _buildAppBar(context, size),
@@ -112,8 +114,10 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
 
     return Scaffold(
       backgroundColor: Colors.white,
+      extendBody: true,
       bottomNavigationBar: const CebeciBottomNav(currentIndex: 1),
       body: SafeArea(
+        bottom: false,
         child: Column(
           children: [
             _buildAppBar(context, size),
@@ -199,13 +203,16 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
 
   Widget _buildContent(BuildContext context, NewsArticle article) {
     final size = MediaQuery.of(context).size;
+    final bottomPadding = MediaQuery.of(context).padding.bottom;
 
     final related = <NewsArticle>[];
 
     return Scaffold(
       backgroundColor: Colors.white,
+      extendBody: true,
       bottomNavigationBar: const CebeciBottomNav(currentIndex: 1),
       body: SafeArea(
+        bottom: false,
         child: Column(
           children: [
             _buildAppBar(context, size),
@@ -416,7 +423,12 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
                       ),
                     ],
 
-                    SizedBox(height: size.height * 0.04),
+                    SizedBox(
+                      height: size.height * 0.082 +
+                          size.height * 0.015 +
+                          bottomPadding +
+                          size.height * 0.02,
+                    ),
                   ],
                 ),
               ),

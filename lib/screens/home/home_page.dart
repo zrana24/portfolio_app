@@ -13,13 +13,16 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
+    final bottomPadding = MediaQuery.of(context).padding.bottom;
 
     return BlocProvider(
       create: (context) => HomeBloc()..add(LoadHomeData()),
       child: Scaffold(
         backgroundColor: Colors.white,
+        extendBody: true,
         bottomNavigationBar: const CebeciBottomNav(currentIndex: 2),
         body: SafeArea(
+          bottom: false,
           child: BlocBuilder<HomeBloc, HomeState>(
             builder: (context, state) {
               return CustomScrollView(
@@ -30,7 +33,7 @@ class HomePage extends StatelessWidget {
                     padding: EdgeInsets.symmetric(horizontal: size.width * 0.06),
                     sliver: SliverList(
                       delegate: SliverChildListDelegate([
-                        SizedBox(height: size.height * 0.025),
+                        SizedBox(height: size.height * 0.012),
                         _buildHeader(size),
                         SizedBox(height: size.height * 0.035),
 
@@ -43,7 +46,13 @@ class HomePage extends StatelessWidget {
                           else if (state is HomeError)
                               _buildErrorState(state.message, context, size),
 
-                        SizedBox(height: size.height * 0.05),
+
+                        SizedBox(
+                          height: size.height * 0.082 +
+                              size.height * 0.015 +
+                              bottomPadding +
+                              size.height * 0.02,
+                        ),
                       ]),
                     ),
                   ),

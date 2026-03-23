@@ -30,16 +30,25 @@ class _CebeciAppBarState extends State<CebeciAppBar> {
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    final padding = MediaQuery.of(context).padding;
+
     return Container(
       color: Colors.white,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: SafeArea(
         bottom: false,
-        child: Center(
-          child: Image.asset(
-            'assets/logo.png',
-            height: 32,
-            fit: BoxFit.contain,
+        child: Container(
+          height: size.height * 0.065,
+          padding: EdgeInsets.symmetric(
+            horizontal: size.width * 0.04,
+            vertical: size.height * 0.008,
+          ),
+          child: Center(
+            child: Image.asset(
+              'assets/logo.png',
+              height: size.height * 0.04,
+              fit: BoxFit.contain,
+            ),
           ),
         ),
       ),

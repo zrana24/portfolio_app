@@ -31,13 +31,16 @@ class _LivePricesView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
+    final bottomPadding = MediaQuery.of(context).padding.bottom; // Safe area bottom padding
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.dark,
       child: Scaffold(
         backgroundColor: Colors.white,
-        bottomNavigationBar: const CebeciBottomNav(currentIndex:0),
+        extendBody: true,
+        bottomNavigationBar: const CebeciBottomNav(currentIndex: 0),
         body: SafeArea(
+          bottom: false, // Bottom safe area'yı devre dışı bırak
           child: Column(
             children: [
               const CebeciAppBar(),
@@ -67,7 +70,7 @@ class _LivePricesView extends StatelessWidget {
                                 horizontal: size.width * 0.06),
                             sliver: SliverList(
                               delegate: SliverChildListDelegate([
-                                SizedBox(height: size.height * 0.025),
+                                SizedBox(height: size.height * 0.012),
                                 _buildTopBar(context, state, size),
                                 SizedBox(height: size.height * 0.018),
                                 _buildUpdateRow(state, size),
@@ -77,7 +80,13 @@ class _LivePricesView extends StatelessWidget {
                                 if (state is LivePricesLoaded ||
                                     state is LivePricesError)
                                   _buildInfoCard(size),
-                                SizedBox(height: size.height * 0.04),
+                                // Bottom navigation için boşluk bırak
+                                SizedBox(
+                                  height: size.height * 0.082 + // Bottom nav yüksekliği
+                                      size.height * 0.015 + // Bottom padding
+                                      bottomPadding + // Safe area
+                                      size.height * 0.02, // Ekstra boşluk
+                                ),
                               ]),
                             ),
                           ),
@@ -234,9 +243,7 @@ class _LivePricesView extends StatelessWidget {
     final changeColor = item.isPositive ? _positive : _negative;
     final abbr = item.code.length > 3 ? item.code.substring(0, 3) : item.code;
 
-
     final spreadPercent = item.buy > 0 ? ((item.sell - item.buy) / item.buy) * 100 : 0.0;
-
 
     final hasChangePct = item.changePct != 0;
 
@@ -297,7 +304,6 @@ class _LivePricesView extends StatelessWidget {
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
@@ -405,7 +411,6 @@ class _LivePricesView extends StatelessWidget {
     );
   }
 
-
   Widget _priceBox({
     required String label,
     required String value,
@@ -500,7 +505,6 @@ class _LivePricesView extends StatelessWidget {
 
   Widget _tableRow(PriceItem item, Size size) {
     final changeColor = item.isPositive ? _positive : _negative;
-
 
     final spreadPercent = item.buy > 0 ? ((item.sell - item.buy) / item.buy) * 100 : 0.0;
 
