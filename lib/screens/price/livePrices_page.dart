@@ -234,6 +234,12 @@ class _LivePricesView extends StatelessWidget {
     final changeColor = item.isPositive ? _positive : _negative;
     final abbr = item.code.length > 3 ? item.code.substring(0, 3) : item.code;
 
+
+    final spreadPercent = item.buy > 0 ? ((item.sell - item.buy) / item.buy) * 100 : 0.0;
+
+
+    final hasChangePct = item.changePct != 0;
+
     return Container(
       padding: EdgeInsets.symmetric(
         horizontal: size.width * 0.05,
@@ -253,12 +259,14 @@ class _LivePricesView extends StatelessWidget {
               shape: BoxShape.circle,
             ),
             child: Center(
-              child: Text(abbr,
-                  style: TextStyle(
-                    fontSize: size.width * 0.028,
-                    fontWeight: FontWeight.w800,
-                    color: _primary,
-                  )),
+              child: Text(
+                abbr,
+                style: TextStyle(
+                  fontSize: size.width * 0.028,
+                  fontWeight: FontWeight.w800,
+                  color: _primary,
+                ),
+              ),
             ),
           ),
           SizedBox(width: size.width * 0.035),
@@ -266,56 +274,175 @@ class _LivePricesView extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(item.code,
-                    style: TextStyle(
-                      fontSize: size.width * 0.042,
-                      fontWeight: FontWeight.w700,
-                      color: const Color(0xFF1A1A1A),
-                    )),
-                SizedBox(height: size.height * 0.003),
-                Text(item.name,
-                    style: TextStyle(
-                        fontSize: size.width * 0.03, color: Colors.grey)),
-              ],
-            ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(_formatNumber(item.sell),
+                Text(
+                  item.code,
                   style: TextStyle(
                     fontSize: size.width * 0.042,
                     fontWeight: FontWeight.w700,
                     color: const Color(0xFF1A1A1A),
-                  )),
-              if (item.changePct != 0) ...[
+                  ),
+                ),
                 SizedBox(height: size.height * 0.003),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
+                Text(
+                  item.name,
+                  style: TextStyle(
+                    fontSize: size.width * 0.03,
+                    color: Colors.grey,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    'A',
+                    style: TextStyle(
+                      fontSize: size.width * 0.024,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                  SizedBox(height: size.height * 0.002),
+                  Text(
+                    _formatNumber(item.buy),
+                    style: TextStyle(
+                      fontSize: size.width * 0.034,
+                      fontWeight: FontWeight.w700,
+                      color: _positive,
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(width: size.width * 0.03),
+
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    'S',
+                    style: TextStyle(
+                      fontSize: size.width * 0.024,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                  SizedBox(height: size.height * 0.002),
+                  Text(
+                    _formatNumber(item.sell),
+                    style: TextStyle(
+                      fontSize: size.width * 0.034,
+                      fontWeight: FontWeight.w700,
+                      color: _negative,
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(width: size.width * 0.03),
+
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    'F',
+                    style: TextStyle(
+                      fontSize: size.width * 0.024,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                  SizedBox(height: size.height * 0.002),
+                  Text(
+                    '${spreadPercent.toStringAsFixed(2).replaceAll('.', ',')}',
+                    style: TextStyle(
+                      fontSize: size.width * 0.031,
+                      fontWeight: FontWeight.w700,
+                      color: _accent,
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                    ),
+                  ),
+                ],
+              ),
+
+              if (hasChangePct) ...[
+                SizedBox(width: size.width * 0.03),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      '%${item.changePct.abs().toStringAsFixed(1).replaceAll('.', ',')}',
+                      '%',
                       style: TextStyle(
-                        fontSize: size.width * 0.03,
+                        fontSize: size.width * 0.024,
                         fontWeight: FontWeight.w600,
-                        color: changeColor,
+                        color: Colors.grey.shade600,
                       ),
                     ),
-                    Icon(
-                      item.isPositive
-                          ? Icons.arrow_drop_up_rounded
-                          : Icons.arrow_drop_down_rounded,
-                      size: size.width * 0.045,
-                      color: changeColor,
+                    SizedBox(height: size.height * 0.002),
+                    Text(
+                      item.changePct.toStringAsFixed(2).replaceAll('.', ','),
+                      style: TextStyle(
+                        fontSize: size.width * 0.031,
+                        fontWeight: FontWeight.w700,
+                        color: changeColor,
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                      ),
                     ),
                   ],
                 ),
               ],
             ],
           ),
-          SizedBox(width: size.width * 0.02),
-          Icon(Icons.chevron_right_rounded,
-              size: size.width * 0.055, color: Colors.grey.shade400),
+        ],
+      ),
+    );
+  }
+
+
+  Widget _priceBox({
+    required String label,
+    required String value,
+    required Color color,
+    required Size size,
+  }) {
+    return Container(
+      padding: EdgeInsets.all(size.width * 0.03),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(size.width * 0.025),
+        border: Border.all(
+          color: color.withOpacity(0.2),
+          width: 1.5,
+        ),
+      ),
+      child: Column(
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: size.width * 0.026,
+              fontWeight: FontWeight.w700,
+              color: color,
+              letterSpacing: 0.5,
+            ),
+          ),
+          SizedBox(height: size.height * 0.004),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: size.width * 0.04,
+              fontWeight: FontWeight.w900,
+              color: color,
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
+          ),
         ],
       ),
     );
@@ -362,10 +489,10 @@ class _LivePricesView extends StatelessWidget {
           horizontal: size.width * 0.05, vertical: size.height * 0.016),
       child: Row(
         children: [
-          Expanded(flex: 4, child: Text('Birim', style: style)),
+          Expanded(flex: 3, child: Text('Birim', style: style)),
           Expanded(flex: 3, child: Text('Alış', style: style, textAlign: TextAlign.center)),
           Expanded(flex: 3, child: Text('Satış', style: style, textAlign: TextAlign.center)),
-          Expanded(flex: 2, child: Text('Yüzde', style: style, textAlign: TextAlign.right)),
+          Expanded(flex: 2, child: Text('Fark', style: style, textAlign: TextAlign.right)),
         ],
       ),
     );
@@ -374,54 +501,61 @@ class _LivePricesView extends StatelessWidget {
   Widget _tableRow(PriceItem item, Size size) {
     final changeColor = item.isPositive ? _positive : _negative;
 
+
+    final spreadPercent = item.buy > 0 ? ((item.sell - item.buy) / item.buy) * 100 : 0.0;
+
     return Padding(
       padding: EdgeInsets.symmetric(
           horizontal: size.width * 0.05, vertical: size.height * 0.016),
       child: Row(
         children: [
           Expanded(
-            flex: 4,
-            child: Text(item.code,
-                style: TextStyle(
-                    fontSize: size.width * 0.032,
-                    fontWeight: FontWeight.w700,
-                    color: _primary)),
-          ),
-          Expanded(
             flex: 3,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(_formatNumber(item.buy),
-                    style: TextStyle(fontSize: size.width * 0.032)),
-                Icon(Icons.arrow_drop_up_rounded,
-                    size: size.width * 0.04, color: _positive),
-              ],
+            child: Text(
+              item.code,
+              style: TextStyle(
+                fontSize: size.width * 0.032,
+                fontWeight: FontWeight.w700,
+                color: _primary,
+              ),
             ),
           ),
           Expanded(
             flex: 3,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(_formatNumber(item.sell),
-                    style: TextStyle(fontSize: size.width * 0.032)),
-                Icon(Icons.arrow_drop_up_rounded,
-                    size: size.width * 0.04, color: _positive),
-              ],
+            child: Text(
+              _formatNumber(item.buy),
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: size.width * 0.032,
+                fontWeight: FontWeight.w600,
+                color: _positive,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
+            ),
+          ),
+          Expanded(
+            flex: 3,
+            child: Text(
+              _formatNumber(item.sell),
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: size.width * 0.032,
+                fontWeight: FontWeight.w600,
+                color: _negative,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
             ),
           ),
           Expanded(
             flex: 2,
             child: Text(
-              item.changePct == 0
-                  ? '%0'
-                  : '%${item.changePct.toStringAsFixed(1).replaceAll('.', ',')}',
+              spreadPercent.toStringAsFixed(2).replaceAll('.', ','),
               textAlign: TextAlign.right,
               style: TextStyle(
                 fontSize: size.width * 0.032,
                 fontWeight: FontWeight.w600,
-                color: item.changePct == 0 ? Colors.black54 : changeColor,
+                color: _accent,
+                fontFeatures: const [FontFeature.tabularFigures()],
               ),
             ),
           ),
