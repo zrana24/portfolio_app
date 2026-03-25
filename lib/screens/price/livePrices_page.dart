@@ -141,7 +141,6 @@ class _LivePricesView extends StatelessWidget {
         ),
         Row(
           children: [
-            _circularIcon(Icons.currency_lira, size),
             SizedBox(width: size.width * 0.025),
             GestureDetector(
               onTap: () =>
@@ -317,7 +316,7 @@ class _LivePricesView extends StatelessWidget {
                   ),
                   SizedBox(height: size.height * 0.002),
                   Text(
-                    _formatNumber(item.buy),
+                    '₺${_formatNumber(item.buy)}',
                     style: TextStyle(
                       fontSize: size.width * 0.034,
                       fontWeight: FontWeight.w700,
@@ -342,7 +341,7 @@ class _LivePricesView extends StatelessWidget {
                   ),
                   SizedBox(height: size.height * 0.002),
                   Text(
-                    _formatNumber(item.sell),
+                    '₺${_formatNumber(item.sell)}',
                     style: TextStyle(
                       fontSize: size.width * 0.034,
                       fontWeight: FontWeight.w700,
@@ -367,7 +366,7 @@ class _LivePricesView extends StatelessWidget {
                   ),
                   SizedBox(height: size.height * 0.002),
                   Text(
-                    '${spreadPercent.toStringAsFixed(2).replaceAll('.', ',')}',
+                    '%${spreadPercent.toStringAsFixed(2).replaceAll('.', ',')}',
                     style: TextStyle(
                       fontSize: size.width * 0.031,
                       fontWeight: FontWeight.w700,
@@ -384,7 +383,7 @@ class _LivePricesView extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      '%',
+                      'Değişim',
                       style: TextStyle(
                         fontSize: size.width * 0.024,
                         fontWeight: FontWeight.w600,
@@ -393,7 +392,7 @@ class _LivePricesView extends StatelessWidget {
                     ),
                     SizedBox(height: size.height * 0.002),
                     Text(
-                      item.changePct.toStringAsFixed(2).replaceAll('.', ','),
+                      '%${item.changePct.toStringAsFixed(2).replaceAll('.', ',')}',
                       style: TextStyle(
                         fontSize: size.width * 0.031,
                         fontWeight: FontWeight.w700,
@@ -527,7 +526,7 @@ class _LivePricesView extends StatelessWidget {
           Expanded(
             flex: 3,
             child: Text(
-              _formatNumber(item.buy),
+              '₺${_formatNumber(item.buy)}',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: size.width * 0.032,
@@ -540,7 +539,7 @@ class _LivePricesView extends StatelessWidget {
           Expanded(
             flex: 3,
             child: Text(
-              _formatNumber(item.sell),
+              '₺${_formatNumber(item.sell)}',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: size.width * 0.032,
@@ -553,7 +552,7 @@ class _LivePricesView extends StatelessWidget {
           Expanded(
             flex: 2,
             child: Text(
-              spreadPercent.toStringAsFixed(2).replaceAll('.', ','),
+              '%${spreadPercent.toStringAsFixed(2).replaceAll('.', ',')}',
               textAlign: TextAlign.right,
               style: TextStyle(
                 fontSize: size.width * 0.032,
