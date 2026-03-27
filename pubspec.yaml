@@ -46,6 +46,5 @@ flutter_native_splash:
 
 flutter:
   assets:
-    - assets/logo.png
-    - assets/playstore.png
+    - assets/
   uses-material-design: true

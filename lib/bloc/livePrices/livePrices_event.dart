@@ -1,6 +1,5 @@
 import 'package:equatable/equatable.dart';
 
-
 enum ViewMode { list, table }
 
 class PriceItem {

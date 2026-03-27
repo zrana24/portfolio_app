@@ -33,6 +33,8 @@ class _LivePricesView extends StatelessWidget {
     final size = MediaQuery.of(context).size;
     final bottomPadding = MediaQuery.of(context).padding.bottom;
     final topPadding = MediaQuery.of(context).padding.top;
+    final isTablet = size.width > 600;
+    final isDesktop = size.width > 900;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.dark,
@@ -69,19 +71,19 @@ class _LivePricesView extends StatelessWidget {
                       slivers: [
                         SliverPadding(
                           padding: EdgeInsets.symmetric(
-                              horizontal: size.width * 0.06),
+                              horizontal: isDesktop ? 80 : (isTablet ? 40 : size.width * 0.06)),
                           sliver: SliverList(
                             delegate: SliverChildListDelegate([
                               SizedBox(height: size.height * 0.006),
-                              _buildTopBar(context, state, size),
+                              _buildTopBar(context, state, size, isTablet, isDesktop),
                               SizedBox(height: size.height * 0.018),
-                              _buildUpdateRow(state, size),
+                              _buildUpdateRow(state, size, isTablet, isDesktop),
                               SizedBox(height: size.height * 0.022),
-                              _buildBody(context, state, size),
+                              _buildBody(context, state, size, isTablet, isDesktop),
                               SizedBox(height: size.height * 0.025),
                               if (state is LivePricesLoaded ||
                                   state is LivePricesError)
-                                _buildInfoCard(size),
+                                _buildInfoCard(size, isTablet, isDesktop),
                               SizedBox(
                                 height: size.height * 0.082 +
                                     size.height * 0.015 +
@@ -103,30 +105,36 @@ class _LivePricesView extends StatelessWidget {
     );
   }
 
-  Widget _buildBody(BuildContext context, LivePricesState state, Size size) {
-    if (state is LivePricesLoading) return _buildSkeletonLoading(size);
+  Widget _buildBody(BuildContext context, LivePricesState state, Size size, bool isTablet, bool isDesktop) {
+    if (state is LivePricesLoading) return _buildSkeletonLoading(size, isTablet, isDesktop);
 
     if (state is LivePricesError && !state.hasPreviousData) {
-      return _buildErrorState(context, state.message, size);
+      return _buildErrorState(context, state.message, size, isTablet, isDesktop);
     }
 
     final loaded = state is LivePricesLoaded
         ? state
         : (state is LivePricesError ? state.previousState : null);
 
-    if (loaded == null) return _buildSkeletonLoading(size);
+    if (loaded == null) return _buildSkeletonLoading(size, isTablet, isDesktop);
 
     final items = loaded.allItems;
-    if (items.isEmpty) return _buildEmptyState(size);
+    if (items.isEmpty) return _buildEmptyState(size, isTablet, isDesktop);
 
     return loaded.viewMode == ViewMode.list
-        ? _buildListView(items, size)
-        : _buildTableView(items, size);
+        ? _buildListView(items, size, isTablet, isDesktop)
+        : _buildTableView(items, size, isTablet, isDesktop);
   }
 
-  Widget _buildTopBar(BuildContext context, LivePricesState state, Size size) {
-    final isTable =
-        state is LivePricesLoaded && state.viewMode == ViewMode.table;
+  Widget _buildTopBar(BuildContext context, LivePricesState state, Size size, bool isTablet, bool isDesktop) {
+    bool isTable = true;
+
+    if (state is LivePricesLoaded) {
+      isTable = state.viewMode == ViewMode.table;
+    }
+
+    final fontSize = isDesktop ? 32.0 : (isTablet ? 28.0 : size.width * 0.07);
+    final buttonPadding = isDesktop ? 16.0 : (isTablet ? 14.0 : size.width * 0.04);
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -134,7 +142,7 @@ class _LivePricesView extends StatelessWidget {
         Text(
           'Canlı Fiyatlar',
           style: TextStyle(
-            fontSize: size.width * 0.07,
+            fontSize: fontSize,
             fontWeight: FontWeight.w900,
             color: const Color(0xFF1A1A1A),
           ),
@@ -147,12 +155,12 @@ class _LivePricesView extends StatelessWidget {
                   context.read<LivePricesBloc>().add(const ToggleViewMode()),
               child: Container(
                 padding: EdgeInsets.symmetric(
-                  horizontal: size.width * 0.04,
-                  vertical: size.width * 0.022,
+                  horizontal: buttonPadding,
+                  vertical: buttonPadding * 0.55,
                 ),
                 decoration: BoxDecoration(
                   color: _cardBg,
-                  borderRadius: BorderRadius.circular(size.width * 0.06),
+                  borderRadius: BorderRadius.circular(isDesktop ? 12 : (isTablet ? 10 : size.width * 0.06)),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -161,14 +169,14 @@ class _LivePricesView extends StatelessWidget {
                       isTable
                           ? Icons.format_list_bulleted_rounded
                           : Icons.table_rows_rounded,
-                      size: size.width * 0.045,
+                      size: isDesktop ? 20 : (isTablet ? 18 : size.width * 0.045),
                       color: Colors.black87,
                     ),
-                    SizedBox(width: size.width * 0.015),
+                    SizedBox(width: isDesktop ? 8 : (isTablet ? 6 : size.width * 0.015)),
                     Text(
                       isTable ? 'Liste' : 'Tablo',
                       style: TextStyle(
-                        fontSize: size.width * 0.035,
+                        fontSize: isDesktop ? 15 : (isTablet ? 14 : size.width * 0.035),
                         fontWeight: FontWeight.w600,
                         color: Colors.black87,
                       ),
@@ -183,7 +191,7 @@ class _LivePricesView extends StatelessWidget {
     );
   }
 
-  Widget _buildUpdateRow(LivePricesState state, Size size) {
+  Widget _buildUpdateRow(LivePricesState state, Size size, bool isTablet, bool isDesktop) {
     String timeStr = '--:--:--';
     bool isRefreshing = false;
 
@@ -192,22 +200,25 @@ class _LivePricesView extends StatelessWidget {
       isRefreshing = state is LivePricesRefreshing;
     }
 
+    final iconSize = isDesktop ? 18.0 : (isTablet ? 16.0 : size.width * 0.04);
+    final fontSize = isDesktop ? 16.0 : (isTablet ? 15.0 : size.width * 0.038);
+
     return Row(
       children: [
         isRefreshing
             ? SizedBox(
-          width: size.width * 0.04,
-          height: size.width * 0.04,
+          width: iconSize,
+          height: iconSize,
           child: CircularProgressIndicator(
               strokeWidth: 2, color: _accent),
         )
             : Icon(Icons.access_time_rounded,
-            size: size.width * 0.04, color: Colors.black54),
-        SizedBox(width: size.width * 0.015),
+            size: iconSize, color: Colors.black54),
+        SizedBox(width: isDesktop ? 8 : (isTablet ? 6 : size.width * 0.015)),
         Text(
           'Son Güncelleme',
           style: TextStyle(
-            fontSize: size.width * 0.038,
+            fontSize: fontSize,
             fontWeight: FontWeight.w600,
             color: Colors.black87,
           ),
@@ -216,7 +227,7 @@ class _LivePricesView extends StatelessWidget {
         Text(
           timeStr,
           style: TextStyle(
-            fontSize: size.width * 0.038,
+            fontSize: fontSize,
             fontWeight: FontWeight.w700,
             color: _accent,
             fontFeatures: const [FontFeature.tabularFigures()],
@@ -226,19 +237,19 @@ class _LivePricesView extends StatelessWidget {
     );
   }
 
-  Widget _buildListView(List<PriceItem> items, Size size) {
+  Widget _buildListView(List<PriceItem> items, Size size, bool isTablet, bool isDesktop) {
     return Column(
       children: items.asMap().entries.map((e) {
         final isLast = e.key == items.length - 1;
         return Padding(
           padding: EdgeInsets.only(bottom: isLast ? 0 : size.height * 0.012),
-          child: _listCard(e.value, size),
+          child: _listCard(e.value, size, isTablet, isDesktop),
         );
       }).toList(),
     );
   }
 
-  Widget _listCard(PriceItem item, Size size) {
+  Widget _listCard(PriceItem item, Size size, bool isTablet, bool isDesktop) {
     final changeColor = item.isPositive ? _positive : _negative;
     final abbr = item.code.length > 3 ? item.code.substring(0, 3) : item.code;
 
@@ -246,20 +257,24 @@ class _LivePricesView extends StatelessWidget {
 
     final hasChangePct = item.changePct != 0;
 
+    final horizontalPadding = isDesktop ? 24.0 : (isTablet ? 20.0 : size.width * 0.05);
+    final verticalPadding = isDesktop ? 16.0 : (isTablet ? 14.0 : size.height * 0.018);
+    final borderRadius = isDesktop ? 16.0 : (isTablet ? 14.0 : size.width * 0.05);
+
     return Container(
       padding: EdgeInsets.symmetric(
-        horizontal: size.width * 0.05,
-        vertical: size.height * 0.018,
+        horizontal: horizontalPadding,
+        vertical: verticalPadding,
       ),
       decoration: BoxDecoration(
         color: _cardBg,
-        borderRadius: BorderRadius.circular(size.width * 0.05),
+        borderRadius: BorderRadius.circular(borderRadius),
       ),
       child: Row(
         children: [
           Container(
-            width: size.width * 0.11,
-            height: size.width * 0.11,
+            width: isDesktop ? 48 : (isTablet ? 44 : size.width * 0.11),
+            height: isDesktop ? 48 : (isTablet ? 44 : size.width * 0.11),
             decoration: BoxDecoration(
               color: _primary.withOpacity(0.08),
               shape: BoxShape.circle,
@@ -268,31 +283,31 @@ class _LivePricesView extends StatelessWidget {
               child: Text(
                 abbr,
                 style: TextStyle(
-                  fontSize: size.width * 0.028,
+                  fontSize: isDesktop ? 14 : (isTablet ? 12 : size.width * 0.028),
                   fontWeight: FontWeight.w800,
                   color: _primary,
                 ),
               ),
             ),
           ),
-          SizedBox(width: size.width * 0.035),
+          SizedBox(width: isDesktop ? 16 : (isTablet ? 14 : size.width * 0.035)),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  item.code,
+                  item.name,
                   style: TextStyle(
-                    fontSize: size.width * 0.042,
+                    fontSize: isDesktop ? 18 : (isTablet ? 16 : size.width * 0.042),
                     fontWeight: FontWeight.w700,
                     color: const Color(0xFF1A1A1A),
                   ),
                 ),
                 SizedBox(height: size.height * 0.003),
                 Text(
-                  item.name,
+                  item.code,
                   style: TextStyle(
-                    fontSize: size.width * 0.03,
+                    fontSize: isDesktop ? 13 : (isTablet ? 12 : size.width * 0.03),
                     color: Colors.grey,
                   ),
                 ),
@@ -303,110 +318,76 @@ class _LivePricesView extends StatelessWidget {
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    'Alış',
-                    style: TextStyle(
-                      fontSize: size.width * 0.024,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.grey.shade600,
-                    ),
-                  ),
-                  SizedBox(height: size.height * 0.002),
-                  Text(
-                    '₺${_formatNumber(item.buy)}',
-                    style: TextStyle(
-                      fontSize: size.width * 0.034,
-                      fontWeight: FontWeight.w700,
-                      color: _positive,
-                      fontFeatures: const [FontFeature.tabularFigures()],
-                    ),
-                  ),
-                ],
+              _priceColumn(
+                'Alış',
+                '₺${_formatNumber(item.buy)}',
+                _positive,
+                size,
+                isTablet,
+                isDesktop,
               ),
-              SizedBox(width: size.width * 0.03),
+              SizedBox(width: isDesktop ? 16 : (isTablet ? 14 : size.width * 0.03)),
 
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    'Satış',
-                    style: TextStyle(
-                      fontSize: size.width * 0.024,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.grey.shade600,
-                    ),
-                  ),
-                  SizedBox(height: size.height * 0.002),
-                  Text(
-                    '₺${_formatNumber(item.sell)}',
-                    style: TextStyle(
-                      fontSize: size.width * 0.034,
-                      fontWeight: FontWeight.w700,
-                      color: _negative,
-                      fontFeatures: const [FontFeature.tabularFigures()],
-                    ),
-                  ),
-                ],
+              _priceColumn(
+                'Satış',
+                '₺${_formatNumber(item.sell)}',
+                _negative,
+                size,
+                isTablet,
+                isDesktop,
               ),
-              SizedBox(width: size.width * 0.03),
+              SizedBox(width: isDesktop ? 16 : (isTablet ? 14 : size.width * 0.03)),
 
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    'Fark',
-                    style: TextStyle(
-                      fontSize: size.width * 0.024,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.grey.shade600,
-                    ),
-                  ),
-                  SizedBox(height: size.height * 0.002),
-                  Text(
-                    '%${spreadPercent.toStringAsFixed(2).replaceAll('.', ',')}',
-                    style: TextStyle(
-                      fontSize: size.width * 0.031,
-                      fontWeight: FontWeight.w700,
-                      color: _accent,
-                      fontFeatures: const [FontFeature.tabularFigures()],
-                    ),
-                  ),
-                ],
+              _priceColumn(
+                'Fark',
+                '%${spreadPercent.toStringAsFixed(2).replaceAll('.', ',')}',
+                _accent,
+                size,
+                isTablet,
+                isDesktop,
               ),
 
               if (hasChangePct) ...[
-                SizedBox(width: size.width * 0.03),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      'Değişim',
-                      style: TextStyle(
-                        fontSize: size.width * 0.024,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.grey.shade600,
-                      ),
-                    ),
-                    SizedBox(height: size.height * 0.002),
-                    Text(
-                      '%${item.changePct.toStringAsFixed(2).replaceAll('.', ',')}',
-                      style: TextStyle(
-                        fontSize: size.width * 0.031,
-                        fontWeight: FontWeight.w700,
-                        color: changeColor,
-                        fontFeatures: const [FontFeature.tabularFigures()],
-                      ),
-                    ),
-                  ],
+                SizedBox(width: isDesktop ? 16 : (isTablet ? 14 : size.width * 0.03)),
+                _priceColumn(
+                  'Değişim',
+                  '%${item.changePct.toStringAsFixed(2).replaceAll('.', ',')}',
+                  changeColor,
+                  size,
+                  isTablet,
+                  isDesktop,
                 ),
               ],
             ],
           ),
         ],
       ),
+    );
+  }
+
+  Widget _priceColumn(String label, String value, Color color, Size size, bool isTablet, bool isDesktop) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: isDesktop ? 11 : (isTablet ? 10 : size.width * 0.024),
+            fontWeight: FontWeight.w600,
+            color: Colors.grey.shade600,
+          ),
+        ),
+        SizedBox(height: size.height * 0.002),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: isDesktop ? 15 : (isTablet ? 14 : size.width * 0.034),
+            fontWeight: FontWeight.w700,
+            color: color,
+            fontFeatures: const [FontFeature.tabularFigures()],
+          ),
+        ),
+      ],
     );
   }
 
@@ -452,21 +433,23 @@ class _LivePricesView extends StatelessWidget {
     );
   }
 
-  Widget _buildTableView(List<PriceItem> items, Size size) {
+  Widget _buildTableView(List<PriceItem> items, Size size, bool isTablet, bool isDesktop) {
+    final borderRadius = isDesktop ? 16.0 : (isTablet ? 14.0 : size.width * 0.05);
+
     return Container(
       decoration: BoxDecoration(
         color: _cardBg,
-        borderRadius: BorderRadius.circular(size.width * 0.05),
+        borderRadius: BorderRadius.circular(borderRadius),
       ),
       child: Column(
         children: [
-          _tableHeader(size),
+          _tableHeader(size, isTablet, isDesktop),
           const Divider(height: 1, thickness: 1, color: Color(0xFFE5E7EB)),
           ...items.asMap().entries.map((entry) {
             final isLast = entry.key == items.length - 1;
             return Column(
               children: [
-                _tableRow(entry.value, size),
+                _tableRow(entry.value, size, isTablet, isDesktop),
                 if (!isLast)
                   const Divider(
                     height: 1,
@@ -483,14 +466,18 @@ class _LivePricesView extends StatelessWidget {
     );
   }
 
-  Widget _tableHeader(Size size) {
+  Widget _tableHeader(Size size, bool isTablet, bool isDesktop) {
+    final fontSize = isDesktop ? 14.0 : (isTablet ? 13.0 : size.width * 0.032);
+    final horizontalPadding = isDesktop ? 24.0 : (isTablet ? 20.0 : size.width * 0.05);
+    final verticalPadding = isDesktop ? 16.0 : (isTablet ? 14.0 : size.height * 0.016);
+
     final style = TextStyle(
-        fontSize: size.width * 0.032,
+        fontSize: fontSize,
         fontWeight: FontWeight.w700,
         color: Colors.grey);
     return Padding(
       padding: EdgeInsets.symmetric(
-          horizontal: size.width * 0.05, vertical: size.height * 0.016),
+          horizontal: horizontalPadding, vertical: verticalPadding),
       child: Row(
         children: [
           Expanded(flex: 3, child: Text('Birim', style: style)),
@@ -502,25 +489,43 @@ class _LivePricesView extends StatelessWidget {
     );
   }
 
-  Widget _tableRow(PriceItem item, Size size) {
+  Widget _tableRow(PriceItem item, Size size, bool isTablet, bool isDesktop) {
     final changeColor = item.isPositive ? _positive : _negative;
 
     final spreadPercent = item.buy > 0 ? ((item.sell - item.buy) / item.buy) * 100 : 0.0;
 
+    final fontSize = isDesktop ? 14.0 : (isTablet ? 13.0 : size.width * 0.032);
+    final horizontalPadding = isDesktop ? 24.0 : (isTablet ? 20.0 : size.width * 0.05);
+    final verticalPadding = isDesktop ? 16.0 : (isTablet ? 14.0 : size.height * 0.016);
+
     return Padding(
       padding: EdgeInsets.symmetric(
-          horizontal: size.width * 0.05, vertical: size.height * 0.016),
+          horizontal: horizontalPadding, vertical: verticalPadding),
       child: Row(
         children: [
           Expanded(
             flex: 3,
-            child: Text(
-              item.code,
-              style: TextStyle(
-                fontSize: size.width * 0.032,
-                fontWeight: FontWeight.w700,
-                color: _primary,
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  item.name,
+                  style: TextStyle(
+                    fontSize: fontSize,
+                    fontWeight: FontWeight.w700,
+                    color: _primary,
+                  ),
+                ),
+                SizedBox(height: 2),
+                Text(
+                  item.code,
+                  style: TextStyle(
+                    fontSize: fontSize * 0.85,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.grey,
+                  ),
+                ),
+              ],
             ),
           ),
           Expanded(
@@ -529,7 +534,7 @@ class _LivePricesView extends StatelessWidget {
               '₺${_formatNumber(item.buy)}',
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: size.width * 0.032,
+                fontSize: fontSize,
                 fontWeight: FontWeight.w600,
                 color: _positive,
                 fontFeatures: const [FontFeature.tabularFigures()],
@@ -542,7 +547,7 @@ class _LivePricesView extends StatelessWidget {
               '₺${_formatNumber(item.sell)}',
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: size.width * 0.032,
+                fontSize: fontSize,
                 fontWeight: FontWeight.w600,
                 color: _negative,
                 fontFeatures: const [FontFeature.tabularFigures()],
@@ -555,7 +560,7 @@ class _LivePricesView extends StatelessWidget {
               '%${spreadPercent.toStringAsFixed(2).replaceAll('.', ',')}',
               textAlign: TextAlign.right,
               style: TextStyle(
-                fontSize: size.width * 0.032,
+                fontSize: fontSize,
                 fontWeight: FontWeight.w600,
                 color: _accent,
                 fontFeatures: const [FontFeature.tabularFigures()],
@@ -567,7 +572,10 @@ class _LivePricesView extends StatelessWidget {
     );
   }
 
-  Widget _buildSkeletonLoading(Size size) {
+  Widget _buildSkeletonLoading(Size size, bool isTablet, bool isDesktop) {
+    final borderRadius = isDesktop ? 16.0 : (isTablet ? 14.0 : size.width * 0.05);
+    final height = isDesktop ? 80.0 : (isTablet ? 75.0 : size.height * 0.09);
+
     return Column(
       children: List.generate(
         5,
@@ -575,15 +583,19 @@ class _LivePricesView extends StatelessWidget {
           padding: EdgeInsets.only(bottom: size.height * 0.012),
           child: _ShimmerBox(
             width: double.infinity,
-            height: size.height * 0.09,
-            borderRadius: size.width * 0.05,
+            height: height,
+            borderRadius: borderRadius,
           ),
         ),
       ),
     );
   }
 
-  Widget _buildErrorState(BuildContext context, String message, Size size) {
+  Widget _buildErrorState(BuildContext context, String message, Size size, bool isTablet, bool isDesktop) {
+    final iconSize = isDesktop ? 60.0 : (isTablet ? 55.0 : size.width * 0.15);
+    final fontSize = isDesktop ? 18.0 : (isTablet ? 16.0 : size.width * 0.04);
+    final borderRadius = isDesktop ? 12.0 : (isTablet ? 10.0 : size.width * 0.06);
+
     return Center(
       child: Padding(
         padding: EdgeInsets.symmetric(vertical: size.height * 0.06),
@@ -591,11 +603,11 @@ class _LivePricesView extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(Icons.wifi_off_rounded,
-                size: size.width * 0.15, color: Colors.grey.shade300),
+                size: iconSize, color: Colors.grey.shade300),
             SizedBox(height: size.height * 0.02),
             Text('Veriler yüklenemedi',
                 style: TextStyle(
-                    fontSize: size.width * 0.04,
+                    fontSize: fontSize,
                     fontWeight: FontWeight.w600,
                     color: Colors.black54)),
             SizedBox(height: size.height * 0.025),
@@ -606,10 +618,10 @@ class _LivePricesView extends StatelessWidget {
                 backgroundColor: _primary,
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(size.width * 0.06)),
+                    borderRadius: BorderRadius.circular(borderRadius)),
                 padding: EdgeInsets.symmetric(
-                    horizontal: size.width * 0.08,
-                    vertical: size.height * 0.018),
+                    horizontal: isDesktop ? 32 : (isTablet ? 28 : size.width * 0.08),
+                    vertical: isDesktop ? 14 : (isTablet ? 12 : size.height * 0.018)),
               ),
               child: const Text('Tekrar Dene'),
             ),
@@ -619,26 +631,30 @@ class _LivePricesView extends StatelessWidget {
     );
   }
 
-  Widget _buildEmptyState(Size size) {
+  Widget _buildEmptyState(Size size, bool isTablet, bool isDesktop) {
+    final circleSize = isDesktop ? 100.0 : (isTablet ? 90.0 : size.width * 0.24);
+    final iconSize = isDesktop ? 50.0 : (isTablet ? 45.0 : size.width * 0.12);
+    final titleSize = isDesktop ? 22.0 : (isTablet ? 20.0 : size.width * 0.05);
+
     return Center(
       child: Padding(
         padding: EdgeInsets.symmetric(
           vertical: size.height * 0.06,
-          horizontal: size.width * 0.08,
+          horizontal: isDesktop ? 100 : (isTablet ? 80 : size.width * 0.08),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: size.width * 0.24,
-              height: size.width * 0.24,
+              width: circleSize,
+              height: circleSize,
               decoration: BoxDecoration(
                 color: _cardBg,
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 Icons.trending_up_rounded,
-                size: size.width * 0.12,
+                size: iconSize,
                 color: Colors.grey.shade400,
               ),
             ),
@@ -648,7 +664,7 @@ class _LivePricesView extends StatelessWidget {
               'Henüz Canlı Fiyat Verisi Yok',
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: size.width * 0.05,
+                fontSize: titleSize,
                 fontWeight: FontWeight.w700,
                 color: const Color(0xFF1A1A1A),
               ),
@@ -660,13 +676,20 @@ class _LivePricesView extends StatelessWidget {
     );
   }
 
-  Widget _buildInfoCard(Size size) {
+  Widget _buildInfoCard(Size size, bool isTablet, bool isDesktop) {
+    final padding = isDesktop ? 24.0 : (isTablet ? 20.0 : size.width * 0.05);
+    final borderRadius = isDesktop ? 16.0 : (isTablet ? 14.0 : size.width * 0.05);
+    final circleSize = isDesktop ? 32.0 : (isTablet ? 30.0 : size.width * 0.07);
+    final iconSize = isDesktop ? 18.0 : (isTablet ? 16.0 : size.width * 0.04);
+    final titleSize = isDesktop ? 18.0 : (isTablet ? 16.0 : size.width * 0.04);
+    final textSize = isDesktop ? 14.0 : (isTablet ? 13.0 : size.width * 0.03);
+
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.all(size.width * 0.05),
+      padding: EdgeInsets.all(padding),
       decoration: BoxDecoration(
         color: const Color(0xFFFFF8EE),
-        borderRadius: BorderRadius.circular(size.width * 0.05),
+        borderRadius: BorderRadius.circular(borderRadius),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -674,17 +697,17 @@ class _LivePricesView extends StatelessWidget {
           Row(
             children: [
               Container(
-                width: size.width * 0.07,
-                height: size.width * 0.07,
+                width: circleSize,
+                height: circleSize,
                 decoration: const BoxDecoration(
                     color: _accent, shape: BoxShape.circle),
                 child: Icon(Icons.info_outline_rounded,
-                    size: size.width * 0.04, color: Colors.white),
+                    size: iconSize, color: Colors.white),
               ),
-              SizedBox(width: size.width * 0.03),
+              SizedBox(width: isDesktop ? 12 : (isTablet ? 10 : size.width * 0.03)),
               Text('Veri Kaynağı',
                   style: TextStyle(
-                      fontSize: size.width * 0.04,
+                      fontSize: titleSize,
                       fontWeight: FontWeight.w700,
                       color: const Color(0xFF1A1A1A))),
             ],
@@ -693,7 +716,7 @@ class _LivePricesView extends StatelessWidget {
           Text(
             'Bu sayfada görüntülenen fiyat verileri Meta Data kaynaklarından üretilerek yayınlanmaktadır ve sadece bilgilendirme amaçlıdır. Veriler izin alınmadan paylaşılamaz.',
             style: TextStyle(
-                fontSize: size.width * 0.03, color: Colors.black54, height: 1.5),
+                fontSize: textSize, color: Colors.black54, height: 1.5),
           ),
         ],
       ),

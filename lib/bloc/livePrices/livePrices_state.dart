@@ -25,7 +25,7 @@ class LivePricesLoaded extends LivePricesState {
   const LivePricesLoaded({
     required this.allItems,
     required this.lastUpdated,
-    this.viewMode = ViewMode.list,
+    this.viewMode = ViewMode.table,
     this.searchQuery = '',
   });
 

@@ -34,19 +34,12 @@ class _CebeciAppBarState extends State<CebeciAppBar> {
 
     return Container(
       color: Colors.white,
-      child: Container(
-        height: size.height * 0.065,
-        padding: EdgeInsets.symmetric(
-          horizontal: size.width * 0.04,
-          vertical: size.height * 0.008,
-        ),
-        child: Center(
-          child: Image.asset(
-            'assets/logo.png',
-            height: size.height * 0.04,
-            fit: BoxFit.contain,
-          ),
-        ),
+      height: size.height * 0.065,
+      width: double.infinity,
+      child: Image.asset(
+        'assets/nav_img.jpg',
+        fit: BoxFit.contain,
+        width: double.infinity,
       ),
     );
   }
