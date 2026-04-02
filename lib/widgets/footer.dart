@@ -35,7 +35,7 @@ class CebeciBottomNav extends StatelessWidget {
     ];
 
     return Container(
-      color: Colors.transparent, // Arka plan şeffaf
+      color: Colors.transparent,
       child: SafeArea(
         top: false,
         child: Padding(

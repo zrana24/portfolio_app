@@ -6,21 +6,57 @@ import '../../bloc/livePrices/livePrices_event.dart';
 import '../../bloc/livePrices/livePrices_state.dart';
 import '../../widgets/nav.dart';
 import '../../widgets/footer.dart';
+import '../../widgets/ads_banner_widget.dart';
 
-class LivePricesPage extends StatelessWidget {
+class LivePricesPage extends StatefulWidget {
   const LivePricesPage({super.key});
+
+  @override
+  State<LivePricesPage> createState() => _LivePricesPageState();
+}
+
+class _LivePricesPageState extends State<LivePricesPage> {
+  bool _showTopAd = false;
+  bool _showBottomAd = false;
+
+  void _onTopAdLoadStateChanged(bool isLoaded) {
+    debugPrint('Üst Reklam yükleme durumu değişti: $isLoaded');
+    if (mounted) {
+      setState(() {
+        _showTopAd = isLoaded;
+      });
+    }
+  }
+
+  void _onBottomAdLoadStateChanged(bool isLoaded) {
+    debugPrint('Alt Reklam yükleme durumu değişti: $isLoaded');
+    if (mounted) {
+      setState(() {
+        _showBottomAd = isLoaded;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (_) => LivePricesBloc()..add(const LoadLivePrices()),
-      child: const _LivePricesView(),
+      child: _LivePricesView(
+        onTopAdLoadStateChanged: _onTopAdLoadStateChanged,
+        onBottomAdLoadStateChanged: _onBottomAdLoadStateChanged,
+      ),
     );
   }
 }
 
 class _LivePricesView extends StatelessWidget {
-  const _LivePricesView();
+  final Function(bool) onTopAdLoadStateChanged;
+  final Function(bool) onBottomAdLoadStateChanged;
+
+  const _LivePricesView({
+    required this.onTopAdLoadStateChanged,
+    required this.onBottomAdLoadStateChanged,
+  });
 
   static const Color _primary  = Color(0xFF1A0B52);
   static const Color _accent   = Color(0xFFE8A020);
@@ -32,7 +68,6 @@ class _LivePricesView extends StatelessWidget {
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final bottomPadding = MediaQuery.of(context).padding.bottom;
-    final topPadding = MediaQuery.of(context).padding.top;
     final isTablet = size.width > 600;
     final isDesktop = size.width > 900;
 
@@ -78,17 +113,30 @@ class _LivePricesView extends StatelessWidget {
                               _buildTopBar(context, state, size, isTablet, isDesktop),
                               SizedBox(height: size.height * 0.018),
                               _buildUpdateRow(state, size, isTablet, isDesktop),
-                              SizedBox(height: size.height * 0.022),
+
+                              SizedBox(height: size.height * 0.012),
+                              AdsBannerWidget(
+                                onAdLoadStateChanged: onTopAdLoadStateChanged,
+                              ),
+                              SizedBox(height: size.height * 0.012),
+
                               _buildBody(context, state, size, isTablet, isDesktop),
-                              SizedBox(height: size.height * 0.025),
+                              SizedBox(height: size.height * 0.018),
+
                               if (state is LivePricesLoaded ||
                                   state is LivePricesError)
                                 _buildInfoCard(size, isTablet, isDesktop),
+
+                              SizedBox(height: size.height * 0.012),
+                              AdsBannerWidget(
+                                onAdLoadStateChanged: onBottomAdLoadStateChanged,
+                              ),
+
                               SizedBox(
                                 height: size.height * 0.082 +
                                     size.height * 0.015 +
                                     bottomPadding +
-                                    size.height * 0.02,
+                                    size.height * 0.02 + 30,
                               ),
                             ]),
                           ),
@@ -193,11 +241,9 @@ class _LivePricesView extends StatelessWidget {
 
   Widget _buildUpdateRow(LivePricesState state, Size size, bool isTablet, bool isDesktop) {
     String timeStr = '--:--:--';
-    bool isRefreshing = false;
 
     if (state is LivePricesLoaded) {
       timeStr = _formatTime(state.lastUpdated);
-      isRefreshing = state is LivePricesRefreshing;
     }
 
     final iconSize = isDesktop ? 18.0 : (isTablet ? 16.0 : size.width * 0.04);
@@ -205,14 +251,7 @@ class _LivePricesView extends StatelessWidget {
 
     return Row(
       children: [
-        isRefreshing
-            ? SizedBox(
-          width: iconSize,
-          height: iconSize,
-          child: CircularProgressIndicator(
-              strokeWidth: 2, color: _accent),
-        )
-            : Icon(Icons.access_time_rounded,
+        Icon(Icons.access_time_rounded,
             size: iconSize, color: Colors.black54),
         SizedBox(width: isDesktop ? 8 : (isTablet ? 6 : size.width * 0.015)),
         Text(
@@ -388,48 +427,6 @@ class _LivePricesView extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-
-  Widget _priceBox({
-    required String label,
-    required String value,
-    required Color color,
-    required Size size,
-  }) {
-    return Container(
-      padding: EdgeInsets.all(size.width * 0.03),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
-        borderRadius: BorderRadius.circular(size.width * 0.025),
-        border: Border.all(
-          color: color.withOpacity(0.2),
-          width: 1.5,
-        ),
-      ),
-      child: Column(
-        children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: size.width * 0.026,
-              fontWeight: FontWeight.w700,
-              color: color,
-              letterSpacing: 0.5,
-            ),
-          ),
-          SizedBox(height: size.height * 0.004),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: size.width * 0.04,
-              fontWeight: FontWeight.w900,
-              color: color,
-              fontFeatures: const [FontFeature.tabularFigures()],
-            ),
-          ),
-        ],
-      ),
     );
   }
 
@@ -720,15 +717,6 @@ class _LivePricesView extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _circularIcon(IconData icon, Size size) {
-    return Container(
-      padding: EdgeInsets.all(size.width * 0.025),
-      decoration:
-      BoxDecoration(color: Colors.grey.shade100, shape: BoxShape.circle),
-      child: Icon(icon, size: size.width * 0.045, color: Colors.black87),
     );
   }
 

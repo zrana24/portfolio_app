@@ -4,6 +4,7 @@ import '../../services/news_service.dart';
 import '../../widgets/nav.dart';
 import '../../widgets/footer.dart';
 import '../../widgets/news_shimmer.dart';
+import '../../widgets/ads_banner_widget.dart';
 
 class NewsDetailPage extends StatefulWidget {
   final NewsArticle? article;
@@ -82,7 +83,6 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
 
       final uri = Uri.parse(url);
 
-      // canLaunchUrl kontrolünü kaldır, direkt launch et
       await launchUrl(
         uri,
         mode: LaunchMode.externalApplication,
@@ -132,19 +132,16 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
       backgroundColor: Colors.white,
       extendBody: true,
       bottomNavigationBar: const CebeciBottomNav(currentIndex: 1),
-      body: SafeArea(
-        bottom: false,
-        child: Column(
-          children: [
-            _buildAppBar(context, size, null),
-            const Expanded(
-              child: SingleChildScrollView(
-                physics: BouncingScrollPhysics(),
-                child: NewsDetailShimmer(),
-              ),
+      body: Column(
+        children: [
+          _buildAppBar(context, size, null),
+          const Expanded(
+            child: SingleChildScrollView(
+              physics: BouncingScrollPhysics(),
+              child: NewsDetailShimmer(),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -156,53 +153,50 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
       backgroundColor: Colors.white,
       extendBody: true,
       bottomNavigationBar: const CebeciBottomNav(currentIndex: 1),
-      body: SafeArea(
-        bottom: false,
-        child: Column(
-          children: [
-            _buildAppBar(context, size, null),
-            Expanded(
-              child: Center(
-                child: Padding(
-                  padding: EdgeInsets.all(size.width * 0.08),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.error_outline_rounded,
-                          size: size.width * 0.15,
-                          color: Colors.grey.shade300),
-                      SizedBox(height: size.height * 0.02),
-                      Text(
-                        message,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: size.width * 0.04,
-                          color: Colors.black54,
+      body: Column(
+        children: [
+          _buildAppBar(context, size, null),
+          Expanded(
+            child: Center(
+              child: Padding(
+                padding: EdgeInsets.all(size.width * 0.08),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.error_outline_rounded,
+                        size: size.width * 0.15,
+                        color: Colors.grey.shade300),
+                    SizedBox(height: size.height * 0.02),
+                    Text(
+                      message,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: size.width * 0.04,
+                        color: Colors.black54,
+                      ),
+                    ),
+                    SizedBox(height: size.height * 0.025),
+                    ElevatedButton(
+                      onPressed: () => _loadNewsDetail(),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: _primary,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(size.width * 0.06),
+                        ),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: size.width * 0.08,
+                          vertical: size.height * 0.015,
                         ),
                       ),
-                      SizedBox(height: size.height * 0.025),
-                      ElevatedButton(
-                        onPressed: () => _loadNewsDetail(),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: _primary,
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(size.width * 0.06),
-                          ),
-                          padding: EdgeInsets.symmetric(
-                            horizontal: size.width * 0.08,
-                            vertical: size.height * 0.015,
-                          ),
-                        ),
-                        child: const Text('Tekrar Dene'),
-                      ),
-                    ],
-                  ),
+                      child: const Text('Tekrar Dene'),
+                    ),
+                  ],
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -211,88 +205,84 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
     final hasSourceUrl = article?.sourceUrl != null &&
         article!.sourceUrl!.isNotEmpty;
 
-    return Container(
-      color: Colors.white,
-      child: SafeArea(
-        bottom: false,
-        child: Padding(
-          padding: EdgeInsets.symmetric(
-              horizontal: size.width * 0.04, vertical: size.height * 0.012),
-          child: Row(
-            children: [
-              // Geri butonu
+    return SafeArea(
+      bottom: false,
+      child: Container(
+        height: size.height * 0.060,
+        width: double.infinity,
+        color: Colors.white,
+        padding: EdgeInsets.symmetric(horizontal: size.width * 0.04),
+        child: Row(
+          children: [
+            GestureDetector(
+              onTap: () => Navigator.pop(context),
+              child: Container(
+                padding: EdgeInsets.all(size.width * 0.02),
+                decoration: const BoxDecoration(
+                  color: _cardBg,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Icons.arrow_back_ios_new_rounded,
+                    size: size.width * 0.04, color: Colors.black87),
+              ),
+            ),
+
+            Expanded(
+              child: Text(
+                'Haber Detay',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: size.width * 0.04,
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFF1A1A1A),
+                ),
+              ),
+            ),
+
+            if (hasSourceUrl)
               GestureDetector(
-                onTap: () => Navigator.pop(context),
+                onTap: () {
+                  print('🖱️ Source button tapped!');
+                  print('🔗 URL: ${article.sourceUrl}');
+                  _launchURL(article.sourceUrl!);
+                },
                 child: Container(
-                  padding: EdgeInsets.all(size.width * 0.025),
-                  decoration: const BoxDecoration(
-                    color: _cardBg,
-                    shape: BoxShape.circle,
+                  padding: EdgeInsets.symmetric(
+                    horizontal: size.width * 0.025,
+                    vertical: size.width * 0.015,
                   ),
-                  child: Icon(Icons.arrow_back_ios_new_rounded,
-                      size: size.width * 0.045, color: Colors.black87),
-                ),
-              ),
-
-              // Başlık
-              Expanded(
-                child: Text(
-                  'Haber Detay',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: size.width * 0.045,
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFF1A1A1A),
-                  ),
-                ),
-              ),
-
-              // Kaynak butonu - Sağ üst (ikon + text)
-              if (hasSourceUrl)
-                GestureDetector(
-                  onTap: () {
-                    print('🖱️ Source button tapped!');
-                    print('🔗 URL: ${article.sourceUrl}');
-                    _launchURL(article.sourceUrl!);
-                  },
-                  child: Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: size.width * 0.03,
-                      vertical: size.width * 0.02,
+                  decoration: BoxDecoration(
+                    color: _accent.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(size.width * 0.05),
+                    border: Border.all(
+                      color: _accent.withOpacity(0.4),
+                      width: 1.5,
                     ),
-                    decoration: BoxDecoration(
-                      color: _accent.withOpacity(0.15),
-                      borderRadius: BorderRadius.circular(size.width * 0.06),
-                      border: Border.all(
-                        color: _accent.withOpacity(0.4),
-                        width: 1.5,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.open_in_new_rounded,
+                        size: size.width * 0.035,
+                        color: _accent,
                       ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.open_in_new_rounded,
-                          size: size.width * 0.04,
+                      SizedBox(width: size.width * 0.01),
+                      Text(
+                        'Kaynak',
+                        style: TextStyle(
+                          fontSize: size.width * 0.028,
+                          fontWeight: FontWeight.w600,
                           color: _accent,
                         ),
-                        SizedBox(width: size.width * 0.015),
-                        Text(
-                          'Kaynağı Görüntüle',
-                          style: TextStyle(
-                            fontSize: size.width * 0.032,
-                            fontWeight: FontWeight.w600,
-                            color: _accent,
-                          ),
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                )
-              else
-                SizedBox(width: size.width * 0.01),
-            ],
-          ),
+                ),
+              )
+            else
+              SizedBox(width: size.width * 0.01),
+          ],
         ),
       ),
     );
@@ -302,7 +292,7 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
     final size = MediaQuery.of(context).size;
     final bottomPadding = MediaQuery.of(context).padding.bottom;
 
-    final related = <NewsArticle>[];
+    final List<NewsArticle> related = [];
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -311,6 +301,7 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
       body: Column(
         children: [
           _buildAppBar(context, size, article),
+
           Expanded(
             child: SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
@@ -320,7 +311,10 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
                 children: [
                   SizedBox(height: size.height * 0.015),
 
-                  // Kategori badge
+                  AdsBannerWidget(),
+
+                  SizedBox(height: size.height * 0.012),
+
                   Container(
                     padding: EdgeInsets.symmetric(
                       horizontal: size.width * 0.03,
@@ -342,7 +336,6 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
                   ),
                   SizedBox(height: size.height * 0.012),
 
-                  // Başlık
                   Text(
                     article.title,
                     style: TextStyle(
@@ -354,7 +347,6 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
                   ),
                   SizedBox(height: size.height * 0.012),
 
-                  // Meta bilgiler
                   Row(
                     children: [
                       Icon(Icons.access_time_rounded,
@@ -382,7 +374,6 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
                   ),
                   SizedBox(height: size.height * 0.02),
 
-                  // Görsel
                   Container(
                     width: double.infinity,
                     height: size.height * 0.25,
@@ -406,7 +397,6 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
                   ),
                   SizedBox(height: size.height * 0.02),
 
-                  // Kaynak bilgisi
                   if (article.sourceName.isNotEmpty)
                     Padding(
                       padding: EdgeInsets.only(bottom: size.height * 0.015),
@@ -429,7 +419,6 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
                       ),
                     ),
 
-                  // Etiketler
                   if (article.tags.isNotEmpty)
                     Padding(
                       padding: EdgeInsets.only(bottom: size.height * 0.025),
@@ -464,56 +453,6 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
                       ),
                     ),
 
-                  // Özet (eğer content yoksa göster)
-                  if (article.content.isEmpty && article.summary.isNotEmpty)
-                    Padding(
-                      padding: EdgeInsets.only(bottom: size.height * 0.02),
-                      child: Container(
-                        padding: EdgeInsets.all(size.width * 0.04),
-                        decoration: BoxDecoration(
-                          color: _cardBg,
-                          borderRadius: BorderRadius.circular(size.width * 0.03),
-                          border: Border.all(
-                            color: Colors.grey.shade300,
-                            width: 1,
-                          ),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Icon(
-                                  Icons.article_rounded,
-                                  size: size.width * 0.04,
-                                  color: _accent,
-                                ),
-                                SizedBox(width: size.width * 0.02),
-                                Text(
-                                  'Özet',
-                                  style: TextStyle(
-                                    fontSize: size.width * 0.036,
-                                    fontWeight: FontWeight.w700,
-                                    color: const Color(0xFF1A1A1A),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            SizedBox(height: size.height * 0.01),
-                            Text(
-                              article.summary,
-                              style: TextStyle(
-                                fontSize: size.width * 0.034,
-                                color: const Color(0xFF555555),
-                                height: 1.5,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-
-                  // İÇERİK - API'den gelen TAM METIN (karakter sınırlaması YOK)
                   if (article.content.isNotEmpty)
                     Container(
                       width: double.infinity,
@@ -531,7 +470,10 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
 
                   SizedBox(height: size.height * 0.035),
 
-                  // İlgili haberler (şimdilik boş)
+                  AdsBannerWidget(),
+
+                  SizedBox(height: size.height * 0.035),
+
                   if (related.isNotEmpty) ...[
                     Text(
                       'İlginizi Çekecek Diğer Haberler',
@@ -556,12 +498,11 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
                     ),
                   ],
 
-                  // Alt boşluk (bottom nav için)
                   SizedBox(
                     height: size.height * 0.082 +
                         size.height * 0.015 +
                         bottomPadding +
-                        size.height * 0.02,
+                        size.height * 0.02 + 30,
                   ),
                 ],
               ),

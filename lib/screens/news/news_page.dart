@@ -7,11 +7,17 @@ import '../../services/news_service.dart';
 import '../../widgets/nav.dart';
 import '../../widgets/footer.dart';
 import '../../widgets/news_shimmer.dart';
+import '../../widgets/ads_banner_widget.dart';
 import 'newsDetail_page.dart';
 
-class NewsPage extends StatelessWidget {
+class NewsPage extends StatefulWidget {
   const NewsPage({super.key});
 
+  @override
+  State<NewsPage> createState() => _NewsPageState();
+}
+
+class _NewsPageState extends State<NewsPage> {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
@@ -112,6 +118,17 @@ class _NewsViewState extends State<_NewsView> {
 
                         if (state is NewsLoaded)
                           _buildCategoryNav(_getGroupedArticles(state.sections), size),
+
+                        if (state is NewsLoaded)
+                          SliverToBoxAdapter(
+                            child: Padding(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: size.width * 0.06,
+                                vertical: size.height * 0.012,
+                              ),
+                              child: AdsBannerWidget(),
+                            ),
+                          ),
 
                         if (state is NewsLoading)
                           const SliverToBoxAdapter(child: NewsShimmer())
@@ -252,11 +269,21 @@ class _NewsViewState extends State<_NewsView> {
       ),
 
       SliverToBoxAdapter(
+        child: Padding(
+          padding: EdgeInsets.symmetric(
+            horizontal: size.width * 0.06,
+            vertical: size.height * 0.012,
+          ),
+          child: AdsBannerWidget(),
+        ),
+      ),
+
+      SliverToBoxAdapter(
         child: SizedBox(
           height: size.height * 0.082 +
               size.height * 0.015 +
               bottomPadding +
-              size.height * 0.02,
+              size.height * 0.02 + 30,
         ),
       ),
     ];
@@ -285,8 +312,7 @@ class _NewsViewState extends State<_NewsView> {
                       ? DecorationImage(
                     image: NetworkImage(article.imageUrl),
                     fit: BoxFit.cover,
-                    onError: (exception, stackTrace) {
-                    },
+                    onError: (exception, stackTrace) {},
                   )
                       : null,
                 ),

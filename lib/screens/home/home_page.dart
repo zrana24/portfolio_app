@@ -6,10 +6,16 @@ import '../../bloc/home/home_event.dart';
 import '../../bloc/home/home_state.dart';
 import '../../widgets/nav.dart';
 import '../../widgets/footer.dart';
+import '../../widgets/ads_banner_widget.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
@@ -29,13 +35,23 @@ class HomePage extends StatelessWidget {
                 physics: const BouncingScrollPhysics(),
                 slivers: [
                   const SliverToBoxAdapter(child: CebeciAppBar()),
+
                   SliverPadding(
                     padding: EdgeInsets.symmetric(horizontal: size.width * 0.06),
                     sliver: SliverList(
                       delegate: SliverChildListDelegate([
                         SizedBox(height: size.height * 0.006),
                         _buildHeader(size),
-                        SizedBox(height: size.height * 0.035),
+
+                        Padding(
+                          padding: EdgeInsets.symmetric(
+                            vertical: size
+                              .height * 0.02,
+                          ),
+                          child: const SizedBox(
+                            child: AdsBannerWidget(key: Key('home_middle_ad')),
+                          ),
+                        ),
 
                         if (state is HomeLoading)
                           _buildSkeletonLoading(size)
@@ -44,16 +60,26 @@ class HomePage extends StatelessWidget {
                         else if (state is HomeEmpty)
                             _buildEmptyState(size)
                           else if (state is HomeError)
-                              _buildErrorState(state.message, context, size),
-
-
-                        SizedBox(
-                          height: size.height * 0.082 +
-                              size.height * 0.015 +
-                              bottomPadding +
-                              size.height * 0.02,
-                        ),
+                              _buildErrorState((state as HomeError).message, context, size),
                       ]),
+                    ),
+                  ),
+
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(
+                        vertical: size.height * 0.02,
+                      ),
+                      child: const AdsBannerWidget(key: Key('home_bottom_ad')),
+                    ),
+                  ),
+
+                  SliverToBoxAdapter(
+                    child: SizedBox(
+                      height: size.height * 0.082 +
+                          size.height * 0.015 +
+                          bottomPadding +
+                          size.height * 0.02 + 30,
                     ),
                   ),
                 ],
@@ -93,13 +119,10 @@ class HomePage extends StatelessWidget {
           ),
         ),
         SizedBox(height: size.height * 0.05),
-
         _ShimmerBox(width: size.width * 0.4, height: size.height * 0.02),
         SizedBox(height: size.height * 0.015),
-
         _ShimmerBox(width: size.width * 0.55, height: size.height * 0.045),
         SizedBox(height: size.height * 0.015),
-
         Row(
           children: [
             _ShimmerBox(
@@ -116,10 +139,8 @@ class HomePage extends StatelessWidget {
           ],
         ),
         SizedBox(height: size.height * 0.04),
-
         _ShimmerBox(width: size.width * 0.2, height: size.height * 0.02),
         SizedBox(height: size.height * 0.02),
-
         ...List.generate(
           3,
               (i) => Padding(
@@ -139,9 +160,16 @@ class HomePage extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        /*Padding(
+          padding: EdgeInsets.only(top: size.height * 0.01, bottom: size.height * 0.02),
+          child: SizedBox(
+            child: const AdsBannerWidget(key: Key('home_middle_ad')),
+          ),
+        ),*/
+
         if (state.categoryDistribution.isNotEmpty) ...[
           _buildDonutChartSection(state, size),
-          SizedBox(height: size.height * 0.05),
+          SliverToBoxAdapter(child: SizedBox(height: size.height * 0.05)),
         ],
 
         _buildSectionTitle("Portföyler Toplamı", size, hasArrows: true),
@@ -210,6 +238,7 @@ class HomePage extends StatelessWidget {
           ],
         ),
         SizedBox(height: size.height * 0.04),
+
         if (state.portfolios.isNotEmpty) ...[
           _buildSectionTitle("İçerik", size, hasSort: true),
           SizedBox(height: size.height * 0.02),
@@ -441,6 +470,15 @@ class HomePage extends StatelessWidget {
           ),
         ),
         SizedBox(height: size.height * 0.05),
+        Text(
+          "Henüz portföyünüz bulunmuyor",
+          style: TextStyle(
+            fontSize: size.width * 0.04,
+            color: Colors.grey,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        SizedBox(height: size.height * 0.02),
       ],
     );
   }
@@ -596,23 +634,6 @@ class EmptyDonutPainter extends CustomPainter {
       ..strokeWidth = strokeWidth;
 
     canvas.drawCircle(center, size.width / 2 - strokeWidth / 2, paint);
-
-    const textStyle = TextStyle(
-      color: Color(0xFF9CA3AF),
-      fontSize: 14,
-    );
-    const span = TextSpan(
-      text: "Şu anda gösterilecek\nbir şey yok.",
-      style: textStyle,
-    );
-    final tp = TextPainter(
-      text: span,
-      textAlign: TextAlign.center,
-      textDirection: TextDirection.ltr,
-    );
-    tp.layout(maxWidth: size.width * 0.55);
-    tp.paint(
-        canvas, Offset(center.dx - tp.width / 2, center.dy - tp.height / 2));
   }
 
   @override

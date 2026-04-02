@@ -67,7 +67,8 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
           categoryDistribution: categoryDistribution,
         ));
 
-      } catch (e, stackTrace) {
+      }
+      catch (e, stackTrace) {
         print('Portföy yükleme hatası: $e');
 
         if (e.toString().contains('Token bulunamadı')) {
@@ -75,14 +76,16 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
           return;
         }
 
-        if (e.toString().contains('SocketException') || e.toString().contains('Failed host lookup')) {
+        if (e.toString().contains('SocketException') ||
+            e.toString().contains('Failed host lookup')) {
+          emit(HomeEmpty());
+          return;
+        } else if (e.toString().contains('401')) {
           emit(HomeEmpty());
           return;
         }
-        else if (e.toString().contains('401')) {
-          emit(HomeEmpty());
-          return;
-        }
+
+        emit(HomeEmpty());
       }
     });
   }
