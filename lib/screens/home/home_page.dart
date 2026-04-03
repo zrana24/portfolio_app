@@ -7,6 +7,8 @@ import '../../bloc/home/home_state.dart';
 import '../../widgets/nav.dart';
 import '../../widgets/footer.dart';
 import '../../widgets/ads_banner_widget.dart';
+import '../../services/auth_service.dart';
+import '../auth/login_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -16,6 +18,33 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  bool _isLoggedIn = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkLoginStatus();
+  }
+
+  Future<void> _checkLoginStatus() async {
+    final loggedIn = await AuthService().isLoggedIn();
+    if (mounted) {
+      setState(() {
+        _isLoggedIn = loggedIn;
+      });
+    }
+  }
+
+  void _navigateToLogin() {
+    Navigator.of(context).pushReplacement(
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) => const LoginPage(),
+        transitionDuration: Duration.zero,
+        reverseTransitionDuration: Duration.zero,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
@@ -45,8 +74,7 @@ class _HomePageState extends State<HomePage> {
 
                         Padding(
                           padding: EdgeInsets.symmetric(
-                            vertical: size
-                              .height * 0.02,
+                            vertical: size.height * 0.02,
                           ),
                           child: const SizedBox(
                             child: AdsBannerWidget(key: Key('home_middle_ad')),
@@ -160,16 +188,9 @@ class _HomePageState extends State<HomePage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        /*Padding(
-          padding: EdgeInsets.only(top: size.height * 0.01, bottom: size.height * 0.02),
-          child: SizedBox(
-            child: const AdsBannerWidget(key: Key('home_middle_ad')),
-          ),
-        ),*/
-
         if (state.categoryDistribution.isNotEmpty) ...[
           _buildDonutChartSection(state, size),
-          SliverToBoxAdapter(child: SizedBox(height: size.height * 0.05)),
+          SizedBox(height: size.height * 0.05),
         ],
 
         _buildSectionTitle("Portföyler Toplamı", size, hasArrows: true),
@@ -469,15 +490,58 @@ class _HomePageState extends State<HomePage> {
             child: CustomPaint(painter: EmptyDonutPainter()),
           ),
         ),
-        SizedBox(height: size.height * 0.05),
-        Text(
-          "Henüz portföyünüz bulunmuyor",
-          style: TextStyle(
-            fontSize: size.width * 0.04,
-            color: Colors.grey,
-            fontWeight: FontWeight.w500,
+        SizedBox(height: size.height * 0.03),
+
+        if (!_isLoggedIn) ...[
+          Text(
+            "Portföyünüzü görüntülemek için",
+            style: TextStyle(
+              fontSize: size.width * 0.04,
+              color: Colors.grey,
+              fontWeight: FontWeight.w500,
+            ),
           ),
-        ),
+          SizedBox(height: size.height * 0.025),
+          ElevatedButton(
+            onPressed: _navigateToLogin,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF1A0B52),
+              foregroundColor: Colors.white,
+              padding: EdgeInsets.symmetric(
+                horizontal: size.width * 0.12,
+                vertical: size.height * 0.018,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(size.width * 0.08),
+              ),
+              elevation: 2,
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.login, size: 20),
+                SizedBox(width: size.width * 0.02),
+                Text(
+                  "Giriş Yap",
+                  style: TextStyle(
+                    fontSize: size.width * 0.04,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ]
+        else ...[
+          Text(
+            "Henüz portföyünüz bulunmuyor",
+            style: TextStyle(
+              fontSize: size.width * 0.04,
+              color: Colors.grey,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
         SizedBox(height: size.height * 0.02),
       ],
     );

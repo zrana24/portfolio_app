@@ -3,8 +3,11 @@ import '../app/routes.dart';
 import '../screens/home/home_page.dart';
 import '../screens/price/livePrices_page.dart';
 import '../screens/news/news_page.dart';
+import '../screens/addPortfolio/addPortfolio_page.dart';
+import '../screens/auth/login_page.dart';
+import '../services/auth_service.dart';
 
-class CebeciBottomNav extends StatelessWidget {
+class CebeciBottomNav extends StatefulWidget {
   final int currentIndex;
   final ValueChanged<int>? onTap;
 
@@ -13,6 +16,28 @@ class CebeciBottomNav extends StatelessWidget {
     this.currentIndex = 0,
     this.onTap,
   });
+
+  @override
+  State<CebeciBottomNav> createState() => _CebeciBottomNavState();
+}
+
+class _CebeciBottomNavState extends State<CebeciBottomNav> {
+  bool _isLoggedIn = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkLoginStatus();
+  }
+
+  Future<void> _checkLoginStatus() async {
+    final loggedIn = await AuthService().isLoggedIn();
+    if (mounted) {
+      setState(() {
+        _isLoggedIn = loggedIn;
+      });
+    }
+  }
 
   void _navigateWithoutAnimation(BuildContext context, Widget page) {
     Navigator.of(context).pushReplacement(
@@ -28,10 +53,12 @@ class CebeciBottomNav extends StatelessWidget {
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
 
-    const items = [
-      _NavItem(label: 'Canlı Fiyatlar', icon: Icons.bar_chart_rounded),
-      _NavItem(label: 'Haberler',       icon: Icons.newspaper_rounded),
-      _NavItem(label: 'Portföyüm',      icon: Icons.pie_chart_rounded),
+    final items = [
+      const _NavItem(label: 'Canlı Fiyatlar', icon: Icons.bar_chart_rounded),
+      const _NavItem(label: 'Haberler', icon: Icons.newspaper_rounded),
+      const _NavItem(label: 'Portföyüm', icon: Icons.pie_chart_rounded),
+      if (_isLoggedIn)
+        const _NavItem(label: 'Portföy Ekle', icon: Icons.add_circle_outline),
     ];
 
     return Container(
@@ -61,13 +88,17 @@ class CebeciBottomNav extends StatelessWidget {
             ),
             child: Row(
               children: List.generate(items.length, (index) {
-                final isActive = index == currentIndex;
+                final isActive = index == widget.currentIndex;
                 return Expanded(
                   child: GestureDetector(
                     behavior: HitTestBehavior.opaque,
                     onTap: () {
-                      if (onTap != null) onTap!(index);
-                      if (index == currentIndex) return;
+                      if (widget.onTap != null) widget.onTap!(index);
+                      if (index == widget.currentIndex) return;
+
+                      if (index == 3 && !_isLoggedIn) {
+                        return;
+                      }
 
                       Widget page;
                       switch (index) {
@@ -79,6 +110,9 @@ class CebeciBottomNav extends StatelessWidget {
                           break;
                         case 2:
                           page = const HomePage();
+                          break;
+                        case 3:
+                          page = const AddPortfolioPage();
                           break;
                         default:
                           return;

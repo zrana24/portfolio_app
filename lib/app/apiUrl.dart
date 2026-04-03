@@ -14,6 +14,10 @@ class ApiUrls {
   static const String prices = "$baseUrl/prices";
   static const String symbols = "$baseUrl/symbols";
   static String priceDetail(String symbol) => "$baseUrl/prices/$symbol";
+  static String priceHistory(String symbol) => "$baseUrl/prices/$symbol/history";
+
+  // Commodities endpoint
+  static const String commodities = "$baseUrl/mobile/commodities";
 
   static const String portfolios = "$baseUrl/portfolios";
   static const String portfolioSummary = "$baseUrl/portfolios/summary";
