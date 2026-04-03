@@ -16,16 +16,16 @@ class UpdatePurchasePrice extends AddAssetEvent {
   UpdatePurchasePrice({required this.price});
 }
 
-class UpdateUnit extends AddAssetEvent {
-  final String unit;
-
-  UpdateUnit({required this.unit});
-}
-
 class UpdateNotes extends AddAssetEvent {
   final String notes;
 
   UpdateNotes({required this.notes});
+}
+
+class UpdateAssetName extends AddAssetEvent {
+  final String assetName;
+
+  UpdateAssetName({required this.assetName});
 }
 
 class SelectPortfolio extends AddAssetEvent {

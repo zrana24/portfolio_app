@@ -1,56 +1,96 @@
-abstract class HomeState {}
+import 'package:equatable/equatable.dart';
 
-class HomeInitial extends HomeState {}
+abstract class HomeState extends Equatable {
+  const HomeState();
 
-class HomeLoading extends HomeState {}
+  @override
+  List<Object?> get props => [];
+}
 
-class HomeEmpty extends HomeState {}
+class HomeInitial extends HomeState {
+  const HomeInitial();
+
+  @override
+  List<Object?> get props => [];
+}
+
+class HomeLoading extends HomeState {
+  const HomeLoading();
+
+  @override
+  List<Object?> get props => [];
+}
+
+class HomeEmpty extends HomeState {
+  const HomeEmpty();
+
+  @override
+  List<Object?> get props => [];
+}
 
 class HomeError extends HomeState {
   final String message;
 
-  HomeError(this.message);
+  const HomeError(this.message);
+
+  @override
+  List<Object?> get props => [message];
 }
 
 class HomeLoaded extends HomeState {
   final double totalValue;
-  final double percentage;
-  final double dailyChange;
-  final double dailyChangePct;
-  final List<PortfolioItem> portfolios;
+  final double totalProfitLoss;
+  final double totalPnLPercent;
+  final List<AssetItem> assets;
   final List<CategoryDistribution> categoryDistribution;
 
-  HomeLoaded({
+  const HomeLoaded({
     required this.totalValue,
-    required this.percentage,
-    required this.dailyChange,
-    required this.dailyChangePct,
-    required this.portfolios,
+    required this.totalProfitLoss,
+    required this.totalPnLPercent,
+    required this.assets,
     required this.categoryDistribution,
   });
+
+  @override
+  List<Object?> get props => [
+    totalValue,
+    totalProfitLoss,
+    totalPnLPercent,
+    assets,
+    categoryDistribution,
+  ];
 }
 
-class PortfolioItem {
+// Varlık modeli
+class AssetItem {
+  final String symbol;
   final String name;
-  final double value;
-  final double dailyChange;
-  final double dailyChangePct;
+  final double quantity;
+  final double currentPrice;
+  final double currentValue;
+  final double profitLoss;
+  final double pnlPercent;
 
-  PortfolioItem({
+  const AssetItem({
+    required this.symbol,
     required this.name,
-    required this.value,
-    required this.dailyChange,
-    required this.dailyChangePct,
+    required this.quantity,
+    required this.currentPrice,
+    required this.currentValue,
+    required this.profitLoss,
+    required this.pnlPercent,
   });
 }
 
+// Kategori dağılım modeli
 class CategoryDistribution {
   final String category;
   final String label;
   final double currentValue;
   final double percentage;
 
-  CategoryDistribution({
+  const CategoryDistribution({
     required this.category,
     required this.label,
     required this.currentValue,

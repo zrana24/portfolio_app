@@ -95,12 +95,27 @@ class PortfolioService {
     required double purchasePrice,
     String? purchaseDate,
     String? notes,
+    String? assetName, // Yeni parametre eklendi
   }) async {
     try {
+      print('📡 API Çağrısı Başlıyor...');
+      print('URL: ${ApiUrls.portfolioAssets(portfolioId)}');
+
       final token = await TokenService.getToken();
       if (token == null) {
         throw PortfolioServiceException('Token bulunamadı');
       }
+
+      final body = {
+        'symbol': symbol,
+        'quantity': quantity,
+        'purchase_price': purchasePrice,
+        if (purchaseDate != null) 'purchase_date': purchaseDate,
+        if (notes != null) 'notes': notes,
+        if (assetName != null) 'asset_name': assetName,
+      };
+
+      print('📤 Request Body: ${jsonEncode(body)}');
 
       final response = await _client.post(
         Uri.parse(ApiUrls.portfolioAssets(portfolioId)),
@@ -109,30 +124,33 @@ class PortfolioService {
           'Accept': 'application/json',
           'Authorization': 'Bearer $token',
         },
-        body: jsonEncode({
-          'symbol': symbol,
-          'quantity': quantity,
-          'purchase_price': purchasePrice,
-          if (purchaseDate != null) 'purchase_date': purchaseDate,
-          if (notes != null) 'notes': notes,
-        }),
+        body: jsonEncode(body),
       ).timeout(_timeout);
 
+      print('📥 Response Status: ${response.statusCode}');
+      print('📥 Response Body: ${response.body}');
+
       if (response.statusCode == 201) {
+        print('✅ API Başarılı - Varlık eklendi');
         return;
       } else if (response.statusCode == 422) {
         final jsonData = json.decode(response.body);
         final errors = jsonData['errors'] as Map<String, dynamic>?;
         if (errors != null && errors.isNotEmpty) {
-          throw errors.values.first[0];
+          final errorMessage = errors.values.first[0];
+          print('❌ Validation Error: $errorMessage');
+          throw errorMessage;
         }
         throw PortfolioServiceException('Varlık eklenemedi');
       } else if (response.statusCode == 404) {
         throw PortfolioServiceException('Portföy bulunamadı');
+      } else if (response.statusCode == 401) {
+        throw PortfolioServiceException('Oturum süreniz dolmuş. Lütfen tekrar giriş yapın.');
       } else {
-        throw PortfolioServiceException('Varlık eklenemedi');
+        throw PortfolioServiceException('Varlık eklenemedi (Kod: ${response.statusCode})');
       }
     } catch (e) {
+      print('❌ Catch Error: $e');
       if (e is PortfolioServiceException) rethrow;
       throw PortfolioServiceException('Beklenmeyen hata: $e');
     }

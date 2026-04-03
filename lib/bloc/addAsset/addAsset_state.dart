@@ -18,6 +18,7 @@ class AddAssetLoaded extends AddAssetState {
   final double quantity;
   final double purchasePrice;
   final String notes;
+  final String assetName; // Kullanıcının girdiği özel isim
 
   AddAssetLoaded({
     required this.symbol,
@@ -31,6 +32,7 @@ class AddAssetLoaded extends AddAssetState {
     required this.quantity,
     required this.purchasePrice,
     required this.notes,
+    required this.assetName,
   });
 
   double get totalCost => quantity * purchasePrice;
@@ -47,6 +49,7 @@ class AddAssetLoaded extends AddAssetState {
     double? quantity,
     double? purchasePrice,
     String? notes,
+    String? assetName,
   }) {
     return AddAssetLoaded(
       symbol: symbol ?? this.symbol,
@@ -60,6 +63,7 @@ class AddAssetLoaded extends AddAssetState {
       quantity: quantity ?? this.quantity,
       purchasePrice: purchasePrice ?? this.purchasePrice,
       notes: notes ?? this.notes,
+      assetName: assetName ?? this.assetName,
     );
   }
 }

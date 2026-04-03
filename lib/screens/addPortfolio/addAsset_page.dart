@@ -6,15 +6,20 @@ import '../../bloc/addAsset/addAsset_bloc.dart';
 import '../../bloc/addAsset/addAsset_event.dart';
 import '../../bloc/addAsset/addAsset_state.dart';
 import '../../widgets/back_button.dart';
+import '../../app/routes.dart';
 
 class AddAssetPage extends StatelessWidget {
   final String symbol;
   final String? name;
+  final String? portfolioName;
+  final int? portfolioId;
 
   const AddAssetPage({
     super.key,
     required this.symbol,
     this.name,
+    this.portfolioName,
+    this.portfolioId,
   });
 
   @override
@@ -22,18 +27,30 @@ class AddAssetPage extends StatelessWidget {
     final size = MediaQuery.of(context).size;
 
     return BlocProvider(
-      create: (context) => AddAssetBloc(symbol: symbol)..add(LoadAssetData()),
+      create: (context) => AddAssetBloc(
+        symbol: symbol,
+        portfolioName: portfolioName,
+        portfolioId: portfolioId,
+      )..add(LoadAssetData()),
       child: BlocListener<AddAssetBloc, AddAssetState>(
         listener: (context, state) {
+          print('📱 AddAsset State Değişti: ${state.runtimeType}');
+
           if (state is AddAssetSuccess) {
+            print('✅ Success state - Ekran kapatılıyor');
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
                 content: Text('Varlık başarıyla eklendi'),
                 backgroundColor: Colors.green,
               ),
             );
-            Navigator.of(context).pop(true);
+            Navigator.pushNamedAndRemoveUntil(
+              context,
+              AppRoutes.add,
+                  (route) => false,
+            );
           } else if (state is AddAssetError) {
+            print('❌ Error state: ${state.message}');
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(state.message),
@@ -41,6 +58,8 @@ class AddAssetPage extends StatelessWidget {
                 duration: const Duration(seconds: 3),
               ),
             );
+          } else if (state is AddAssetSaving) {
+            print('⏳ Saving state - Loading gösteriliyor');
           }
         },
         child: Scaffold(
@@ -402,7 +421,7 @@ class AddAssetPage extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Varlık Miktarı',
+          'Varlık Bilgileri',
           style: TextStyle(
             fontSize: size.width * 0.038,
             fontWeight: FontWeight.w600,
@@ -411,7 +430,22 @@ class AddAssetPage extends StatelessWidget {
         ),
         SizedBox(height: size.height * 0.015),
 
+        // Portfolio Selector
         _buildPortfolioSelector(context, state, size),
+        SizedBox(height: size.height * 0.015),
+
+        // Varlık İsmi Input
+        _buildLabeledInput(
+          context,
+          label: 'Varlık Adı',
+          hint: 'Örn: Altın Gram',
+          initialValue: state.assetName,
+          onChanged: (value) {
+            context.read<AddAssetBloc>().add(UpdateAssetName(assetName: value));
+          },
+          size: size,
+          isNumeric: false,
+        ),
         SizedBox(height: size.height * 0.015),
 
         _buildLabeledInput(
@@ -424,12 +458,13 @@ class AddAssetPage extends StatelessWidget {
             context.read<AddAssetBloc>().add(UpdateQuantity(quantity: quantity));
           },
           size: size,
+          isNumeric: true,
         ),
         SizedBox(height: size.height * 0.015),
 
         _buildLabeledInput(
           context,
-          label: 'Birim (Opsiyonel)',
+          label: 'Birim Fiyat (Opsiyonel)',
           hint: '0.0',
           initialValue: state.purchasePrice == 0 ? '' : state.purchasePrice.toString(),
           onChanged: (value) {
@@ -437,6 +472,7 @@ class AddAssetPage extends StatelessWidget {
             context.read<AddAssetBloc>().add(UpdatePurchasePrice(price: price));
           },
           size: size,
+          isNumeric: true,
         ),
         SizedBox(height: size.height * 0.015),
 
@@ -444,7 +480,7 @@ class AddAssetPage extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'Ekstra / Artır',
+              'Miktar Ayarla',
               style: TextStyle(
                 fontSize: size.width * 0.035,
                 color: Colors.grey.shade600,
@@ -559,6 +595,7 @@ class AddAssetPage extends StatelessWidget {
         required String initialValue,
         required Function(String) onChanged,
         required Size size,
+        bool isNumeric = true,
       }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -573,10 +610,12 @@ class AddAssetPage extends StatelessWidget {
         SizedBox(height: size.height * 0.008),
         TextField(
           controller: TextEditingController(text: initialValue),
-          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          inputFormatters: [
-            FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
-          ],
+          keyboardType: isNumeric
+              ? const TextInputType.numberWithOptions(decimal: true)
+              : TextInputType.text,
+          inputFormatters: isNumeric
+              ? [FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}'))]
+              : null,
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: TextStyle(color: Colors.grey.shade400),
@@ -629,7 +668,9 @@ class AddAssetPage extends StatelessWidget {
   }
 
   Widget _buildSaveButton(BuildContext context, AddAssetLoaded state, Size size) {
-    final isValid = state.quantity > 0 && state.purchasePrice > 0;
+    final isValid = state.quantity > 0 &&
+        state.purchasePrice > 0 &&
+        state.assetName.trim().isNotEmpty;
 
     return SizedBox(
       width: double.infinity,
@@ -648,7 +689,7 @@ class AddAssetPage extends StatelessWidget {
           elevation: 0,
         ),
         child: Text(
-          'Portföy Ekle',
+          'Portföye Ekle',
           style: TextStyle(
             fontSize: size.width * 0.04,
             fontWeight: FontWeight.bold,

@@ -4,6 +4,7 @@ import '../../bloc/addPortfolio/addportfolio_bloc.dart';
 import '../../bloc/addPortfolio/addPortfolio_event.dart';
 import '../../bloc/addPortfolio/addPortfolio_state.dart';
 import '../../services/commodity_services.dart';
+import '../../services/portfolio_services.dart';
 import '../../widgets/nav.dart';
 import '../../widgets/back_button.dart';
 import '../../widgets/footer.dart';
@@ -239,14 +240,7 @@ class _CommodityCard extends StatelessWidget {
 
     return GestureDetector(
       onTap: () {
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (context) => AddAssetPage(
-              symbol: commodity.symbol,
-              name: commodity.name,
-            ),
-          ),
-        );
+        _showPortfolioNameDialog(context);
       },
       child: Container(
         padding: EdgeInsets.all(size.width * 0.04),
@@ -338,6 +332,163 @@ class _CommodityCard extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  void _showPortfolioNameDialog(BuildContext context) async {
+    final TextEditingController nameController = TextEditingController();
+
+    final result = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(size.width * 0.04),
+        ),
+        title: Text(
+          'Portföy İsmi',
+          style: TextStyle(
+            fontSize: size.width * 0.045,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        content: TextField(
+          controller: nameController,
+          autofocus: true,
+          decoration: InputDecoration(
+            hintText: 'Örn: ${commodity.name} Portföyüm',
+            hintStyle: TextStyle(color: Colors.grey.shade400),
+            filled: true,
+            fillColor: Colors.grey.shade50,
+            contentPadding: EdgeInsets.symmetric(
+              horizontal: size.width * 0.04,
+              vertical: size.height * 0.018,
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(size.width * 0.03),
+              borderSide: BorderSide(color: Colors.grey.shade300),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(size.width * 0.03),
+              borderSide: BorderSide(color: Colors.grey.shade300),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(size.width * 0.03),
+              borderSide: const BorderSide(color: Color(0xFF1A0B52), width: 1.5),
+            ),
+          ),
+          onSubmitted: (value) {
+            if (value.trim().isNotEmpty) {
+              Navigator.of(dialogContext).pop(value.trim());
+            }
+          },
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: Text(
+              'İptal',
+              style: TextStyle(
+                color: Colors.grey.shade600,
+                fontSize: size.width * 0.038,
+              ),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              if (nameController.text.trim().isNotEmpty) {
+                Navigator.of(dialogContext).pop(nameController.text.trim());
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF1A0B52),
+              foregroundColor: Colors.white,
+              padding: EdgeInsets.symmetric(
+                horizontal: size.width * 0.06,
+                vertical: size.height * 0.015,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(size.width * 0.03),
+              ),
+            ),
+            child: Text(
+              'Portföy Oluştur',
+              style: TextStyle(fontSize: size.width * 0.038),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (result != null && result.isNotEmpty) {
+      // Portfolio oluştur
+      _createPortfolio(context, result);
+    }
+  }
+
+  Future<void> _createPortfolio(BuildContext context, String portfolioName) async {
+    try {
+      // Loading göster
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (loadingContext) => const Center(
+          child: CircularProgressIndicator(color: Color(0xFF1A0B52)),
+        ),
+      );
+
+      final portfolioService = PortfolioService();
+      final newPortfolio = await portfolioService.createPortfolio(
+        name: portfolioName,
+        currency: 'TRY',
+        isDefault: false,
+      );
+
+      // Loading'i kapat
+      if (context.mounted) {
+        Navigator.of(context).pop(); // Loading dialog'u kapat
+      }
+
+      // Kısa bir gecikme
+      await Future.delayed(const Duration(milliseconds: 100));
+
+      if (!context.mounted) return;
+
+      // Success mesajı
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('$portfolioName oluşturuldu!'),
+          backgroundColor: Colors.green,
+          duration: const Duration(seconds: 1),
+        ),
+      );
+
+      // AddAsset sayfasına git - portfolioId ile
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (context) => AddAssetPage(
+            symbol: commodity.symbol,
+            name: commodity.name,
+            portfolioId: newPortfolio.id,
+          ),
+        ),
+      );
+
+    } catch (e) {
+      // Loading'i kapat
+      if (context.mounted) {
+        Navigator.of(context).pop();
+      }
+
+      // Error mesajı
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Hata: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
   }
 }
 

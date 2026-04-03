@@ -185,6 +185,21 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildMainContent(HomeLoaded state, Size size) {
+    // Toplam değeri hesapla (TL bazında)
+    final totalValue = state.totalValue;
+    final totalProfitLoss = state.totalProfitLoss;
+    final totalPnLPercent = state.totalPnLPercent;
+
+    // Günlük değişim için ilk varlığın değerini kullan (veya 0)
+    double dailyChangeTotal = 0;
+    double dailyChangePercentTotal = 0;
+    if (state.assets.isNotEmpty) {
+      // İlk varlığın günlük değişimini kullan
+      // Not: API'den daily_change gelmiyorsa 0 olarak kalır
+      dailyChangeTotal = state.assets.first.profitLoss; // Geçici çözüm
+      dailyChangePercentTotal = state.assets.first.pnlPercent;
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -195,7 +210,7 @@ class _HomePageState extends State<HomePage> {
 
         _buildSectionTitle("Portföyler Toplamı", size, hasArrows: true),
         Text(
-          "${state.totalValue.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')} ₺",
+          "${totalValue.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')} ₺",
           style: TextStyle(
             fontSize: size.width * 0.09,
             fontWeight: FontWeight.bold,
@@ -207,22 +222,23 @@ class _HomePageState extends State<HomePage> {
           spacing: size.width * 0.02,
           runSpacing: size.height * 0.01,
           children: [
+            // Toplam K/Z gösterimi
             _badge(
               size: size,
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    "Günlük Değişim ",
+                    "Toplam K/Z ",
                     style: TextStyle(
                       color: Colors.grey,
                       fontSize: size.width * 0.03,
                     ),
                   ),
                   Text(
-                    "${state.dailyChange >= 0 ? '+' : ''}${state.dailyChange.toStringAsFixed(0)}",
+                    "${totalProfitLoss >= 0 ? '+' : ''}${totalProfitLoss.toStringAsFixed(0)} ₺",
                     style: TextStyle(
-                      color: state.dailyChange >= 0
+                      color: totalProfitLoss >= 0
                           ? Colors.green.shade400
                           : Colors.red.shade400,
                       fontWeight: FontWeight.bold,
@@ -232,24 +248,26 @@ class _HomePageState extends State<HomePage> {
                 ],
               ),
             ),
+
+            // Toplam K/Z % gösterimi
             _badge(
               size: size,
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    "${state.dailyChangePct >= 0 ? '+' : ''}%${state.dailyChangePct.toStringAsFixed(1).replaceAll('.', ',')}  ",
+                    "${totalPnLPercent >= 0 ? '+' : ''}%${totalPnLPercent.toStringAsFixed(1).replaceAll('.', ',')}  ",
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: size.width * 0.03,
                     ),
                   ),
                   Icon(
-                    state.dailyChangePct >= 0
+                    totalPnLPercent >= 0
                         ? Icons.trending_up
                         : Icons.trending_down,
                     size: size.width * 0.04,
-                    color: state.dailyChangePct >= 0
+                    color: totalPnLPercent >= 0
                         ? Colors.green.shade400
                         : Colors.red.shade400,
                   ),
@@ -260,21 +278,36 @@ class _HomePageState extends State<HomePage> {
         ),
         SizedBox(height: size.height * 0.04),
 
-        if (state.portfolios.isNotEmpty) ...[
-          _buildSectionTitle("İçerik", size, hasSort: true),
+        // Varlık listesi (İçerik)
+        if (state.assets.isNotEmpty) ...[
+          _buildSectionTitle("Varlıklarım", size, hasSort: true),
           SizedBox(height: size.height * 0.02),
 
-          ...state.portfolios.map((p) => Padding(
+          ...state.assets.map((asset) => Padding(
             padding: EdgeInsets.only(bottom: size.height * 0.015),
             child: _contentCard(
-              p.name,
-              p.value.toStringAsFixed(0),
-              "${p.dailyChange >= 0 ? '+' : ''}${p.dailyChange.toStringAsFixed(0)}",
-              "${p.dailyChangePct >= 0 ? '+' : ''}%${p.dailyChangePct.toStringAsFixed(1).replaceAll('.', ',')}",
-              p.dailyChangePct,
+              asset.name,
+              asset.currentValue.toStringAsFixed(0),
+              "${asset.profitLoss >= 0 ? '+' : ''}${asset.profitLoss.toStringAsFixed(0)}",
+              "${asset.pnlPercent >= 0 ? '+' : ''}%${asset.pnlPercent.toStringAsFixed(1).replaceAll('.', ',')}",
+              asset.pnlPercent,
               size,
             ),
           )),
+        ],
+
+        // Portföy bilgisi (eğer varsa farklı bir yapıda)
+        if (state.assets.isEmpty && state.totalValue > 0) ...[
+          _buildSectionTitle("Portföy Özeti", size, hasSort: true),
+          SizedBox(height: size.height * 0.02),
+          _contentCard(
+            "Ana Portföy",
+            totalValue.toStringAsFixed(0),
+            "${totalProfitLoss >= 0 ? '+' : ''}${totalProfitLoss.toStringAsFixed(0)}",
+            "${totalPnLPercent >= 0 ? '+' : ''}%${totalPnLPercent.toStringAsFixed(1).replaceAll('.', ',')}",
+            totalPnLPercent,
+            size,
+          ),
         ],
       ],
     );
