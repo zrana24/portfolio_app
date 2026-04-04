@@ -4,6 +4,7 @@ import '../screens/home/home_page.dart';
 import '../screens/price/livePrices_page.dart';
 import '../screens/news/news_page.dart';
 import '../screens/addPortfolio/addPortfolio_page.dart';
+import '../screens/profile/profile_page.dart';
 import '../screens/auth/login_page.dart';
 import '../services/auth_service.dart';
 
@@ -23,6 +24,7 @@ class CebeciBottomNav extends StatefulWidget {
 
 class _CebeciBottomNavState extends State<CebeciBottomNav> {
   bool _isLoggedIn = false;
+  bool _isLoading = true;
 
   @override
   void initState() {
@@ -35,6 +37,7 @@ class _CebeciBottomNavState extends State<CebeciBottomNav> {
     if (mounted) {
       setState(() {
         _isLoggedIn = loggedIn;
+        _isLoading = false;
       });
     }
   }
@@ -49,17 +52,29 @@ class _CebeciBottomNavState extends State<CebeciBottomNav> {
     );
   }
 
+  List<_NavItem> _getNavItems() {
+    if (_isLoggedIn) {
+      return const [
+        _NavItem(label: 'Canlı Fiyatlar', icon: Icons.bar_chart_rounded),
+        _NavItem(label: 'Haberler', icon: Icons.newspaper_rounded),
+        _NavItem(label: 'Portföyüm', icon: Icons.pie_chart_rounded),
+        _NavItem(label: 'Portföy Ekle', icon: Icons.add_circle_outline),
+        _NavItem(label: 'Profil', icon: Icons.person_outline),
+      ];
+    } else {
+      return const [
+        _NavItem(label: 'Canlı Fiyatlar', icon: Icons.bar_chart_rounded),
+        _NavItem(label: 'Haberler', icon: Icons.newspaper_rounded),
+        _NavItem(label: 'Portföyüm', icon: Icons.pie_chart_rounded),
+      ];
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
 
-    final items = [
-      const _NavItem(label: 'Canlı Fiyatlar', icon: Icons.bar_chart_rounded),
-      const _NavItem(label: 'Haberler', icon: Icons.newspaper_rounded),
-      const _NavItem(label: 'Portföyüm', icon: Icons.pie_chart_rounded),
-      if (_isLoggedIn)
-        const _NavItem(label: 'Portföy Ekle', icon: Icons.add_circle_outline),
-    ];
+    final items = _getNavItems();
 
     return Container(
       color: Colors.transparent,
@@ -67,16 +82,16 @@ class _CebeciBottomNavState extends State<CebeciBottomNav> {
         top: false,
         child: Padding(
           padding: EdgeInsets.only(
-            left: size.width * 0.05,
-            right: size.width * 0.05,
+            left: size.width * 0.04,
+            right: size.width * 0.04,
             bottom: size.height * 0.015,
             top: size.height * 0.008,
           ),
           child: Container(
-            height: size.height * 0.082,
+            height: size.height * 0.080,
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(size.height * 0.05),
+              borderRadius: BorderRadius.circular(size.height * 0.04),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withOpacity(0.10),
@@ -96,10 +111,6 @@ class _CebeciBottomNavState extends State<CebeciBottomNav> {
                       if (widget.onTap != null) widget.onTap!(index);
                       if (index == widget.currentIndex) return;
 
-                      if (index == 3 && !_isLoggedIn) {
-                        return;
-                      }
-
                       Widget page;
                       switch (index) {
                         case 0:
@@ -112,7 +123,18 @@ class _CebeciBottomNavState extends State<CebeciBottomNav> {
                           page = const HomePage();
                           break;
                         case 3:
-                          page = const AddPortfolioPage();
+                          if (_isLoggedIn) {
+                            page = const AddPortfolioPage();
+                          } else {
+                            return;
+                          }
+                          break;
+                        case 4:
+                          if (_isLoggedIn) {
+                            page = const ProfilePage();
+                          } else {
+                            return;
+                          }
                           break;
                         default:
                           return;
@@ -149,7 +171,7 @@ class _NavItemWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final iconSize = size.width * 0.062;
+    final iconSize = size.width * 0.060;
     const activeColor = Color(0xFF1A0B52);
     const inactiveColor = Colors.black54;
 
@@ -159,7 +181,7 @@ class _NavItemWidget extends StatelessWidget {
         AnimatedContainer(
           duration: const Duration(milliseconds: 250),
           curve: Curves.easeInOut,
-          width: isActive ? size.width * 0.14 : iconSize,
+          width: isActive ? size.width * 0.10 : iconSize,
           height: size.height * 0.038,
           decoration: BoxDecoration(
             color: isActive ? const Color(0xFFEEEBF8) : Colors.transparent,
@@ -177,7 +199,7 @@ class _NavItemWidget extends StatelessWidget {
         Text(
           item.label,
           style: TextStyle(
-            fontSize: size.width * 0.027,
+            fontSize: size.width * 0.025,
             fontWeight: isActive ? FontWeight.w700 : FontWeight.w400,
             color: isActive ? activeColor : inactiveColor,
           ),

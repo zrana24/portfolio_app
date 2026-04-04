@@ -19,6 +19,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   bool _isLoggedIn = false;
+  bool _isCheckingAuth = true;
 
   @override
   void initState() {
@@ -31,6 +32,7 @@ class _HomePageState extends State<HomePage> {
     if (mounted) {
       setState(() {
         _isLoggedIn = loggedIn;
+        _isCheckingAuth = false;
       });
     }
   }
@@ -55,7 +57,9 @@ class _HomePageState extends State<HomePage> {
       child: Scaffold(
         backgroundColor: Colors.white,
         extendBody: true,
-        bottomNavigationBar: const CebeciBottomNav(currentIndex: 2),
+        bottomNavigationBar: _isCheckingAuth
+            ? null
+            : const CebeciBottomNav(currentIndex: 2),
         body: SafeArea(
           bottom: false,
           child: BlocBuilder<HomeBloc, HomeState>(
@@ -72,14 +76,16 @@ class _HomePageState extends State<HomePage> {
                         SizedBox(height: size.height * 0.006),
                         _buildHeader(size),
 
-                        Padding(
-                          padding: EdgeInsets.symmetric(
-                            vertical: size.height * 0.02,
+                        // Token yoksa ve empty state ise reklam gösterme (aşağıda göstereceğiz)
+                        if (!(!_isLoggedIn && state is HomeEmpty))
+                          Padding(
+                            padding: EdgeInsets.symmetric(
+                              vertical: size.height * 0.02,
+                            ),
+                            child: const SizedBox(
+                              child: AdsBannerWidget(key: Key('home_middle_ad')),
+                            ),
                           ),
-                          child: const SizedBox(
-                            child: AdsBannerWidget(key: Key('home_middle_ad')),
-                          ),
-                        ),
 
                         if (state is HomeLoading)
                           _buildSkeletonLoading(size)
@@ -93,14 +99,16 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
 
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(
-                        vertical: size.height * 0.02,
+                  // Token yoksa ve empty state ise bottom reklam gösterme
+                  if (!(!_isLoggedIn && state is HomeEmpty))
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(
+                          vertical: size.height * 0.02,
+                        ),
+                        child: const AdsBannerWidget(key: Key('home_bottom_ad')),
                       ),
-                      child: const AdsBannerWidget(key: Key('home_bottom_ad')),
                     ),
-                  ),
 
                   SliverToBoxAdapter(
                     child: SizedBox(
@@ -515,7 +523,16 @@ class _HomePageState extends State<HomePage> {
     final chartSize = size.width * 0.65;
     return Column(
       children: [
-        SizedBox(height: size.height * 0.05),
+        SizedBox(height: size.height * 0.02),
+
+        // Üst reklam (Her durumda göster)
+        const Padding(
+          padding: EdgeInsets.symmetric(vertical: 12.0),
+          child: AdsBannerWidget(key: Key('empty_state_top_ad')),
+        ),
+
+        SizedBox(height: size.height * 0.02),
+
         Center(
           child: SizedBox(
             width: chartSize,
@@ -564,6 +581,14 @@ class _HomePageState extends State<HomePage> {
               ],
             ),
           ),
+
+          SizedBox(height: size.height * 0.03),
+
+          // Alt reklam (Giriş yapmamış kullanıcılar için)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 12.0),
+            child: AdsBannerWidget(key: Key('empty_state_bottom_ad')),
+          ),
         ]
         else ...[
           Text(
@@ -573,6 +598,14 @@ class _HomePageState extends State<HomePage> {
               color: Colors.grey,
               fontWeight: FontWeight.w500,
             ),
+          ),
+
+          SizedBox(height: size.height * 0.03),
+
+          // Alt reklam (Giriş yapmış ama portföyü olmayan kullanıcılar için)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 12.0),
+            child: AdsBannerWidget(key: Key('empty_state_bottom_ad')),
           ),
         ],
         SizedBox(height: size.height * 0.02),

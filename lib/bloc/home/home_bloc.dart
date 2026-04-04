@@ -2,6 +2,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'home_event.dart';
 import 'home_state.dart';
 import '../../services/home_service.dart';
+import '../../services/auth_service.dart';
 
 class HomeBloc extends Bloc<HomeEvent, HomeState> {
   HomeBloc() : super(const HomeInitial()) {
@@ -13,6 +14,16 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     emit(const HomeLoading());
 
     try {
+      // ✅ TOKEN KONTROLÜ - Token yoksa API çağrısı yapma
+      final isLoggedIn = await AuthService().isLoggedIn();
+
+      if (!isLoggedIn) {
+        print('DEBUG: Token yok, direkt empty state döndürülüyor');
+        emit(const HomeEmpty());
+        return;
+      }
+
+      // Token varsa API çağrısı yap
       final detailResponse = await HomeService.getPortfolioSummary();
 
       // Response kontrolü
@@ -24,7 +35,6 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
 
       final data = detailResponse['data'];
 
-      // ✅ VARLIKLARI İŞLE (Null Check + Try-Parse)
       final List<AssetItem> assetsList = [];
       if (data['assets'] != null && data['assets'] is List) {
         for (var item in data['assets']) {
@@ -65,7 +75,15 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     } catch (e, stack) {
       print('DEBUG ERROR: $e');
       print('DEBUG STACK: $stack');
-      emit(HomeError("Veriler işlenirken hata oluştu: ${e.toString()}"));
+
+      // Token hatası ise empty state döndür
+      if (e.toString().contains('Token') || e.toString().contains('token')) {
+        print('DEBUG: Token hatası, empty state döndürülüyor');
+        emit(const HomeEmpty());
+      } else {
+        // Diğer hatalar için error state
+        emit(HomeError("Veriler işlenirken hata oluştu: ${e.toString()}"));
+      }
     }
   }
 

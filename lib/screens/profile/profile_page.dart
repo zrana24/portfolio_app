@@ -46,7 +46,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
     return Scaffold(
       backgroundColor: Colors.white,
-      bottomNavigationBar: const CebeciBottomNav(currentIndex: 3),
+      bottomNavigationBar: const CebeciBottomNav(currentIndex: 4),
       body: SafeArea(
         child: BlocConsumer<ProfileBloc, ProfileState>(
           listener: (context, state) {
