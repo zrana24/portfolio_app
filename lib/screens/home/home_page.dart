@@ -211,7 +211,7 @@ class _HomePageState extends State<HomePage> {
           SizedBox(height: size.height * 0.05),
         ],
 
-        _buildSectionTitle("Varlıklar Toplamı", size, hasArrows: true),
+        _buildSectionTitle("Portföyler Toplamı", size, hasArrows: true),
         Text(
           "${totalValue.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')} ₺",
           style: TextStyle(
@@ -265,15 +265,6 @@ class _HomePageState extends State<HomePage> {
                       fontSize: size.width * 0.03,
                     ),
                   ),
-                  Icon(
-                    totalPnLPercent >= 0
-                        ? Icons.trending_up
-                        : Icons.trending_down,
-                    size: size.width * 0.04,
-                    color: totalPnLPercent >= 0
-                        ? Colors.green.shade400
-                        : Colors.red.shade400,
-                  ),
                 ],
               ),
             ),
@@ -283,7 +274,7 @@ class _HomePageState extends State<HomePage> {
 
         // Varlık listesi (İçerik)
         if (state.assets.isNotEmpty) ...[
-          _buildSectionTitle("Varlıklarım", size, hasSort: true),
+          _buildSectionTitle("İçerik", size, hasSort: true),
           SizedBox(height: size.height * 0.02),
           ...state.assets.asMap().entries.map((entry) {
             final index = entry.key;
@@ -603,45 +594,8 @@ class _HomePageState extends State<HomePage> {
       ),
     );
 
-    // Eğer değişiklik yapıldıysa (true dönerse) sayfayı yenile
     if (result == true && mounted) {
       context.read<HomeBloc>().add(LoadHomeData());
-    }
-  }
-
-  Future<void> _confirmDeleteAsset(AssetItem asset) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Varlığı Sil"),
-        content: const Text("Bu varlığı portföyünüzden kaldırmak istediğinize emin misiniz?"),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text("İptal")),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true), 
-            child: Text("Sil", style: TextStyle(color: Colors.red.shade400))
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed == true) {
-      setState(() => _isSavingAsset = true);
-      try {
-        await _portfolioService.deleteAsset(portfolioId: asset.portfolioId, assetId: asset.id);
-        if (mounted) {
-          setState(() {
-            _isSavingAsset = false;
-            _expandedAssetKey = null;
-          });
-          context.read<HomeBloc>().add(LoadHomeData());
-        }
-      } catch (e) {
-        if (mounted) {
-          setState(() => _isSavingAsset = false);
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Hata: $e"), backgroundColor: Colors.red));
-        }
-      }
     }
   }
 

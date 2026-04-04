@@ -27,14 +27,12 @@ class AddAssetPage extends StatefulWidget {
 }
 
 class _AddAssetPageState extends State<AddAssetPage> {
-  // TextEditingController'ları burada tanımla
   final TextEditingController _assetNameController = TextEditingController();
   final TextEditingController _quantityController = TextEditingController();
   final TextEditingController _purchasePriceController = TextEditingController();
 
   @override
   void dispose() {
-    // Controller'ları dispose et
     _assetNameController.dispose();
     _quantityController.dispose();
     _purchasePriceController.dispose();
@@ -53,22 +51,16 @@ class _AddAssetPageState extends State<AddAssetPage> {
       )..add(LoadAssetData()),
       child: BlocListener<AddAssetBloc, AddAssetState>(
         listener: (context, state) {
-          print('📱 AddAsset State Değişti: ${state.runtimeType}');
-
-          // State değiştiğinde controller'ları güncelle
-          // State değiştiğinde controller'ları sadece değer farklıysa güncelle
           if (state is AddAssetLoaded) {
             if (_assetNameController.text != state.assetName) {
               _assetNameController.text = state.assetName;
             }
-            
-            // Miktar kontrolü: Sayısal değer aynıysa metni değiştirme (örn: 30 ve 30.0 aynıdır)
+
             final currentQuantity = double.tryParse(_quantityController.text) ?? 0;
             if (currentQuantity != state.quantity) {
               _quantityController.text = state.quantity == 0 ? '' : state.quantity.toString();
             }
 
-            // Fiyat kontrolü: Sayısal değer aynıysa metni değiştirme
             final currentPrice = double.tryParse(_purchasePriceController.text) ?? 0;
             if (currentPrice != state.purchasePrice) {
               _purchasePriceController.text = state.purchasePrice == 0 ? '' : state.purchasePrice.toString();
@@ -76,11 +68,14 @@ class _AddAssetPageState extends State<AddAssetPage> {
           }
 
           if (state is AddAssetSuccess) {
-            print('✅ Success state - Ekran kapatılıyor');
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Varlık başarıyla eklendi'),
-                backgroundColor: Colors.green,
+              SnackBar(
+                content: const Text('Varlık başarıyla eklendi'),
+                backgroundColor: Colors.green.shade600,
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
               ),
             );
             Navigator.pushNamedAndRemoveUntil(
@@ -89,38 +84,30 @@ class _AddAssetPageState extends State<AddAssetPage> {
                   (route) => false,
             );
           } else if (state is AddAssetError) {
-            print('❌ Error state: ${state.message}');
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(state.message),
-                backgroundColor: Colors.red,
+                backgroundColor: Colors.red.shade600,
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
                 duration: const Duration(seconds: 3),
               ),
             );
-          } else if (state is AddAssetSaving) {
-            print('⏳ Saving state - Loading gösteriliyor');
           }
         },
         child: Scaffold(
-          backgroundColor: Colors.white,
+          backgroundColor: const Color(0xFFF8F9FA),
           body: SafeArea(
             child: BlocBuilder<AddAssetBloc, AddAssetState>(
               builder: (context, state) {
                 if (state is AddAssetLoading) {
-                  return const Center(child: CircularProgressIndicator());
+                  return const Center(child: CircularProgressIndicator(color: Color(0xFF1A0B52)));
                 } else if (state is AddAssetLoaded) {
                   return _buildContent(context, state, size);
                 } else if (state is AddAssetSaving) {
-                  return const Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        CircularProgressIndicator(),
-                        SizedBox(height: 16),
-                        Text('Kaydediliyor...'),
-                      ],
-                    ),
-                  );
+                  return const Center(child: CircularProgressIndicator(color: Color(0xFF1A0B52)));
                 } else if (state is AddAssetError) {
                   return _buildErrorState(context, state.message, size);
                 }
@@ -136,30 +123,7 @@ class _AddAssetPageState extends State<AddAssetPage> {
   Widget _buildErrorState(BuildContext context, String message, Size size) {
     return Column(
       children: [
-        // App Bar
-        Padding(
-          padding: EdgeInsets.all(size.width * 0.05),
-          child: Row(
-            children: [
-              const BackButtonWidget(),
-              SizedBox(width: size.width * 0.03),
-              Expanded(
-                child: Text(
-                  '${widget.name ?? widget.symbol} Ekle',
-                  style: TextStyle(
-                    fontSize: size.width * 0.045,
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFF1A1A1A),
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-              SizedBox(width: size.width * 0.08),
-            ],
-          ),
-        ),
-
-        // Error Content
+        _buildAppBar(context, widget.name ?? widget.symbol, size),
         Expanded(
           child: Center(
             child: Padding(
@@ -168,45 +132,43 @@ class _AddAssetPageState extends State<AddAssetPage> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(
-                    Icons.error_outline,
-                    size: size.width * 0.2,
-                    color: Colors.red.shade300,
+                    Icons.error_outline_rounded,
+                    size: size.width * 0.15,
+                    color: Colors.red.shade400,
                   ),
-                  SizedBox(height: size.height * 0.03),
+                  SizedBox(height: size.height * 0.02),
                   Text(
                     'Bir hata oluştu',
                     style: TextStyle(
                       fontSize: size.width * 0.05,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
-                  SizedBox(height: size.height * 0.015),
+                  SizedBox(height: size.height * 0.01),
                   Text(
                     message,
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: size.width * 0.035,
-                      color: Colors.grey,
+                      color: const Color(0xFF6B7280),
                     ),
                   ),
-                  SizedBox(height: size.height * 0.04),
+                  SizedBox(height: size.height * 0.03),
                   ElevatedButton.icon(
-                    onPressed: () {
-                      context.read<AddAssetBloc>().add(LoadAssetData());
-                    },
-                    icon: const Icon(Icons.refresh),
+                    onPressed: () => context.read<AddAssetBloc>().add(LoadAssetData()),
+                    icon: const Icon(Icons.refresh_rounded),
                     label: const Text('Tekrar Dene'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF1A0B52),
                       foregroundColor: Colors.white,
                       padding: EdgeInsets.symmetric(
                         horizontal: size.width * 0.08,
-                        vertical: size.height * 0.018,
+                        vertical: size.height * 0.015,
                       ),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(size.width * 0.08),
+                        borderRadius: BorderRadius.circular(size.width * 0.03),
                       ),
+                      elevation: 0,
                     ),
                   ),
                 ],
@@ -218,48 +180,55 @@ class _AddAssetPageState extends State<AddAssetPage> {
     );
   }
 
+  Widget _buildAppBar(BuildContext context, String title, Size size) {
+    return Container(
+      padding: EdgeInsets.all(size.width * 0.05),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Color(0x0A000000),
+            blurRadius: 8,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          const Align(
+            alignment: Alignment.centerLeft,
+            child: BackButtonWidget(),
+          ),
+          Text(
+            '$title Ekle',
+            style: TextStyle(
+              fontSize: size.width * 0.045,
+              fontWeight: FontWeight.w700,
+              color: const Color(0xFF1A1A1A),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildContent(BuildContext context, AddAssetLoaded state, Size size) {
     return Column(
       children: [
-        // App Bar
-        Padding(
-          padding: EdgeInsets.all(size.width * 0.05),
-          child: Row(
-            children: [
-              const BackButtonWidget(),
-              SizedBox(width: size.width * 0.03),
-              Expanded(
-                child: Text(
-                  '${state.name} Ekle',
-                  style: TextStyle(
-                    fontSize: size.width * 0.045,
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFF1A1A1A),
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-              SizedBox(width: size.width * 0.08),
-            ],
-          ),
-        ),
-
-        // Scrollable Content
+        _buildAppBar(context, state.name, size),
         Expanded(
           child: SingleChildScrollView(
             physics: const BouncingScrollPhysics(),
-            padding: EdgeInsets.symmetric(horizontal: size.width * 0.05),
+            padding: EdgeInsets.all(size.width * 0.05),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildGraphSection(state, size),
-                SizedBox(height: size.height * 0.025),
-                _buildPriceInfo(state, size),
-                SizedBox(height: size.height * 0.025),
+                _buildPriceSection(state, size),
+                SizedBox(height: size.height * 0.02),
                 _buildInputSection(context, state, size),
-                SizedBox(height: size.height * 0.03),
+                SizedBox(height: size.height * 0.02),
                 _buildSaveButton(context, state, size),
-                SizedBox(height: size.height * 0.03),
+                SizedBox(height: size.height * 0.02),
               ],
             ),
           ),
@@ -268,59 +237,76 @@ class _AddAssetPageState extends State<AddAssetPage> {
     );
   }
 
-  Widget _buildGraphSection(AddAssetLoaded state, Size size) {
+  Widget _buildPriceSection(AddAssetLoaded state, Size size) {
     final isPositive = state.dailyChange >= 0;
 
     return Container(
       padding: EdgeInsets.all(size.width * 0.04),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(size.width * 0.04),
-        border: Border.all(color: Colors.grey.shade200, width: 1),
+        borderRadius: BorderRadius.circular(size.width * 0.035),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Anlık',
-                style: TextStyle(
-                  fontSize: size.width * 0.035,
-                  color: Colors.grey.shade600,
-                ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Anlık Fiyat',
+                    style: TextStyle(
+                      fontSize: size.width * 0.032,
+                      color: const Color(0xFF6B7280),
+                    ),
+                  ),
+                  SizedBox(height: size.height * 0.005),
+                  Text(
+                    state.currentPrice.toStringAsFixed(2),
+                    style: TextStyle(
+                      fontSize: size.width * 0.065,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF1A1A1A),
+                    ),
+                  ),
+                ],
               ),
               Container(
                 padding: EdgeInsets.symmetric(
                   horizontal: size.width * 0.03,
-                  vertical: size.height * 0.008,
+                  vertical: size.height * 0.006,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade100,
-                  borderRadius: BorderRadius.circular(size.width * 0.04),
+                  color: isPositive ? Colors.green.shade50 : Colors.red.shade50,
+                  borderRadius: BorderRadius.circular(size.width * 0.02),
                 ),
                 child: Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(
-                      'Tarih: Son 7 Gün',
-                      style: TextStyle(
-                        fontSize: size.width * 0.03,
-                        color: Colors.black87,
-                      ),
+                    Icon(
+                      isPositive ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded,
+                      size: size.width * 0.035,
+                      color: isPositive ? Colors.green.shade600 : Colors.red.shade600,
                     ),
                     SizedBox(width: size.width * 0.01),
-                    Icon(
-                      Icons.keyboard_arrow_down,
-                      size: size.width * 0.04,
-                      color: Colors.black87,
+                    Text(
+                      '${isPositive ? '+' : ''}${state.dailyChange.toStringAsFixed(2)}%',
+                      style: TextStyle(
+                        fontSize: size.width * 0.032,
+                        fontWeight: FontWeight.w600,
+                        color: isPositive ? Colors.green.shade600 : Colors.red.shade600,
+                      ),
                     ),
                   ],
                 ),
               ),
             ],
           ),
+
           SizedBox(height: size.height * 0.02),
+
           SizedBox(
             height: size.height * 0.15,
             child: _buildLineChart(state, size, isPositive),
@@ -332,7 +318,15 @@ class _AddAssetPageState extends State<AddAssetPage> {
 
   Widget _buildLineChart(AddAssetLoaded state, Size size, bool isPositive) {
     if (state.priceHistory.chart.data.isEmpty) {
-      return const Center(child: Text('Grafik verisi yok'));
+      return Center(
+        child: Text(
+          'Grafik verisi yok',
+          style: TextStyle(
+            fontSize: size.width * 0.035,
+            color: Colors.grey.shade400,
+          ),
+        ),
+      );
     }
 
     final spots = <FlSpot>[];
@@ -340,19 +334,32 @@ class _AddAssetPageState extends State<AddAssetPage> {
       spots.add(FlSpot(i.toDouble(), state.priceHistory.chart.data[i]));
     }
 
+    final minY = spots.map((e) => e.y).reduce((a, b) => a < b ? a : b);
+    final maxY = spots.map((e) => e.y).reduce((a, b) => a > b ? a : b);
+
     return LineChart(
       LineChartData(
-        gridData: const FlGridData(show: false),
+        gridData: FlGridData(
+          show: true,
+          drawVerticalLine: false,
+          getDrawingHorizontalLine: (value) {
+            return FlLine(
+              color: const Color(0xFFF3F4F6),
+              strokeWidth: 1,
+            );
+          },
+        ),
         titlesData: const FlTitlesData(show: false),
         borderData: FlBorderData(show: false),
-        minY: spots.map((e) => e.y).reduce((a, b) => a < b ? a : b) * 0.998,
-        maxY: spots.map((e) => e.y).reduce((a, b) => a > b ? a : b) * 1.002,
+        minY: minY * 0.998,
+        maxY: maxY * 1.002,
         lineBarsData: [
           LineChartBarData(
             spots: spots,
             isCurved: true,
-            color: isPositive ? const Color(0xFF4CAF50) : const Color(0xFFE53935),
-            barWidth: 2,
+            curveSmoothness: 0.35,
+            color: isPositive ? Colors.green.shade600 : Colors.red.shade600,
+            barWidth: 2.5,
             isStrokeCapRound: true,
             dotData: FlDotData(
               show: true,
@@ -361,8 +368,8 @@ class _AddAssetPageState extends State<AddAssetPage> {
                   return FlDotCirclePainter(
                     radius: 4,
                     color: Colors.white,
-                    strokeWidth: 2,
-                    strokeColor: isPositive ? const Color(0xFF4CAF50) : const Color(0xFFE53935),
+                    strokeWidth: 2.5,
+                    strokeColor: isPositive ? Colors.green.shade600 : Colors.red.shade600,
                   );
                 }
                 return FlDotCirclePainter(radius: 0, color: Colors.transparent);
@@ -374,8 +381,8 @@ class _AddAssetPageState extends State<AddAssetPage> {
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  (isPositive ? const Color(0xFF4CAF50) : const Color(0xFFE53935)).withOpacity(0.2),
-                  (isPositive ? const Color(0xFF4CAF50) : const Color(0xFFE53935)).withOpacity(0.0),
+                  (isPositive ? Colors.green.shade600 : Colors.red.shade600).withOpacity(0.15),
+                  (isPositive ? Colors.green.shade600 : Colors.red.shade600).withOpacity(0.0),
                 ],
               ),
             ),
@@ -385,98 +392,12 @@ class _AddAssetPageState extends State<AddAssetPage> {
     );
   }
 
-  Widget _buildPriceInfo(AddAssetLoaded state, Size size) {
-    final isPositive = state.dailyChange >= 0;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          state.currentPrice.toStringAsFixed(2).replaceAllMapped(
-            RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
-                (m) => '${m[1]},',
-          ),
-          style: TextStyle(
-            fontSize: size.width * 0.08,
-            fontWeight: FontWeight.bold,
-            color: const Color(0xFF1A1A1A),
-          ),
-        ),
-        SizedBox(height: size.height * 0.01),
-        Row(
-          children: [
-            Container(
-              padding: EdgeInsets.symmetric(
-                horizontal: size.width * 0.025,
-                vertical: size.height * 0.005,
-              ),
-              decoration: BoxDecoration(
-                color: isPositive
-                    ? const Color(0xFF4CAF50).withOpacity(0.1)
-                    : const Color(0xFFE53935).withOpacity(0.1),
-                borderRadius: BorderRadius.circular(size.width * 0.02),
-              ),
-              child: Text(
-                '${isPositive ? '+' : ''}${state.dailyChange.toStringAsFixed(2)}',
-                style: TextStyle(
-                  fontSize: size.width * 0.032,
-                  fontWeight: FontWeight.w600,
-                  color: isPositive ? const Color(0xFF4CAF50) : const Color(0xFFE53935),
-                ),
-              ),
-            ),
-            SizedBox(width: size.width * 0.02),
-            Container(
-              padding: EdgeInsets.symmetric(
-                horizontal: size.width * 0.025,
-                vertical: size.height * 0.005,
-              ),
-              decoration: BoxDecoration(
-                color: Colors.grey.shade100,
-                borderRadius: BorderRadius.circular(size.width * 0.02),
-              ),
-              child: Text(
-                '%${state.dailyChange.toStringAsFixed(1)}',
-                style: TextStyle(
-                  fontSize: size.width * 0.032,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black87,
-                ),
-              ),
-            ),
-            const Spacer(),
-            Icon(
-              isPositive ? Icons.trending_up : Icons.trending_down,
-              color: isPositive ? const Color(0xFF4CAF50) : const Color(0xFFE53935),
-              size: size.width * 0.05,
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
   Widget _buildInputSection(BuildContext context, AddAssetLoaded state, Size size) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Varlık Bilgileri',
-          style: TextStyle(
-            fontSize: size.width * 0.038,
-            fontWeight: FontWeight.w600,
-            color: const Color(0xFF1A1A1A),
-          ),
-        ),
-        SizedBox(height: size.height * 0.015),
-
-        // Portfolio Selector
         _buildPortfolioSelector(context, state, size),
         SizedBox(height: size.height * 0.015),
-
-        // Varlık İsmi Input - Controller kullan
-        _buildLabeledInput(
-          context,
+        _buildInput(
           label: 'Varlık Adı',
           hint: 'Örn: Altın Gram',
           controller: _assetNameController,
@@ -487,10 +408,7 @@ class _AddAssetPageState extends State<AddAssetPage> {
           isNumeric: false,
         ),
         SizedBox(height: size.height * 0.015),
-
-        // Miktar Input - Controller kullan
-        _buildLabeledInput(
-          context,
+        _buildInput(
           label: 'Miktar',
           hint: '0.0',
           controller: _quantityController,
@@ -499,13 +417,9 @@ class _AddAssetPageState extends State<AddAssetPage> {
             context.read<AddAssetBloc>().add(UpdateQuantity(quantity: quantity));
           },
           size: size,
-          isNumeric: true,
         ),
         SizedBox(height: size.height * 0.015),
-
-        // Birim Fiyat Input - Controller kullan
-        _buildLabeledInput(
-          context,
+        _buildInput(
           label: 'Birim Fiyat (Opsiyonel)',
           hint: '0.0',
           controller: _purchasePriceController,
@@ -514,10 +428,7 @@ class _AddAssetPageState extends State<AddAssetPage> {
             context.read<AddAssetBloc>().add(UpdatePurchasePrice(price: price));
           },
           size: size,
-          isNumeric: true,
         ),
-        SizedBox(height: size.height * 0.015),
-
       ],
     );
   }
@@ -527,28 +438,50 @@ class _AddAssetPageState extends State<AddAssetPage> {
       onTap: () => _showPortfolioSheet(context, state, size),
       child: Container(
         padding: EdgeInsets.symmetric(
-          horizontal: size.width * 0.04,
-          vertical: size.height * 0.018,
+          horizontal: size.width * 0.045,
+          vertical: size.height * 0.02,
         ),
         decoration: BoxDecoration(
-          color: const Color(0xFF1A0B52),
-          borderRadius: BorderRadius.circular(size.width * 0.03),
+          gradient: const LinearGradient(
+            colors: [Color(0xFF1A0B52), Color(0xFF2D1B6B)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(size.width * 0.035),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF1A0B52).withOpacity(0.2),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              state.selectedPortfolio.name,
-              style: TextStyle(
-                fontSize: size.width * 0.038,
-                fontWeight: FontWeight.w600,
-                color: Colors.white,
+            Expanded(
+              child: Text(
+                state.selectedPortfolio.name,
+                style: TextStyle(
+                  fontSize: size.width * 0.04,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                  letterSpacing: 0.3,
+                ),
+                overflow: TextOverflow.ellipsis,
               ),
             ),
-            Icon(
-              Icons.keyboard_arrow_down,
-              color: Colors.white,
-              size: size.width * 0.05,
+            Container(
+              padding: EdgeInsets.all(size.width * 0.015),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(size.width * 0.02),
+              ),
+              child: Icon(
+                Icons.keyboard_arrow_down,
+                color: Colors.white,
+                size: size.width * 0.045,
+              ),
             ),
           ],
         ),
@@ -559,52 +492,175 @@ class _AddAssetPageState extends State<AddAssetPage> {
   void _showPortfolioSheet(BuildContext context, AddAssetLoaded state, Size size) {
     showModalBottomSheet(
       context: context,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(size.width * 0.05),
-        ),
-      ),
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
       builder: (sheetContext) => Container(
-        padding: EdgeInsets.all(size.width * 0.05),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(
+            top: Radius.circular(size.width * 0.06),
+          ),
+        ),
+        constraints: BoxConstraints(
+          maxHeight: size.height * 0.6,
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              'Portföy Seç',
-              style: TextStyle(
-                fontSize: size.width * 0.045,
-                fontWeight: FontWeight.bold,
+            // Drag handle
+            Container(
+              margin: EdgeInsets.only(top: size.height * 0.015),
+              width: size.width * 0.12,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2),
               ),
             ),
-            SizedBox(height: size.height * 0.02),
-            ...state.portfolios.map((portfolio) {
-              final isSelected = portfolio.id == state.selectedPortfolio.id;
-              return ListTile(
-                title: Text(portfolio.name),
-                trailing: isSelected
-                    ? const Icon(Icons.check, color: Color(0xFF1A0B52))
-                    : null,
-                onTap: () {
-                  context.read<AddAssetBloc>().add(SelectPortfolio(portfolio: portfolio));
-                  Navigator.pop(sheetContext);
+
+            // Başlık
+            Padding(
+              padding: EdgeInsets.only(
+                top: size.height * 0.02,
+                left: size.width * 0.05,
+                right: size.width * 0.05,
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Portföy Seç',
+                    style: TextStyle(
+                      fontSize: size.width * 0.05,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF1A1A1A),
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.pop(sheetContext),
+                    icon: const Icon(Icons.close, color: Color(0xFF6B7280)),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+                ],
+              ),
+            ),
+
+            // Scrollable portföy listesi
+            Flexible(
+              child: ListView.builder(
+                shrinkWrap: true,
+                physics: const BouncingScrollPhysics(),
+                padding: EdgeInsets.symmetric(
+                  horizontal: size.width * 0.05,
+                  vertical: size.height * 0.015,
+                ),
+                itemCount: state.portfolios.length,
+                itemBuilder: (context, index) {
+                  final portfolio = state.portfolios[index];
+                  final isSelected = portfolio.id == state.selectedPortfolio.id;
+
+                  return Container(
+                    margin: EdgeInsets.only(bottom: size.height * 0.012),
+                    child: InkWell(
+                      onTap: () {
+                        context.read<AddAssetBloc>().add(SelectPortfolio(portfolio: portfolio));
+                        Navigator.pop(sheetContext);
+                      },
+                      borderRadius: BorderRadius.circular(size.width * 0.035),
+                      child: Container(
+                        padding: EdgeInsets.all(size.width * 0.04),
+                        decoration: BoxDecoration(
+                          color: isSelected ? const Color(0xFF1A0B52) : Colors.white,
+                          borderRadius: BorderRadius.circular(size.width * 0.035),
+                          border: Border.all(
+                            color: isSelected ? const Color(0xFF1A0B52) : const Color(0xFFE5E7EB),
+                            width: 1.5,
+                          ),
+                          boxShadow: isSelected
+                              ? [
+                            BoxShadow(
+                              color: const Color(0xFF1A0B52).withOpacity(0.2),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ]
+                              : null,
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: size.width * 0.11,
+                              height: size.width * 0.11,
+                              decoration: BoxDecoration(
+                                gradient: isSelected
+                                    ? LinearGradient(
+                                  colors: [
+                                    Colors.white.withOpacity(0.3),
+                                    Colors.white.withOpacity(0.15)
+                                  ],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                )
+                                    : LinearGradient(
+                                  colors: [
+                                    const Color(0xFF1A0B52).withOpacity(0.1),
+                                    const Color(0xFF1A0B52).withOpacity(0.05)
+                                  ],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
+                                Icons.account_balance_wallet_rounded,
+                                color: isSelected ? Colors.white : const Color(0xFF1A0B52),
+                                size: size.width * 0.05,
+                              ),
+                            ),
+                            SizedBox(width: size.width * 0.035),
+                            Expanded(
+                              child: Text(
+                                portfolio.name,
+                                style: TextStyle(
+                                  fontSize: size.width * 0.04,
+                                  fontWeight: FontWeight.w600,
+                                  color: isSelected ? Colors.white : const Color(0xFF1A1A1A),
+                                  letterSpacing: 0.2,
+                                ),
+                              ),
+                            ),
+                            if (isSelected)
+                              Icon(
+                                Icons.check_circle_rounded,
+                                color: Colors.white,
+                                size: size.width * 0.055,
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
                 },
-              );
-            }),
+              ),
+            ),
+
+            // Alt padding
+            SizedBox(height: size.height * 0.025),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildLabeledInput(
-      BuildContext context, {
-        required String label,
-        required String hint,
-        required TextEditingController controller,
-        required Function(String) onChanged,
-        required Size size,
-        bool isNumeric = true,
-      }) {
+  Widget _buildInput({
+    required String label,
+    required String hint,
+    required TextEditingController controller,
+    required Function(String) onChanged,
+    required Size size,
+    bool isNumeric = true,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -612,7 +668,8 @@ class _AddAssetPageState extends State<AddAssetPage> {
           label,
           style: TextStyle(
             fontSize: size.width * 0.035,
-            color: Colors.grey.shade600,
+            fontWeight: FontWeight.w600,
+            color: const Color(0xFF6B7280),
           ),
         ),
         SizedBox(height: size.height * 0.008),
@@ -628,50 +685,23 @@ class _AddAssetPageState extends State<AddAssetPage> {
             hintText: hint,
             hintStyle: TextStyle(color: Colors.grey.shade400),
             filled: true,
-            fillColor: Colors.white,
+            fillColor: const Color(0xFFF8F9FA),
             contentPadding: EdgeInsets.symmetric(
-              horizontal: size.width * 0.04,
-              vertical: size.height * 0.018,
+              horizontal: size.width * 0.045,
+              vertical: size.height * 0.02,
             ),
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(size.width * 0.03),
-              borderSide: BorderSide(color: Colors.grey.shade300),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(size.width * 0.03),
-              borderSide: BorderSide(color: Colors.grey.shade300),
+              borderRadius: BorderRadius.circular(size.width * 0.035),
+              borderSide: BorderSide.none,
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(size.width * 0.03),
-              borderSide: const BorderSide(color: Color(0xFF1A0B52), width: 1.5),
+              borderRadius: BorderRadius.circular(size.width * 0.035),
+              borderSide: const BorderSide(color: Color(0xFF1A0B52), width: 2),
             ),
           ),
           onChanged: onChanged,
         ),
       ],
-    );
-  }
-
-  Widget _buildCircularButton({
-    required IconData icon,
-    required VoidCallback onPressed,
-    required Size size,
-  }) {
-    return GestureDetector(
-      onTap: onPressed,
-      child: Container(
-        width: size.width * 0.1,
-        height: size.width * 0.1,
-        decoration: BoxDecoration(
-          color: Colors.grey.shade200,
-          shape: BoxShape.circle,
-        ),
-        child: Icon(
-          icon,
-          size: size.width * 0.05,
-          color: Colors.black87,
-        ),
-      ),
     );
   }
 
@@ -683,16 +713,14 @@ class _AddAssetPageState extends State<AddAssetPage> {
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
-        onPressed: isValid
-            ? () => context.read<AddAssetBloc>().add(SaveAsset())
-            : null,
+        onPressed: isValid ? () => context.read<AddAssetBloc>().add(SaveAsset()) : null,
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFF1A0B52),
           disabledBackgroundColor: Colors.grey.shade300,
           foregroundColor: Colors.white,
           padding: EdgeInsets.symmetric(vertical: size.height * 0.02),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(size.width * 0.03),
+            borderRadius: BorderRadius.circular(size.width * 0.035),
           ),
           elevation: 0,
         ),
@@ -700,7 +728,7 @@ class _AddAssetPageState extends State<AddAssetPage> {
           'Portföye Ekle',
           style: TextStyle(
             fontSize: size.width * 0.04,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w600,
           ),
         ),
       ),

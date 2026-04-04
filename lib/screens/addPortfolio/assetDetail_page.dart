@@ -38,8 +38,7 @@ class _AssetDetailPageState extends State<AssetDetailPage> {
   final TextEditingController _quantityController = TextEditingController();
   final TextEditingController _purchasePriceController = TextEditingController();
 
-  bool _isEditing = true; // Doğrudan düzenleme modunda açılması için true yapıldı
-  bool _isLoading = false;
+  bool _isSaving = false;
 
   @override
   void initState() {
@@ -59,66 +58,31 @@ class _AssetDetailPageState extends State<AssetDetailPage> {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
+    final bottomPadding = MediaQuery.of(context).padding.bottom;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF8F9FA),
       body: SafeArea(
         child: Column(
           children: [
-            // App Bar
-            Padding(
-              padding: EdgeInsets.all(size.width * 0.05),
-              child: Row(
-                children: [
-                  const BackButtonWidget(),
-                  SizedBox(width: size.width * 0.03),
-                  Expanded(
-                    child: Text(
-                      widget.assetName,
-                      style: TextStyle(
-                        fontSize: size.width * 0.045,
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFF1A1A1A),
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                  SizedBox(width: size.width * 0.03),
-                  // Save Button (Always in edit mode now)
-                  IconButton(
-                    onPressed: _isLoading ? null : _saveChanges,
-                    icon: const Icon(
-                      Icons.save,
-                      color: Color(0xFF1A0B52),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // Content
+            _buildHeader(size),
             Expanded(
               child: SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
-                padding: EdgeInsets.symmetric(horizontal: size.width * 0.05),
+                padding: EdgeInsets.fromLTRB(
+                  size.width * 0.05,
+                  size.width * 0.05,
+                  size.width * 0.05,
+                  size.width * 0.05 + bottomPadding,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Current Stats Card (Only visible when NOT editing, but now always hidden or simplified)
-                    if (!_isEditing) ...[
-                      _buildStatsCard(size),
-                      SizedBox(height: size.height * 0.03),
-                    ],
-
-                    // Edit Form (visible when editing)
-                    if (_isEditing) ...[
-                      _buildEditSection(size),
-                      SizedBox(height: size.height * 0.03),
-                    ],
-
-                    // Delete Button
-                    _buildDeleteButton(size),
-                    SizedBox(height: size.height * 0.03),
+                    _buildSummarySection(size),
+                    SizedBox(height: size.height * 0.025),
+                    _buildEditSection(size),
+                    SizedBox(height: size.height * 0.025),
+                    _buildActionButtons(size),
                   ],
                 ),
               ),
@@ -129,170 +93,170 @@ class _AssetDetailPageState extends State<AssetDetailPage> {
     );
   }
 
-  Widget _buildStatsCard(Size size) {
-    final isPositive = widget.profitLoss >= 0;
-
+  Widget _buildHeader(Size size) {
     return Container(
       padding: EdgeInsets.all(size.width * 0.05),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF3F4F6),
-        borderRadius: BorderRadius.circular(size.width * 0.04),
+      decoration: const BoxDecoration(
+        color: Color(0xFFF8F9FA),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          // Symbol
-          Text(
-            widget.symbol,
-            style: TextStyle(
-              fontSize: size.width * 0.035,
-              color: Colors.grey.shade600,
-              fontWeight: FontWeight.w500,
+          const BackButtonWidget(),
+          SizedBox(width: size.width * 0.03),
+          Expanded(
+            child: Text(
+              widget.assetName,
+              style: TextStyle(
+                fontSize: size.width * 0.05,
+                fontWeight: FontWeight.w800,
+                color: const Color(0xFF1A1A1A),
+              ),
             ),
           ),
-          SizedBox(height: size.height * 0.01),
-
-          // Current Value
-          Text(
-            "${widget.currentValue.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')} ₺",
-            style: TextStyle(
-              fontSize: size.width * 0.08,
-              fontWeight: FontWeight.bold,
-              color: const Color(0xFF1A1A1A),
-            ),
-          ),
-          SizedBox(height: size.height * 0.02),
-
-          // Profit/Loss
-          Row(
-            children: [
-              Container(
-                padding: EdgeInsets.symmetric(
-                  horizontal: size.width * 0.03,
-                  vertical: size.height * 0.008,
-                ),
-                decoration: BoxDecoration(
-                  color: isPositive
-                      ? Colors.green.shade100
-                      : Colors.red.shade100,
-                  borderRadius: BorderRadius.circular(size.width * 0.02),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      isPositive
-                          ? Icons.trending_up
-                          : Icons.trending_down,
-                      size: size.width * 0.04,
-                      color: isPositive
-                          ? Colors.green.shade700
-                          : Colors.red.shade700,
-                    ),
-                    SizedBox(width: size.width * 0.01),
-                    Text(
-                      "${isPositive ? '+' : ''}${widget.profitLoss.toStringAsFixed(0)} ₺",
-                      style: TextStyle(
-                        fontSize: size.width * 0.035,
-                        fontWeight: FontWeight.bold,
-                        color: isPositive
-                            ? Colors.green.shade700
-                            : Colors.red.shade700,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              SizedBox(width: size.width * 0.02),
-              Container(
-                padding: EdgeInsets.symmetric(
-                  horizontal: size.width * 0.03,
-                  vertical: size.height * 0.008,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade200,
-                  borderRadius: BorderRadius.circular(size.width * 0.02),
-                ),
-                child: Text(
-                  "${isPositive ? '+' : ''}%${widget.pnlPercent.toStringAsFixed(1).replaceAll('.', ',')}",
-                  style: TextStyle(
-                    fontSize: size.width * 0.035,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: size.height * 0.025),
-
-          // Details
-          Divider(color: Colors.grey.shade300),
-          SizedBox(height: size.height * 0.015),
-
-          _buildDetailRow('Miktar', '${widget.quantity}', size),
-          SizedBox(height: size.height * 0.012),
-          _buildDetailRow('Alış Fiyatı', '${widget.purchasePrice.toStringAsFixed(2)} ₺', size),
-          SizedBox(height: size.height * 0.012),
-          _buildDetailRow('Güncel Fiyat', '${widget.currentPrice.toStringAsFixed(2)} ₺', size),
-          SizedBox(height: size.height * 0.012),
-          _buildDetailRow('Toplam Yatırım', '${(widget.quantity * widget.purchasePrice).toStringAsFixed(0)} ₺', size),
         ],
       ),
     );
   }
 
-  Widget _buildDetailRow(String label, String value, Size size) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  Widget _buildSummarySection(Size size) {
+    final isPositive = widget.profitLoss >= 0;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          label,
+          widget.symbol,
           style: TextStyle(
             fontSize: size.width * 0.035,
-            color: Colors.grey.shade600,
+            color: const Color(0xFF6B7280),
+            fontWeight: FontWeight.w500,
           ),
         ),
+        SizedBox(height: size.height * 0.008),
         Text(
-          value,
+          '₺${widget.currentValue.toStringAsFixed(2).replaceAllMapped(
+            RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
+                (m) => '${m[1]},',
+          )}',
           style: TextStyle(
-            fontSize: size.width * 0.038,
-            fontWeight: FontWeight.w600,
+            fontSize: size.width * 0.1,
+            fontWeight: FontWeight.w900,
+            color: const Color(0xFF1A1A1A),
+            letterSpacing: -1,
           ),
+        ),
+        SizedBox(height: size.height * 0.012),
+        Row(
+          children: [
+            Container(
+              padding: EdgeInsets.symmetric(
+                horizontal: size.width * 0.03,
+                vertical: size.height * 0.008,
+              ),
+              decoration: BoxDecoration(
+                color: isPositive ? Colors.green.shade50 : Colors.red.shade50,
+                borderRadius: BorderRadius.circular(size.width * 0.02),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    isPositive
+                        ? Icons.arrow_upward_rounded
+                        : Icons.arrow_downward_rounded,
+                    size: size.width * 0.035,
+                    color: isPositive ? Colors.green.shade600 : Colors.red.shade600,
+                  ),
+                  SizedBox(width: size.width * 0.01),
+                  Text(
+                    '${isPositive ? '+' : ''}₺${widget.profitLoss.abs().toStringAsFixed(2)}',
+                    style: TextStyle(
+                      fontSize: size.width * 0.035,
+                      fontWeight: FontWeight.w700,
+                      color: isPositive ? Colors.green.shade600 : Colors.red.shade600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(width: size.width * 0.02),
+            Container(
+              padding: EdgeInsets.symmetric(
+                horizontal: size.width * 0.03,
+                vertical: size.height * 0.008,
+              ),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF8F9FA),
+                borderRadius: BorderRadius.circular(size.width * 0.02),
+                border: Border.all(color: const Color(0xFFE5E7EB)),
+              ),
+              child: Text(
+                '${isPositive ? '+' : ''}${widget.pnlPercent.toStringAsFixed(2)}%',
+                style: TextStyle(
+                  fontSize: size.width * 0.035,
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFF1A1A1A),
+                ),
+              ),
+            ),
+          ],
         ),
       ],
     );
   }
 
+  Widget _buildDetailRow(String label, String value, Size size) {
+    return Padding(
+      padding: EdgeInsets.only(top: size.height * 0.012),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: size.width * 0.035,
+              color: const Color(0xFF6B7280),
+            ),
+          ),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: size.width * 0.038,
+              fontWeight: FontWeight.w600,
+              color: const Color(0xFF1A1A1A),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildEditSection(Size size) {
     return Container(
-      padding: EdgeInsets.all(size.width * 0.05),
+      padding: EdgeInsets.all(size.width * 0.04),
       decoration: BoxDecoration(
-        color: Colors.blue.shade50,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(size.width * 0.04),
-        border: Border.all(color: Colors.blue.shade200, width: 1.5),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Düzenleme Modu',
+            'Düzenle',
             style: TextStyle(
               fontSize: size.width * 0.04,
-              fontWeight: FontWeight.bold,
-              color: const Color(0xFF1A0B52),
+              fontWeight: FontWeight.w700,
+              color: const Color(0xFF1A1A1A),
             ),
           ),
           SizedBox(height: size.height * 0.02),
-
-          // Miktar
           _buildEditField(
             label: 'Miktar',
             controller: _quantityController,
             size: size,
           ),
           SizedBox(height: size.height * 0.015),
-
-          // Alış Fiyatı
           _buildEditField(
             label: 'Alış Fiyatı',
             controller: _purchasePriceController,
@@ -316,7 +280,7 @@ class _AssetDetailPageState extends State<AssetDetailPage> {
           style: TextStyle(
             fontSize: size.width * 0.035,
             fontWeight: FontWeight.w500,
-            color: Colors.grey.shade700,
+            color: const Color(0xFF6B7280),
           ),
         ),
         SizedBox(height: size.height * 0.008),
@@ -328,22 +292,22 @@ class _AssetDetailPageState extends State<AssetDetailPage> {
           ],
           decoration: InputDecoration(
             filled: true,
-            fillColor: Colors.white,
+            fillColor: const Color(0xFFF8F9FA),
             contentPadding: EdgeInsets.symmetric(
               horizontal: size.width * 0.04,
               vertical: size.height * 0.015,
             ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(size.width * 0.03),
-              borderSide: BorderSide(color: Colors.grey.shade300),
+              borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(size.width * 0.03),
-              borderSide: BorderSide(color: Colors.grey.shade300),
+              borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(size.width * 0.03),
-              borderSide: const BorderSide(color: Color(0xFF1A0B52), width: 1.5),
+              borderSide: const BorderSide(color: Color(0xFF1A0B52), width: 2),
             ),
           ),
         ),
@@ -351,28 +315,63 @@ class _AssetDetailPageState extends State<AssetDetailPage> {
     );
   }
 
-  Widget _buildDeleteButton(Size size) {
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton.icon(
-        onPressed: _isLoading ? null : _confirmDelete,
-        icon: const Icon(Icons.delete_outline),
-        label: Text(
-          'Varlığı Sil',
-          style: TextStyle(
-            fontSize: size.width * 0.04,
-            fontWeight: FontWeight.bold,
+  Widget _buildActionButtons(Size size) {
+    return Column(
+      children: [
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton(
+            onPressed: _isSaving ? null : _saveChanges,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF1A0B52),
+              foregroundColor: Colors.white,
+              padding: EdgeInsets.symmetric(vertical: size.height * 0.018),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(size.width * 0.03),
+              ),
+              elevation: 0,
+            ),
+            child: _isSaving
+                ? SizedBox(
+              height: size.width * 0.05,
+              width: size.width * 0.05,
+              child: const CircularProgressIndicator(
+                color: Colors.white,
+                strokeWidth: 2,
+              ),
+            )
+                : Text(
+              'Değişiklikleri Kaydet',
+              style: TextStyle(
+                fontSize: size.width * 0.04,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
         ),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.red.shade400,
-          foregroundColor: Colors.white,
-          padding: EdgeInsets.symmetric(vertical: size.height * 0.018),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(size.width * 0.03),
+        SizedBox(height: size.height * 0.015),
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton(
+            onPressed: _isSaving ? null : _confirmDelete,
+            style: OutlinedButton.styleFrom(
+              foregroundColor: Colors.red.shade600,
+              side: BorderSide(color: Colors.red.shade600),
+              padding: EdgeInsets.symmetric(vertical: size.height * 0.018),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(size.width * 0.03),
+              ),
+            ),
+            child: Text(
+              'Varlığı Sil',
+              style: TextStyle(
+                fontSize: size.width * 0.04,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
         ),
-      ),
+      ],
     );
   }
 
@@ -382,17 +381,19 @@ class _AssetDetailPageState extends State<AssetDetailPage> {
 
     if (quantity <= 0 || purchasePrice <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Miktar ve fiyat 0\'dan büyük olmalıdır'),
-          backgroundColor: Colors.orange,
+        SnackBar(
+          content: const Text('Miktar ve fiyat 0\'dan büyük olmalıdır'),
+          backgroundColor: Colors.orange.shade600,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
       );
       return;
     }
 
-    setState(() {
-      _isLoading = true;
-    });
+    setState(() => _isSaving = true);
 
     try {
       await _portfolioService.updateAsset(
@@ -403,31 +404,29 @@ class _AssetDetailPageState extends State<AssetDetailPage> {
       );
 
       if (mounted) {
-        setState(() {
-          _isLoading = false;
-          _isEditing = false;
-        });
-
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Varlık güncellendi!'),
-            backgroundColor: Colors.green,
+          SnackBar(
+            content: const Text('Varlık güncellendi!'),
+            backgroundColor: Colors.green.shade600,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
         );
-
-        // Geri dön ve home page'i yenile
         Navigator.pop(context, true);
       }
     } catch (e) {
       if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-
+        setState(() => _isSaving = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Hata: $e'),
-            backgroundColor: Colors.red,
+            backgroundColor: Colors.red.shade600,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
         );
       }
@@ -440,13 +439,14 @@ class _AssetDetailPageState extends State<AssetDetailPage> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
+        backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(size.width * 0.04),
         ),
         title: Row(
           children: [
             Icon(
-              Icons.warning_outlined,
+              Icons.warning_rounded,
               color: Colors.red.shade400,
               size: size.width * 0.06,
             ),
@@ -464,7 +464,7 @@ class _AssetDetailPageState extends State<AssetDetailPage> {
             child: Text(
               'İptal',
               style: TextStyle(
-                color: Colors.grey.shade600,
+                color: const Color(0xFF6B7280),
                 fontSize: size.width * 0.038,
               ),
             ),
@@ -472,8 +472,9 @@ class _AssetDetailPageState extends State<AssetDetailPage> {
           ElevatedButton(
             onPressed: () => Navigator.pop(dialogContext, true),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red.shade400,
+              backgroundColor: Colors.red.shade600,
               foregroundColor: Colors.white,
+              elevation: 0,
             ),
             child: Text(
               'Sil',
@@ -490,9 +491,7 @@ class _AssetDetailPageState extends State<AssetDetailPage> {
   }
 
   Future<void> _deleteAsset() async {
-    setState(() {
-      _isLoading = true;
-    });
+    setState(() => _isSaving = true);
 
     try {
       await _portfolioService.deleteAsset(
@@ -502,25 +501,28 @@ class _AssetDetailPageState extends State<AssetDetailPage> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Varlık silindi!'),
-            backgroundColor: Colors.green,
+          SnackBar(
+            content: const Text('Varlık silindi!'),
+            backgroundColor: Colors.green.shade600,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
         );
-
-        // Geri dön ve home page'i yenile
         Navigator.pop(context, true);
       }
     } catch (e) {
       if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-
+        setState(() => _isSaving = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Hata: $e'),
-            backgroundColor: Colors.red,
+            backgroundColor: Colors.red.shade600,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
         );
       }

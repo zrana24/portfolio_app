@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
-import '../app/routes.dart';
 import '../screens/home/home_page.dart';
 import '../screens/price/livePrices_page.dart';
 import '../screens/news/news_page.dart';
 import '../screens/addPortfolio/addPortfolio_page.dart';
 import '../screens/profile/profile_page.dart';
-import '../screens/auth/login_page.dart';
 import '../services/auth_service.dart';
+
+class AuthCache {
+  static bool? isLoggedIn;
+}
 
 class CebeciBottomNav extends StatefulWidget {
   final int currentIndex;
@@ -23,21 +25,23 @@ class CebeciBottomNav extends StatefulWidget {
 }
 
 class _CebeciBottomNavState extends State<CebeciBottomNav> {
-  bool _isLoggedIn = false;
-  bool _isLoading = true;
+  bool _isLoggedIn = AuthCache.isLoggedIn ?? false;
+  int _itemCount = 3;
 
   @override
   void initState() {
     super.initState();
+    _itemCount = _isLoggedIn ? 5 : 3;
     _checkLoginStatus();
   }
 
   Future<void> _checkLoginStatus() async {
     final loggedIn = await AuthService().isLoggedIn();
-    if (mounted) {
+    AuthCache.isLoggedIn = loggedIn;
+    if (mounted && _isLoggedIn != loggedIn) {
       setState(() {
         _isLoggedIn = loggedIn;
-        _isLoading = false;
+        _itemCount = loggedIn ? 5 : 3;
       });
     }
   }
@@ -52,104 +56,79 @@ class _CebeciBottomNavState extends State<CebeciBottomNav> {
     );
   }
 
-  List<_NavItem> _getNavItems() {
+  List<Map<String, dynamic>> _getNavData() {
+    List<Map<String, dynamic>> items = [
+      {'label': ' Canlı Fiyatlar', 'icon': Icons.bar_chart_rounded, 'page':
+      const LivePricesPage()},
+      {'label': 'Haberler', 'icon': Icons.newspaper_rounded, 'page': const NewsPage()},
+      {'label': 'Portföy', 'icon': Icons.pie_chart_rounded, 'page': const HomePage()},
+    ];
+
     if (_isLoggedIn) {
-      return const [
-        _NavItem(label: 'Canlı Fiyatlar', icon: Icons.bar_chart_rounded),
-        _NavItem(label: 'Haberler', icon: Icons.newspaper_rounded),
-        _NavItem(label: 'Portföyüm', icon: Icons.pie_chart_rounded),
-        _NavItem(label: 'Portföy Ekle', icon: Icons.add_circle_outline),
-        _NavItem(label: 'Profil', icon: Icons.person_outline),
-      ];
-    } else {
-      return const [
-        _NavItem(label: 'Canlı Fiyatlar', icon: Icons.bar_chart_rounded),
-        _NavItem(label: 'Haberler', icon: Icons.newspaper_rounded),
-        _NavItem(label: 'Portföyüm', icon: Icons.pie_chart_rounded),
-      ];
+      items.add({'label': 'Portföy Ekle', 'icon': Icons.add_circle_outline, ''
+          'page': const AddPortfolioPage()});
+      items.add({'label': 'Profil', 'icon': Icons.person_outline, 'page': const ProfilePage()});
     }
+    return items;
   }
 
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
+    final navData = _getNavData();
 
-    final items = _getNavItems();
+    final double barHeight = size.height * 0.082;
+    final double horizontalPadding = size.width * 0.04;
+    final double bottomPadding = size.height * 0.015;
 
     return Container(
       color: Colors.transparent,
       child: SafeArea(
         top: false,
         child: Padding(
-          padding: EdgeInsets.only(
-            left: size.width * 0.04,
-            right: size.width * 0.04,
-            bottom: size.height * 0.015,
-            top: size.height * 0.008,
-          ),
-          child: Container(
-            height: size.height * 0.080,
+          padding: EdgeInsets.fromLTRB(horizontalPadding, 8, horizontalPadding, bottomPadding),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+            height: barHeight,
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(size.height * 0.04),
+              borderRadius: BorderRadius.circular(barHeight / 2),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.10),
-                  blurRadius: 24,
-                  spreadRadius: 0,
+                  color: const Color(0x1A000000),
+                  blurRadius: 20,
                   offset: const Offset(0, 4),
                 ),
               ],
             ),
-            child: Row(
-              children: List.generate(items.length, (index) {
-                final isActive = index == widget.currentIndex;
-                return Expanded(
-                  child: GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onTap: () {
-                      if (widget.onTap != null) widget.onTap!(index);
-                      if (index == widget.currentIndex) return;
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(barHeight / 2),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: List.generate(navData.length, (index) {
+                  final isActive = index == widget.currentIndex;
+                  return Flexible(
+                    flex: 1,
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () {
+                        if (widget.onTap != null) widget.onTap!(index);
+                        if (isActive) return;
 
-                      Widget page;
-                      switch (index) {
-                        case 0:
-                          page = const LivePricesPage();
-                          break;
-                        case 1:
-                          page = const NewsPage();
-                          break;
-                        case 2:
-                          page = const HomePage();
-                          break;
-                        case 3:
-                          if (_isLoggedIn) {
-                            page = const AddPortfolioPage();
-                          } else {
-                            return;
-                          }
-                          break;
-                        case 4:
-                          if (_isLoggedIn) {
-                            page = const ProfilePage();
-                          } else {
-                            return;
-                          }
-                          break;
-                        default:
-                          return;
-                      }
-
-                      _navigateWithoutAnimation(context, page);
-                    },
-                    child: _NavItemWidget(
-                      item: items[index],
-                      isActive: isActive,
-                      size: size,
+                        _navigateWithoutAnimation(context, navData[index]['page']);
+                      },
+                      child: _NavItemWidget(
+                        label: navData[index]['label'],
+                        icon: navData[index]['icon'],
+                        isActive: isActive,
+                        size: size,
+                        itemCount: _itemCount,
+                      ),
                     ),
-                  ),
-                );
-              }),
+                  );
+                }),
+              ),
             ),
           ),
         ),
@@ -159,59 +138,66 @@ class _CebeciBottomNavState extends State<CebeciBottomNav> {
 }
 
 class _NavItemWidget extends StatelessWidget {
-  final _NavItem item;
+  final String label;
+  final IconData icon;
   final bool isActive;
   final Size size;
+  final int itemCount;
 
   const _NavItemWidget({
-    required this.item,
+    required this.label,
+    required this.icon,
     required this.isActive,
     required this.size,
+    required this.itemCount,
   });
 
   @override
   Widget build(BuildContext context) {
-    final iconSize = size.width * 0.060;
-    const activeColor = Color(0xFF1A0B52);
-    const inactiveColor = Colors.black54;
+    final double iconSize = itemCount == 5 ? size.width * 0.055 : size.width * 0.06;
+    final double fontSize = itemCount == 5 ? size.width * 0.026 : size.width * 0.029;
 
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        AnimatedContainer(
-          duration: const Duration(milliseconds: 250),
-          curve: Curves.easeInOut,
-          width: isActive ? size.width * 0.10 : iconSize,
-          height: size.height * 0.038,
-          decoration: BoxDecoration(
-            color: isActive ? const Color(0xFFEEEBF8) : Colors.transparent,
-            borderRadius: BorderRadius.circular(size.height * 0.02),
-          ),
-          child: Center(
+    const activeColor = Color(0xFF1A0B52);
+    const inactiveColor = Color(0xFF6B7280);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeInOut,
+            padding: EdgeInsets.symmetric(
+              horizontal: itemCount == 5 ? 8 : 10,
+              vertical: 4,
+            ),
+            decoration: BoxDecoration(
+              color: isActive ? const Color(0xFF1A0B52).withOpacity(0.1) : Colors.transparent,
+              borderRadius: BorderRadius.circular(20),
+            ),
             child: Icon(
-              item.icon,
+              icon,
               size: iconSize,
               color: isActive ? activeColor : inactiveColor,
             ),
           ),
-        ),
-        SizedBox(height: size.height * 0.005),
-        Text(
-          item.label,
-          style: TextStyle(
-            fontSize: size.width * 0.025,
-            fontWeight: isActive ? FontWeight.w700 : FontWeight.w400,
-            color: isActive ? activeColor : inactiveColor,
+          const SizedBox(height: 3),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: fontSize,
+              fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
+              color: isActive ? activeColor : inactiveColor,
+              letterSpacing: -0.2,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
-}
-
-class _NavItem {
-  final String label;
-  final IconData icon;
-
-  const _NavItem({required this.label, required this.icon});
 }

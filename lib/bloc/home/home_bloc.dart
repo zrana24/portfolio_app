@@ -10,18 +10,15 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
   }
 
   Future<void> _onLoadHomeData(LoadHomeData event, Emitter<HomeState> emit) async {
-    // Beyaz ekran kalmaması için state'i hemen loading'e çekiyoruz
     emit(const HomeLoading());
 
     try {
-      // ✅ TOKEN KONTROLÜ - Token yoksa API çağrısı yapma
       final isLoggedIn = await AuthService().isLoggedIn();
       if (!isLoggedIn) {
         emit(const HomeEmpty());
         return;
       }
 
-      // Token varsa özet ve grafik verilerini paralel çek
       final responses = await Future.wait([
         HomeService.getPortfolioSummary(),
         HomeService.getPortfolioChart(),
@@ -38,7 +35,6 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       final data = summaryResponse['data'];
       final List<dynamic> chartDataList = chartResponse['data'] is List ? chartResponse['data'] : [];
 
-      // Grafik verilerini sembol bazlı eşleştirmek için bir map oluştur
       final Map<String, dynamic> symbolCharts = {};
       for (var chartItem in chartDataList) {
         if (chartItem['symbol'] != null) {
@@ -49,15 +45,30 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       final List<AssetItem> assetsList = [];
       if (data['all_assets'] != null && data['all_assets'] is List) {
         for (var item in data['all_assets']) {
-          print('🔍 ASSET KEYS DEBUG: ${item.keys.toList()}');
-          print('🔍 ASSET DATA DEBUG: $item');
+          print('🔍 ASSET RAW DATA: $item');
+
           final symbol = item['symbol']?.toString() ?? '';
-          
-          // ID'yi sırasıyla kontrol et: id, portfolio_asset_id, asset_id
-          final assetId = item['id'] ?? item['portfolio_asset_id'] ?? item['asset_id'] ?? 0;
-          
+
+          // ÖNCE asset_id'yi kontrol et (API'den gelen primary key)
+          int assetId = 0;
+          if (item['asset_id'] != null) {
+            assetId = _safeToInt(item['asset_id']);
+            print('✅ asset_id kullanılıyor: $assetId');
+          } else if (item['id'] != null) {
+            assetId = _safeToInt(item['id']);
+            print('⚠️ id kullanılıyor (fallback): $assetId');
+          } else if (item['portfolio_asset_id'] != null) {
+            assetId = _safeToInt(item['portfolio_asset_id']);
+            print('⚠️ portfolio_asset_id kullanılıyor (fallback): $assetId');
+          }
+
+          if (assetId == 0) {
+            print('❌ UYARI: Asset ID bulunamadı! Item: $item');
+            continue; // Bu asset'i atla
+          }
+
           assetsList.add(AssetItem(
-            id: _safeToInt(assetId),
+            id: assetId, // API'den gelen doğru asset_id
             portfolioId: _safeToInt(item['portfolio_id']),
             portfolioName: item['portfolio_name']?.toString(),
             symbol: symbol,
@@ -68,8 +79,10 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
             currentValue: _safeToDouble(item['current_value']),
             profitLoss: _safeToDouble(item['profit_loss']),
             pnlPercent: _safeToDouble(item['pnl_percent']),
-            chartData: symbolCharts[symbol], // Eşleşen grafik verisini ekle
+            chartData: symbolCharts[symbol],
           ));
+
+          print('✅ Asset eklendi - ID: $assetId, Name: ${item['name']}');
         }
       }
 
@@ -85,6 +98,9 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
         }
       }
 
+      print('📊 TOPLAM ASSET SAYISI: ${assetsList.length}');
+      print('📊 CATEGORY SAYISI: ${categoryList.length}');
+
       emit(HomeLoaded(
         portfolioId: data['portfolio_id'] ?? 0,
         totalValue: _safeToDouble(data['total_current_value']),
@@ -95,21 +111,18 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       ));
 
     } catch (e, stack) {
-      print('DEBUG ERROR: $e');
-      print('DEBUG STACK: $stack');
+      print('❌ ERROR: $e');
+      print('❌ STACK: $stack');
 
-      // Token hatası ise empty state döndür
       if (e.toString().contains('Token') || e.toString().contains('token')) {
-        print('DEBUG: Token hatası, empty state döndürülüyor');
+        print('⚠️ Token hatası, empty state döndürülüyor');
         emit(const HomeEmpty());
       } else {
-        // Diğer hatalar için error state
         emit(HomeError("Veriler işlenirken hata oluştu: ${e.toString()}"));
       }
     }
   }
 
-  // ✅ En Güvenli Double Dönüştürücü
   double _safeToDouble(dynamic value) {
     if (value == null) return 0.0;
     if (value is double) return value;

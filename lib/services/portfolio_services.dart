@@ -69,7 +69,7 @@ class PortfolioService {
         }),
       ).timeout(_timeout);
 
-      if (response.statusCode == 201) {
+      if (response.statusCode == 201 || response.statusCode == 200) {
         final jsonData = json.decode(response.body);
         return Portfolio.fromJson(jsonData['data']);
       } else if (response.statusCode == 422) {
@@ -210,7 +210,7 @@ class PortfolioService {
       print('📥 Response Status: ${response.statusCode}');
       print('📥 Response Body: ${response.body}');
 
-      if (response.statusCode == 201) {
+      if (response.statusCode == 201 || response.statusCode == 200) {
         print('✅ API Başarılı - Varlık eklendi');
         return;
       } else if (response.statusCode == 422) {
@@ -261,9 +261,77 @@ class PortfolioService {
     }
   }
 
-  Future<void> updateAsset({
+  // YENİ: Portfolio summary'den tüm verileri al
+  Future<Map<String, dynamic>> fetchPortfolioSummary() async {
+    try {
+      final token = await TokenService.getToken();
+      if (token == null) {
+        throw PortfolioServiceException('Token bulunamadı');
+      }
+
+      final response = await _client.get(
+        Uri.parse(ApiUrls.mobilePortfolioSummary),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      ).timeout(_timeout);
+
+      if (response.statusCode == 200) {
+        final jsonData = json.decode(response.body);
+        return jsonData['data'] ?? {};
+      } else if (response.statusCode == 401) {
+        throw PortfolioServiceException('Oturum süreniz dolmuş');
+      } else {
+        throw PortfolioServiceException('Özet veriler yüklenemedi');
+      }
+    } catch (e) {
+      if (e is PortfolioServiceException) rethrow;
+      throw PortfolioServiceException('Beklenmeyen hata: $e');
+    }
+  }
+
+  // YENİ: Varlık detayını getir
+  Future<Map<String, dynamic>> getAssetDetail({
     required int portfolioId,
     required int assetId,
+  }) async {
+    try {
+      final token = await TokenService.getToken();
+      if (token == null) {
+        throw PortfolioServiceException('Token bulunamadı');
+      }
+
+      final response = await _client.get(
+        Uri.parse(ApiUrls.portfolioAssetDetail(portfolioId, assetId)),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      ).timeout(_timeout);
+
+      if (response.statusCode == 200) {
+        final jsonData = json.decode(response.body);
+        return jsonData['data'] ?? {};
+      } else if (response.statusCode == 404) {
+        throw PortfolioServiceException('Varlık bulunamadı');
+      } else if (response.statusCode == 401) {
+        throw PortfolioServiceException('Oturum süreniz dolmuş');
+      } else {
+        throw PortfolioServiceException('Varlık detayı yüklenemedi');
+      }
+    } catch (e) {
+      if (e is PortfolioServiceException) rethrow;
+      throw PortfolioServiceException('Beklenmeyen hata: $e');
+    }
+  }
+
+  // GÜNCELLENDİ: asset_id kullanılıyor
+  Future<void> updateAsset({
+    required int portfolioId,
+    required int assetId, // all_assets içindeki asset_id
     required double quantity,
     required double purchasePrice,
     String? purchaseDate,
@@ -271,7 +339,7 @@ class PortfolioService {
   }) async {
     try {
       print('📡 Update Asset API Çağrısı...');
-      print('URL: ${ApiUrls.portfolioAssets(portfolioId)}/$assetId');
+      print('URL: ${ApiUrls.portfolioAssetDetail(portfolioId, assetId)}');
 
       final token = await TokenService.getToken();
       if (token == null) {
@@ -288,7 +356,7 @@ class PortfolioService {
       print('📤 Request Body: ${jsonEncode(body)}');
 
       final response = await _client.put(
-        Uri.parse('${ApiUrls.portfolioAssets(portfolioId)}/$assetId'),
+        Uri.parse(ApiUrls.portfolioAssetDetail(portfolioId, assetId)),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
@@ -324,13 +392,14 @@ class PortfolioService {
     }
   }
 
+  // GÜNCELLENDİ: asset_id kullanılıyor
   Future<void> deleteAsset({
     required int portfolioId,
-    required int assetId,
+    required int assetId, // all_assets içindeki asset_id
   }) async {
     try {
       print('📡 Delete Asset API Çağrısı...');
-      print('URL: ${ApiUrls.portfolioAssets(portfolioId)}/$assetId');
+      print('URL: ${ApiUrls.portfolioAssetDetail(portfolioId, assetId)}');
 
       final token = await TokenService.getToken();
       if (token == null) {
@@ -338,7 +407,7 @@ class PortfolioService {
       }
 
       final response = await _client.delete(
-        Uri.parse('${ApiUrls.portfolioAssets(portfolioId)}/$assetId'),
+        Uri.parse(ApiUrls.portfolioAssetDetail(portfolioId, assetId)),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',

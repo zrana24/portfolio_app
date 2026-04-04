@@ -4,6 +4,7 @@ import '../../services/commodity_services.dart';
 import '../../widgets/nav.dart';
 import '../../widgets/back_button.dart';
 import '../../widgets/footer.dart';
+import '../../widgets/ads_banner_widget.dart';
 import 'addAsset_page.dart';
 
 class AddPortfolioPage extends StatefulWidget {
@@ -71,7 +72,7 @@ class _AddPortfolioPageState extends State<AddPortfolioPage> {
     final bottomPadding = MediaQuery.of(context).padding.bottom;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF8F9FA),
       extendBody: true,
       bottomNavigationBar: const CebeciBottomNav(currentIndex: 3),
       body: SafeArea(
@@ -93,18 +94,24 @@ class _AddPortfolioPageState extends State<AddPortfolioPage> {
   }
 
   Widget _buildAppBar(BuildContext context, Size size) {
-    return Padding(
+    return Container(
       padding: EdgeInsets.symmetric(
         horizontal: size.width * 0.05,
         vertical: size.height * 0.02,
       ),
+      decoration: const BoxDecoration(
+        //color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Color(0x0A000000),
+            blurRadius: 8,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
       child: Stack(
         alignment: Alignment.center,
         children: [
-          const Align(
-            alignment: Alignment.centerLeft,
-            child: BackButtonWidget(),
-          ),
           Text(
             "Portföy Ekle",
             style: TextStyle(
@@ -119,63 +126,70 @@ class _AddPortfolioPageState extends State<AddPortfolioPage> {
   }
 
   Widget _buildContent(Size size, double bottomPadding) {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: size.width * 0.05),
+    return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
+      padding: EdgeInsets.only(
+        bottom: size.height * 0.095 + bottomPadding, // navbar + padding için yer
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(height: size.height * 0.01),
+          SizedBox(height: size.height * 0.02),
 
-          // Portföy Seç Başlığı
-          Text(
-            "Portföy Seç",
-            style: TextStyle(
-              fontSize: size.width * 0.042,
-              fontWeight: FontWeight.bold,
-              color: const Color(0xFF1A1A1A),
+          // Üst Reklam
+          const AdsBannerWidget(),
+          SizedBox(height: size.height * 0.02),
+
+          // Portföy Seç Bölümü
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: size.width * 0.05),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Portföy Seç",
+                  style: TextStyle(
+                    fontSize: size.width * 0.04,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF6B7280),
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                SizedBox(height: size.height * 0.012),
+                _buildPortfolioSelector(size),
+              ],
+            ),
+          ),
+
+          SizedBox(height: size.height * 0.03),
+
+          // Varlık Listesi Bölümü
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: size.width * 0.05),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  "Varlık Seç",
+                  style: TextStyle(
+                    fontSize: size.width * 0.04,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF6B7280),
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ],
             ),
           ),
           SizedBox(height: size.height * 0.015),
 
-          // Seçili Portföy Dropdown
-          _buildPortfolioSelector(size),
-          SizedBox(height: size.height * 0.025),
-
-          // Varlık Listesi Başlığı
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                "Varlık Seç",
-                style: TextStyle(
-                  fontSize: size.width * 0.042,
-                  fontWeight: FontWeight.bold,
-                  color: const Color(0xFF1A1A1A),
-                ),
-              ),
-              Text(
-                "${_commodities.length} varlık",
-                style: TextStyle(
-                  fontSize: size.width * 0.032,
-                  color: Colors.grey.shade600,
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: size.height * 0.015),
-
-          // Varlık Listesi
-          Expanded(
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: size.width * 0.05),
             child: ListView.separated(
-              physics: const BouncingScrollPhysics(), // Smooth scroll
-              padding: EdgeInsets.only(
-                bottom: size.height * 0.082 +
-                    size.height * 0.015 +
-                    bottomPadding +
-                    20,
-              ),
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
               itemCount: _commodities.length,
-              separatorBuilder: (_, __) => SizedBox(height: size.height * 0.012),
+              separatorBuilder: (_, __) => SizedBox(height: size.height * 0.01),
               itemBuilder: (_, i) => _CommodityCard(
                 commodity: _commodities[i],
                 size: size,
@@ -183,6 +197,12 @@ class _AddPortfolioPageState extends State<AddPortfolioPage> {
               ),
             ),
           ),
+
+          SizedBox(height: size.height * 0.02),
+
+          // Alt Reklam
+          const AdsBannerWidget(),
+          SizedBox(height: size.height * 0.02),
         ],
       ),
     );
@@ -193,12 +213,23 @@ class _AddPortfolioPageState extends State<AddPortfolioPage> {
       onTap: () => _showPortfolioBottomSheet(size),
       child: Container(
         padding: EdgeInsets.symmetric(
-          horizontal: size.width * 0.04,
-          vertical: size.height * 0.018,
+          horizontal: size.width * 0.045,
+          vertical: size.height * 0.02,
         ),
         decoration: BoxDecoration(
-          color: const Color(0xFF1A0B52),
-          borderRadius: BorderRadius.circular(size.width * 0.03),
+          gradient: const LinearGradient(
+            colors: [Color(0xFF1A0B52), Color(0xFF2D1B6B)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(size.width * 0.035),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF1A0B52).withOpacity(0.3),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -210,14 +241,22 @@ class _AddPortfolioPageState extends State<AddPortfolioPage> {
                   fontSize: size.width * 0.04,
                   fontWeight: FontWeight.w600,
                   color: Colors.white,
+                  letterSpacing: 0.3,
                 ),
                 overflow: TextOverflow.ellipsis,
               ),
             ),
-            Icon(
-              Icons.keyboard_arrow_down,
-              color: Colors.white,
-              size: size.width * 0.05,
+            Container(
+              padding: EdgeInsets.all(size.width * 0.015),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(size.width * 0.02),
+              ),
+              child: Icon(
+                Icons.keyboard_arrow_down,
+                color: Colors.white,
+                size: size.width * 0.05,
+              ),
             ),
           ],
         ),
@@ -228,22 +267,33 @@ class _AddPortfolioPageState extends State<AddPortfolioPage> {
   void _showPortfolioBottomSheet(Size size) {
     showModalBottomSheet(
       context: context,
-      isScrollControlled: false, // Sayfanın yarısından fazla olmasın
+      isScrollControlled: false,
       backgroundColor: Colors.transparent,
       builder: (sheetContext) => Container(
         constraints: BoxConstraints(
-          maxHeight: size.height * 0.5, // Maksimum yarım ekran
+          maxHeight: size.height * 0.5,
         ),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.vertical(
-            top: Radius.circular(size.width * 0.05),
+            top: Radius.circular(size.width * 0.06),
           ),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Başlık - Fixed (scroll dışında)
+            // Handle bar
+            Container(
+              margin: EdgeInsets.only(top: size.height * 0.015),
+              width: size.width * 0.12,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+
+            // Başlık
             Padding(
               padding: EdgeInsets.only(
                 top: size.height * 0.02,
@@ -256,13 +306,14 @@ class _AddPortfolioPageState extends State<AddPortfolioPage> {
                   Text(
                     'Portföylerim',
                     style: TextStyle(
-                      fontSize: size.width * 0.045,
-                      fontWeight: FontWeight.bold,
+                      fontSize: size.width * 0.05,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF1A1A1A),
                     ),
                   ),
                   IconButton(
                     onPressed: () => Navigator.pop(sheetContext),
-                    icon: const Icon(Icons.close),
+                    icon: const Icon(Icons.close, color: Color(0xFF6B7280)),
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
                   ),
@@ -270,14 +321,14 @@ class _AddPortfolioPageState extends State<AddPortfolioPage> {
               ),
             ),
 
-            // Portföy Listesi - Scrollable
+            // Portföy Listesi
             Flexible(
               child: ListView(
                 shrinkWrap: true,
-                physics: const BouncingScrollPhysics(), // Smooth scroll
+                physics: const BouncingScrollPhysics(),
                 padding: EdgeInsets.symmetric(
                   horizontal: size.width * 0.05,
-                  vertical: size.height * 0.01,
+                  vertical: size.height * 0.015,
                 ),
                 children: [
                   if (_portfolios.isNotEmpty)
@@ -299,13 +350,13 @@ class _AddPortfolioPageState extends State<AddPortfolioPage> {
               ),
             ),
 
-            // Yeni Portföy Oluştur Butonu - Fixed (scroll dışında)
+            // Yeni Portföy Oluştur Butonu
             Padding(
               padding: EdgeInsets.only(
                 left: size.width * 0.05,
                 right: size.width * 0.05,
                 top: size.height * 0.015,
-                bottom: size.height * 0.02,
+                bottom: size.height * 0.025,
               ),
               child: SizedBox(
                 width: double.infinity,
@@ -317,21 +368,23 @@ class _AddPortfolioPageState extends State<AddPortfolioPage> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF1A0B52),
                     foregroundColor: Colors.white,
-                    padding: EdgeInsets.symmetric(vertical: size.height * 0.018),
+                    padding: EdgeInsets.symmetric(vertical: size.height * 0.02),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(size.width * 0.03),
+                      borderRadius: BorderRadius.circular(size.width * 0.035),
                     ),
+                    elevation: 0,
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.add, size: 20),
+                      const Icon(Icons.add_rounded, size: 22),
                       SizedBox(width: size.width * 0.02),
                       Text(
-                        'Portföy Ekle',
+                        'Yeni Portföy Oluştur',
                         style: TextStyle(
                           fontSize: size.width * 0.04,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.3,
                         ),
                       ),
                     ],
@@ -354,44 +407,65 @@ class _AddPortfolioPageState extends State<AddPortfolioPage> {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        margin: EdgeInsets.only(bottom: size.height * 0.01),
-        padding: EdgeInsets.symmetric(
-          horizontal: size.width * 0.04,
-          vertical: size.height * 0.015,
-        ),
+        margin: EdgeInsets.only(bottom: size.height * 0.012),
+        padding: EdgeInsets.all(size.width * 0.04),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF1A0B52) : Colors.grey.shade50,
-          borderRadius: BorderRadius.circular(size.width * 0.03),
+          color: isSelected ? const Color(0xFF1A0B52) : Colors.white,
+          borderRadius: BorderRadius.circular(size.width * 0.035),
           border: Border.all(
-            color: isSelected ? const Color(0xFF1A0B52) : Colors.grey.shade200,
+            color: isSelected ? const Color(0xFF1A0B52) : const Color(0xFFE5E7EB),
             width: 1.5,
           ),
+          boxShadow: isSelected
+              ? [
+            BoxShadow(
+              color: const Color(0xFF1A0B52).withOpacity(0.2),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ]
+              : null,
         ),
         child: Row(
           children: [
             Container(
-              width: size.width * 0.1,
-              height: size.width * 0.1,
+              width: size.width * 0.11,
+              height: size.width * 0.11,
               decoration: BoxDecoration(
-                color: isSelected
-                    ? Colors.white.withOpacity(0.2)
-                    : const Color(0xFF1A0B52).withOpacity(0.1),
+                gradient: isSelected
+                    ? LinearGradient(
+                  colors: [
+                    Colors.white.withOpacity(0.3),
+                    Colors.white.withOpacity(0.15)
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                )
+                    : LinearGradient(
+                  colors: [
+                    const Color(0xFF1A0B52).withOpacity(0.1),
+                    const Color(0xFF1A0B52).withOpacity(0.05)
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
                 shape: BoxShape.circle,
               ),
               child: Icon(
-                Icons.folder_outlined,
+                Icons.account_balance_wallet_rounded,
                 color: isSelected ? Colors.white : const Color(0xFF1A0B52),
                 size: size.width * 0.05,
               ),
             ),
-            SizedBox(width: size.width * 0.03),
+            SizedBox(width: size.width * 0.035),
             Expanded(
               child: Text(
                 portfolio.name,
                 style: TextStyle(
-                  fontSize: size.width * 0.038,
+                  fontSize: size.width * 0.04,
                   fontWeight: FontWeight.w600,
                   color: isSelected ? Colors.white : const Color(0xFF1A1A1A),
+                  letterSpacing: 0.2,
                 ),
               ),
             ),
@@ -403,14 +477,20 @@ class _AddPortfolioPageState extends State<AddPortfolioPage> {
               },
               child: Container(
                 padding: EdgeInsets.all(size.width * 0.02),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? Colors.white.withOpacity(0.15)
+                      : Colors.blue.shade50,
+                  borderRadius: BorderRadius.circular(size.width * 0.02),
+                ),
                 child: Icon(
                   Icons.edit_outlined,
-                  color: isSelected ? Colors.white : Colors.blue.shade400,
-                  size: size.width * 0.05,
+                  color: isSelected ? Colors.white : Colors.blue.shade600,
+                  size: size.width * 0.045,
                 ),
               ),
             ),
-            SizedBox(width: size.width * 0.01),
+            SizedBox(width: size.width * 0.015),
             // Sil butonu
             GestureDetector(
               onTap: () {
@@ -419,20 +499,27 @@ class _AddPortfolioPageState extends State<AddPortfolioPage> {
               },
               child: Container(
                 padding: EdgeInsets.all(size.width * 0.02),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? Colors.white.withOpacity(0.15)
+                      : Colors.red.shade50,
+                  borderRadius: BorderRadius.circular(size.width * 0.02),
+                ),
                 child: Icon(
                   Icons.delete_outline,
-                  color: isSelected ? Colors.white : Colors.red.shade400,
-                  size: size.width * 0.05,
+                  color: isSelected ? Colors.white : Colors.red.shade600,
+                  size: size.width * 0.045,
                 ),
               ),
             ),
-            SizedBox(width: size.width * 0.01),
-            if (isSelected)
+            if (isSelected) ...[
+              SizedBox(width: size.width * 0.015),
               Icon(
-                Icons.check_circle,
+                Icons.check_circle_rounded,
                 color: Colors.white,
-                size: size.width * 0.05,
+                size: size.width * 0.055,
               ),
+            ],
           ],
         ),
       ),
@@ -448,13 +535,13 @@ class _AddPortfolioPageState extends State<AddPortfolioPage> {
       context: context,
       builder: (dialogContext) => AlertDialog(
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(size.width * 0.04),
+          borderRadius: BorderRadius.circular(size.width * 0.05),
         ),
         title: Text(
           'Portföy Güncelle',
           style: TextStyle(
-            fontSize: size.width * 0.045,
-            fontWeight: FontWeight.bold,
+            fontSize: size.width * 0.05,
+            fontWeight: FontWeight.w700,
           ),
         ),
         content: TextField(
@@ -464,22 +551,18 @@ class _AddPortfolioPageState extends State<AddPortfolioPage> {
             hintText: 'Portföy adı',
             hintStyle: TextStyle(color: Colors.grey.shade400),
             filled: true,
-            fillColor: Colors.grey.shade50,
+            fillColor: const Color(0xFFF8F9FA),
             contentPadding: EdgeInsets.symmetric(
-              horizontal: size.width * 0.04,
-              vertical: size.height * 0.018,
+              horizontal: size.width * 0.045,
+              vertical: size.height * 0.02,
             ),
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(size.width * 0.03),
-              borderSide: BorderSide(color: Colors.grey.shade300),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(size.width * 0.03),
-              borderSide: BorderSide(color: Colors.grey.shade300),
+              borderRadius: BorderRadius.circular(size.width * 0.035),
+              borderSide: BorderSide.none,
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(size.width * 0.03),
-              borderSide: const BorderSide(color: Color(0xFF1A0B52), width: 1.5),
+              borderRadius: BorderRadius.circular(size.width * 0.035),
+              borderSide: const BorderSide(color: Color(0xFF1A0B52), width: 2),
             ),
           ),
           onSubmitted: (value) {
@@ -495,7 +578,8 @@ class _AddPortfolioPageState extends State<AddPortfolioPage> {
               'İptal',
               style: TextStyle(
                 color: Colors.grey.shade600,
-                fontSize: size.width * 0.038,
+                fontSize: size.width * 0.04,
+                fontWeight: FontWeight.w600,
               ),
             ),
           ),
@@ -509,16 +593,20 @@ class _AddPortfolioPageState extends State<AddPortfolioPage> {
               backgroundColor: const Color(0xFF1A0B52),
               foregroundColor: Colors.white,
               padding: EdgeInsets.symmetric(
-                horizontal: size.width * 0.06,
-                vertical: size.height * 0.015,
+                horizontal: size.width * 0.07,
+                vertical: size.height * 0.017,
               ),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(size.width * 0.03),
+                borderRadius: BorderRadius.circular(size.width * 0.035),
               ),
+              elevation: 0,
             ),
             child: Text(
               'Güncelle',
-              style: TextStyle(fontSize: size.width * 0.038),
+              style: TextStyle(
+                fontSize: size.width * 0.04,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],
@@ -532,7 +620,6 @@ class _AddPortfolioPageState extends State<AddPortfolioPage> {
 
   Future<void> _updatePortfolio(int portfolioId, String newName) async {
     try {
-      // Loading göster
       showDialog(
         context: context,
         barrierDismissible: false,
@@ -546,42 +633,45 @@ class _AddPortfolioPageState extends State<AddPortfolioPage> {
         name: newName,
       );
 
-      // Portföy listesini güncelle
       await _loadData();
 
-      // Güncellenen portföyü seçili tut
       if (mounted) {
         setState(() {
           _selectedPortfolio = _portfolios.firstWhere(
                 (p) => p.id == portfolioId,
-            orElse: () => _portfolios.isNotEmpty ? _portfolios.first : _selectedPortfolio!,
+            orElse: () =>
+            _portfolios.isNotEmpty ? _portfolios.first : _selectedPortfolio!,
           );
         });
       }
 
-      // Loading'i kapat
       if (mounted) {
         Navigator.of(context).pop();
 
-        // Success mesajı
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Portföy güncellendi!'),
-            backgroundColor: Colors.green,
-            duration: Duration(seconds: 2),
+          SnackBar(
+            content: const Text('Portföy güncellendi!'),
+            backgroundColor: Colors.green.shade600,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+            duration: const Duration(seconds: 2),
           ),
         );
       }
     } catch (e) {
-      // Loading'i kapat
       if (mounted) {
         Navigator.of(context).pop();
 
-        // Error mesajı
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Hata: $e'),
-            backgroundColor: Colors.red,
+            backgroundColor: Colors.red.shade600,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
             duration: const Duration(seconds: 3),
           ),
         );
@@ -594,21 +684,21 @@ class _AddPortfolioPageState extends State<AddPortfolioPage> {
       context: context,
       builder: (dialogContext) => AlertDialog(
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(size.width * 0.04),
+          borderRadius: BorderRadius.circular(size.width * 0.05),
         ),
         title: Row(
           children: [
             Icon(
-              Icons.warning_outlined,
-              color: Colors.red.shade400,
-              size: size.width * 0.06,
+              Icons.warning_rounded,
+              color: Colors.red.shade600,
+              size: size.width * 0.07,
             ),
             SizedBox(width: size.width * 0.03),
             Text(
               'Portföy Sil',
               style: TextStyle(
-                fontSize: size.width * 0.045,
-                fontWeight: FontWeight.bold,
+                fontSize: size.width * 0.05,
+                fontWeight: FontWeight.w700,
               ),
             ),
           ],
@@ -616,9 +706,9 @@ class _AddPortfolioPageState extends State<AddPortfolioPage> {
         content: Text(
           '"${portfolio.name}" portföyünü silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.',
           style: TextStyle(
-            fontSize: size.width * 0.038,
-            color: Colors.grey.shade700,
-            height: 1.4,
+            fontSize: size.width * 0.04,
+            color: const Color(0xFF6B7280),
+            height: 1.5,
           ),
         ),
         actions: [
@@ -628,26 +718,31 @@ class _AddPortfolioPageState extends State<AddPortfolioPage> {
               'İptal',
               style: TextStyle(
                 color: Colors.grey.shade600,
-                fontSize: size.width * 0.038,
+                fontSize: size.width * 0.04,
+                fontWeight: FontWeight.w600,
               ),
             ),
           ),
           ElevatedButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red.shade400,
+              backgroundColor: Colors.red.shade600,
               foregroundColor: Colors.white,
               padding: EdgeInsets.symmetric(
-                horizontal: size.width * 0.06,
-                vertical: size.height * 0.015,
+                horizontal: size.width * 0.07,
+                vertical: size.height * 0.017,
               ),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(size.width * 0.03),
+                borderRadius: BorderRadius.circular(size.width * 0.035),
               ),
+              elevation: 0,
             ),
             child: Text(
               'Sil',
-              style: TextStyle(fontSize: size.width * 0.038),
+              style: TextStyle(
+                fontSize: size.width * 0.04,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],
@@ -661,7 +756,6 @@ class _AddPortfolioPageState extends State<AddPortfolioPage> {
 
   Future<void> _deletePortfolio(int portfolioId) async {
     try {
-      // Loading göster
       showDialog(
         context: context,
         barrierDismissible: false,
@@ -672,39 +766,42 @@ class _AddPortfolioPageState extends State<AddPortfolioPage> {
 
       await _portfolioService.deletePortfolio(portfolioId: portfolioId);
 
-      // Portföy listesini güncelle
       await _loadData();
 
-      // Seçili portföy silinmişse, seçimi temizle
       if (_selectedPortfolio?.id == portfolioId) {
         setState(() {
-          _selectedPortfolio = _portfolios.isNotEmpty ? _portfolios.first : null;
+          _selectedPortfolio =
+          _portfolios.isNotEmpty ? _portfolios.first : null;
         });
       }
 
-      // Loading'i kapat
       if (mounted) {
         Navigator.of(context).pop();
 
-        // Success mesajı
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Portföy silindi!'),
-            backgroundColor: Colors.green,
-            duration: Duration(seconds: 2),
+          SnackBar(
+            content: const Text('Portföy silindi!'),
+            backgroundColor: Colors.green.shade600,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+            duration: const Duration(seconds: 2),
           ),
         );
       }
     } catch (e) {
-      // Loading'i kapat
       if (mounted) {
         Navigator.of(context).pop();
 
-        // Error mesajı
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Hata: $e'),
-            backgroundColor: Colors.red,
+            backgroundColor: Colors.red.shade600,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
             duration: const Duration(seconds: 3),
           ),
         );
@@ -719,13 +816,13 @@ class _AddPortfolioPageState extends State<AddPortfolioPage> {
       context: context,
       builder: (dialogContext) => AlertDialog(
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(size.width * 0.04),
+          borderRadius: BorderRadius.circular(size.width * 0.05),
         ),
         title: Text(
-          'Portföy Adı',
+          'Yeni Portföy',
           style: TextStyle(
-            fontSize: size.width * 0.045,
-            fontWeight: FontWeight.bold,
+            fontSize: size.width * 0.05,
+            fontWeight: FontWeight.w700,
           ),
         ),
         content: TextField(
@@ -735,22 +832,18 @@ class _AddPortfolioPageState extends State<AddPortfolioPage> {
             hintText: 'Örn: Altın Portföyüm',
             hintStyle: TextStyle(color: Colors.grey.shade400),
             filled: true,
-            fillColor: Colors.grey.shade50,
+            fillColor: const Color(0xFFF8F9FA),
             contentPadding: EdgeInsets.symmetric(
-              horizontal: size.width * 0.04,
-              vertical: size.height * 0.018,
+              horizontal: size.width * 0.045,
+              vertical: size.height * 0.02,
             ),
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(size.width * 0.03),
-              borderSide: BorderSide(color: Colors.grey.shade300),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(size.width * 0.03),
-              borderSide: BorderSide(color: Colors.grey.shade300),
+              borderRadius: BorderRadius.circular(size.width * 0.035),
+              borderSide: BorderSide.none,
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(size.width * 0.03),
-              borderSide: const BorderSide(color: Color(0xFF1A0B52), width: 1.5),
+              borderRadius: BorderRadius.circular(size.width * 0.035),
+              borderSide: const BorderSide(color: Color(0xFF1A0B52), width: 2),
             ),
           ),
           onSubmitted: (value) {
@@ -766,7 +859,8 @@ class _AddPortfolioPageState extends State<AddPortfolioPage> {
               'İptal',
               style: TextStyle(
                 color: Colors.grey.shade600,
-                fontSize: size.width * 0.038,
+                fontSize: size.width * 0.04,
+                fontWeight: FontWeight.w600,
               ),
             ),
           ),
@@ -780,16 +874,20 @@ class _AddPortfolioPageState extends State<AddPortfolioPage> {
               backgroundColor: const Color(0xFF1A0B52),
               foregroundColor: Colors.white,
               padding: EdgeInsets.symmetric(
-                horizontal: size.width * 0.06,
-                vertical: size.height * 0.015,
+                horizontal: size.width * 0.07,
+                vertical: size.height * 0.017,
               ),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(size.width * 0.03),
+                borderRadius: BorderRadius.circular(size.width * 0.035),
               ),
+              elevation: 0,
             ),
             child: Text(
               'Oluştur',
-              style: TextStyle(fontSize: size.width * 0.038),
+              style: TextStyle(
+                fontSize: size.width * 0.04,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],
@@ -803,7 +901,6 @@ class _AddPortfolioPageState extends State<AddPortfolioPage> {
 
   Future<void> _createPortfolio(String portfolioName) async {
     try {
-      // Loading göster
       showDialog(
         context: context,
         barrierDismissible: false,
@@ -818,14 +915,11 @@ class _AddPortfolioPageState extends State<AddPortfolioPage> {
         isDefault: _portfolios.isEmpty,
       );
 
-      // Portföy listesini güncelle
       await _loadData();
 
-      // Loading'i kapat
       if (mounted) {
         Navigator.of(context).pop();
 
-        // Yeni portföyü seç
         setState(() {
           _selectedPortfolio = _portfolios.firstWhere(
                 (p) => p.id == newPortfolio.id,
@@ -833,25 +927,30 @@ class _AddPortfolioPageState extends State<AddPortfolioPage> {
           );
         });
 
-        // Success mesajı
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('$portfolioName oluşturuldu!'),
-            backgroundColor: Colors.green,
+            backgroundColor: Colors.green.shade600,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
             duration: const Duration(seconds: 2),
           ),
         );
       }
     } catch (e) {
-      // Loading'i kapat
       if (mounted) {
         Navigator.of(context).pop();
 
-        // Error mesajı
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Hata: $e'),
-            backgroundColor: Colors.red,
+            backgroundColor: Colors.red.shade600,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
             duration: const Duration(seconds: 3),
           ),
         );
@@ -862,16 +961,19 @@ class _AddPortfolioPageState extends State<AddPortfolioPage> {
   void _handleCommodityTap(CommodityItem commodity) {
     if (_selectedPortfolio == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Lütfen önce bir portföy seçin'),
-          backgroundColor: Colors.orange,
-          duration: Duration(seconds: 2),
+        SnackBar(
+          content: const Text('Lütfen önce bir portföy seçin'),
+          backgroundColor: Colors.orange.shade600,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+          duration: const Duration(seconds: 2),
         ),
       );
       return;
     }
 
-    // AddAsset sayfasına git
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -890,25 +992,25 @@ class _AddPortfolioPageState extends State<AddPortfolioPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(height: size.height * 0.01),
+          SizedBox(height: size.height * 0.02),
           _ShimmerBox(width: size.width * 0.3, height: size.height * 0.025),
           SizedBox(height: size.height * 0.015),
           _ShimmerBox(
             width: double.infinity,
-            height: size.height * 0.06,
-            borderRadius: size.width * 0.03,
+            height: size.height * 0.065,
+            borderRadius: size.width * 0.035,
           ),
-          SizedBox(height: size.height * 0.025),
+          SizedBox(height: size.height * 0.03),
           _ShimmerBox(width: size.width * 0.3, height: size.height * 0.025),
           SizedBox(height: size.height * 0.015),
           Expanded(
             child: ListView.separated(
-              itemCount: 10,
-              separatorBuilder: (_, __) => SizedBox(height: size.height * 0.012),
+              itemCount: 8,
+              separatorBuilder: (_, __) => SizedBox(height: size.height * 0.01),
               itemBuilder: (_, __) => _ShimmerBox(
                 width: double.infinity,
-                height: size.height * 0.08,
-                borderRadius: size.width * 0.04,
+                height: size.height * 0.075,
+                borderRadius: size.width * 0.035,
               ),
             ),
           ),
@@ -924,18 +1026,25 @@ class _AddPortfolioPageState extends State<AddPortfolioPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.error_outline,
-              size: size.width * 0.2,
-              color: Colors.red.shade300,
+            Container(
+              padding: EdgeInsets.all(size.width * 0.08),
+              decoration: BoxDecoration(
+                color: Colors.red.shade50,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.error_outline_rounded,
+                size: size.width * 0.15,
+                color: Colors.red.shade400,
+              ),
             ),
             SizedBox(height: size.height * 0.03),
             Text(
               "Bir hata oluştu",
               style: TextStyle(
-                fontSize: size.width * 0.05,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
+                fontSize: size.width * 0.055,
+                fontWeight: FontWeight.w700,
+                color: const Color(0xFF1A1A1A),
               ),
             ),
             SizedBox(height: size.height * 0.015),
@@ -943,25 +1052,27 @@ class _AddPortfolioPageState extends State<AddPortfolioPage> {
               _errorMessage ?? 'Bilinmeyen hata',
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: size.width * 0.035,
-                color: Colors.grey,
+                fontSize: size.width * 0.038,
+                color: const Color(0xFF6B7280),
+                height: 1.5,
               ),
             ),
             SizedBox(height: size.height * 0.04),
             ElevatedButton.icon(
               onPressed: _loadData,
-              icon: const Icon(Icons.refresh),
+              icon: const Icon(Icons.refresh_rounded),
               label: const Text("Tekrar Dene"),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF1A0B52),
                 foregroundColor: Colors.white,
                 padding: EdgeInsets.symmetric(
-                  horizontal: size.width * 0.08,
-                  vertical: size.height * 0.018,
+                  horizontal: size.width * 0.1,
+                  vertical: size.height * 0.02,
                 ),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(size.width * 0.08),
+                  borderRadius: BorderRadius.circular(size.width * 0.035),
                 ),
+                elevation: 0,
               ),
             ),
           ],
@@ -982,40 +1093,6 @@ class _CommodityCard extends StatelessWidget {
     required this.onTap,
   });
 
-  Color _getCategoryColor(String category) {
-    switch (category.toLowerCase()) {
-      case 'altin':
-        return const Color(0xFFFFD700);
-      case 'doviz':
-        return const Color(0xFF43A047);
-      case 'kripto':
-        return const Color(0xFFF9A825);
-      case 'emtia':
-        return const Color(0xFFFB8C00);
-      case 'parite':
-        return const Color(0xFF5C9CE5);
-      default:
-        return Colors.grey;
-    }
-  }
-
-  IconData _getCategoryIcon(String category) {
-    switch (category.toLowerCase()) {
-      case 'altin':
-        return Icons.brightness_5;
-      case 'doviz':
-        return Icons.euro;
-      case 'kripto':
-        return Icons.currency_bitcoin;
-      case 'emtia':
-        return Icons.grain;
-      case 'parite':
-        return Icons.compare_arrows;
-      default:
-        return Icons.category;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final isPositive = commodity.dailyChangePercent >= 0;
@@ -1025,29 +1102,22 @@ class _CommodityCard extends StatelessWidget {
       child: Container(
         padding: EdgeInsets.all(size.width * 0.04),
         decoration: BoxDecoration(
-          color: Colors.grey.shade50,
-          borderRadius: BorderRadius.circular(size.width * 0.04),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(size.width * 0.035),
           border: Border.all(
-            color: Colors.grey.shade200,
+            color: const Color(0xFFE5E7EB),
             width: 1,
           ),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x05000000),
+              blurRadius: 4,
+              offset: Offset(0, 2),
+            ),
+          ],
         ),
         child: Row(
           children: [
-            Container(
-              width: size.width * 0.11,
-              height: size.width * 0.11,
-              decoration: BoxDecoration(
-                color: _getCategoryColor(commodity.category),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                _getCategoryIcon(commodity.category),
-                color: Colors.white,
-                size: size.width * 0.055,
-              ),
-            ),
-            SizedBox(width: size.width * 0.04),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -1058,14 +1128,16 @@ class _CommodityCard extends StatelessWidget {
                       fontSize: size.width * 0.04,
                       fontWeight: FontWeight.w600,
                       color: const Color(0xFF1A1A1A),
+                      letterSpacing: 0.2,
                     ),
                   ),
-                  SizedBox(height: size.height * 0.003),
+                  SizedBox(height: size.height * 0.004),
                   Text(
                     commodity.symbol,
                     style: TextStyle(
                       fontSize: size.width * 0.032,
-                      color: Colors.grey.shade600,
+                      color: const Color(0xFF9CA3AF),
+                      letterSpacing: 0.3,
                     ),
                   ),
                 ],
@@ -1077,42 +1149,56 @@ class _CommodityCard extends StatelessWidget {
                 Text(
                   commodity.bid.toStringAsFixed(2),
                   style: TextStyle(
-                    fontSize: size.width * 0.04,
-                    fontWeight: FontWeight.bold,
+                    fontSize: size.width * 0.042,
+                    fontWeight: FontWeight.w700,
                     color: const Color(0xFF1A1A1A),
                   ),
                 ),
-                SizedBox(height: size.height * 0.003),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      isPositive ? Icons.arrow_upward : Icons.arrow_downward,
-                      size: size.width * 0.03,
-                      color: isPositive
-                          ? Colors.green.shade400
-                          : Colors.red.shade400,
-                    ),
-                    SizedBox(width: size.width * 0.01),
-                    Text(
-                      "${isPositive ? '+' : ''}${commodity.dailyChangePercent.toStringAsFixed(2)}%",
-                      style: TextStyle(
-                        fontSize: size.width * 0.032,
-                        fontWeight: FontWeight.w600,
+                SizedBox(height: size.height * 0.004),
+                Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: size.width * 0.02,
+                    vertical: size.height * 0.003,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isPositive
+                        ? Colors.green.shade50
+                        : Colors.red.shade50,
+                    borderRadius: BorderRadius.circular(size.width * 0.015),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        isPositive
+                            ? Icons.arrow_upward_rounded
+                            : Icons.arrow_downward_rounded,
+                        size: size.width * 0.03,
                         color: isPositive
-                            ? Colors.green.shade400
-                            : Colors.red.shade400,
+                            ? Colors.green.shade600
+                            : Colors.red.shade600,
                       ),
-                    ),
-                  ],
+                      SizedBox(width: size.width * 0.008),
+                      Text(
+                        "${isPositive ? '+' : ''}${commodity.dailyChangePercent.toStringAsFixed(2)}%",
+                        style: TextStyle(
+                          fontSize: size.width * 0.032,
+                          fontWeight: FontWeight.w600,
+                          color: isPositive
+                              ? Colors.green.shade600
+                              : Colors.red.shade600,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
-            SizedBox(width: size.width * 0.02),
+            SizedBox(width: size.width * 0.025),
             Icon(
-              Icons.chevron_right,
-              color: Colors.grey.shade400,
-              size: size.width * 0.05,
+              Icons.chevron_right_rounded,
+              color: const Color(0xFFD1D5DB),
+              size: size.width * 0.055,
             ),
           ],
         ),
