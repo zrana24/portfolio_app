@@ -9,6 +9,7 @@ import '../../widgets/footer.dart';
 import '../../widgets/ads_banner_widget.dart';
 import '../../services/auth_service.dart';
 import '../auth/login_page.dart';
+import '../addPortfolio/assetDetail_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -300,6 +301,14 @@ class _HomePageState extends State<HomePage> {
               "${asset.pnlPercent >= 0 ? '+' : ''}%${asset.pnlPercent.toStringAsFixed(1).replaceAll('.', ',')}",
               asset.pnlPercent,
               size,
+              // Asset detail için gerekli parametreler (state'de varsa)
+              portfolioId: state.portfolioId,  // HomeState'e eklenecek
+              assetId: asset.id,               // Asset modelinde id olmalı
+              symbol: asset.symbol,
+              quantity: asset.quantity,
+              purchasePrice: asset.purchasePrice,
+              currentPrice: asset.currentPrice,
+              currentValue: asset.currentValue,
             ),
           )),
         ],
@@ -445,11 +454,27 @@ class _HomePageState extends State<HomePage> {
       String diff,
       String perc,
       double percValue,
-      Size size,
-      ) {
+      Size size, {
+        int? portfolioId,
+        int? assetId,
+        String? symbol,
+        double? quantity,
+        double? purchasePrice,
+        double? currentPrice,
+        double? currentValue,
+      }) {
     final isPositive = percValue >= 0;
 
-    return Container(
+    // Eğer gerekli parametreler varsa tıklanabilir yap
+    final isClickable = portfolioId != null &&
+        assetId != null &&
+        symbol != null &&
+        quantity != null &&
+        purchasePrice != null &&
+        currentPrice != null &&
+        currentValue != null;
+
+    Widget cardContent = Container(
       padding: EdgeInsets.all(size.width * 0.05),
       decoration: BoxDecoration(
         color: const Color(0xFFF3F4F6),
@@ -516,6 +541,40 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
+    );
+
+    if (!isClickable) {
+      return cardContent;
+    }
+
+    return GestureDetector(
+      onTap: () async {
+        final result = await Navigator.push<bool>(
+          context,
+          MaterialPageRoute(
+            builder: (context) => AssetDetailPage(
+              portfolioId: portfolioId!,
+              assetId: assetId!,
+              assetName: title,
+              symbol: symbol!,
+              quantity: quantity!,
+              purchasePrice: purchasePrice!,
+              currentPrice: currentPrice!,
+              currentValue: currentValue!,
+              profitLoss: double.parse(
+                diff.replaceAll('+', '').replaceAll(',', '').replaceAll(' ₺', ''),
+              ),
+              pnlPercent: percValue,
+            ),
+          ),
+        );
+
+        // Eğer değişiklik yapıldıysa (true dönerse) sayfayı yenile
+        if (result == true && mounted) {
+          context.read<HomeBloc>().add(LoadHomeData());
+        }
+      },
+      child: cardContent,
     );
   }
 

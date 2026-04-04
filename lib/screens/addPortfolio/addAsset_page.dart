@@ -8,7 +8,7 @@ import '../../bloc/addAsset/addAsset_state.dart';
 import '../../widgets/back_button.dart';
 import '../../app/routes.dart';
 
-class AddAssetPage extends StatelessWidget {
+class AddAssetPage extends StatefulWidget {
   final String symbol;
   final String? name;
   final String? portfolioName;
@@ -23,18 +23,50 @@ class AddAssetPage extends StatelessWidget {
   });
 
   @override
+  State<AddAssetPage> createState() => _AddAssetPageState();
+}
+
+class _AddAssetPageState extends State<AddAssetPage> {
+  // TextEditingController'ları burada tanımla
+  final TextEditingController _assetNameController = TextEditingController();
+  final TextEditingController _quantityController = TextEditingController();
+  final TextEditingController _purchasePriceController = TextEditingController();
+
+  @override
+  void dispose() {
+    // Controller'ları dispose et
+    _assetNameController.dispose();
+    _quantityController.dispose();
+    _purchasePriceController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
 
     return BlocProvider(
       create: (context) => AddAssetBloc(
-        symbol: symbol,
-        portfolioName: portfolioName,
-        portfolioId: portfolioId,
+        symbol: widget.symbol,
+        portfolioName: widget.portfolioName,
+        portfolioId: widget.portfolioId,
       )..add(LoadAssetData()),
       child: BlocListener<AddAssetBloc, AddAssetState>(
         listener: (context, state) {
           print('📱 AddAsset State Değişti: ${state.runtimeType}');
+
+          // State değiştiğinde controller'ları güncelle
+          if (state is AddAssetLoaded) {
+            if (_assetNameController.text != state.assetName) {
+              _assetNameController.text = state.assetName;
+            }
+            if (_quantityController.text != (state.quantity == 0 ? '' : state.quantity.toString())) {
+              _quantityController.text = state.quantity == 0 ? '' : state.quantity.toString();
+            }
+            if (_purchasePriceController.text != (state.purchasePrice == 0 ? '' : state.purchasePrice.toString())) {
+              _purchasePriceController.text = state.purchasePrice == 0 ? '' : state.purchasePrice.toString();
+            }
+          }
 
           if (state is AddAssetSuccess) {
             print('✅ Success state - Ekran kapatılıyor');
@@ -106,7 +138,7 @@ class AddAssetPage extends StatelessWidget {
               SizedBox(width: size.width * 0.03),
               Expanded(
                 child: Text(
-                  '${name ?? symbol} Ekle',
+                  '${widget.name ?? widget.symbol} Ekle',
                   style: TextStyle(
                     fontSize: size.width * 0.045,
                     fontWeight: FontWeight.w700,
@@ -208,6 +240,7 @@ class AddAssetPage extends StatelessWidget {
         // Scrollable Content
         Expanded(
           child: SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
             padding: EdgeInsets.symmetric(horizontal: size.width * 0.05),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -434,12 +467,12 @@ class AddAssetPage extends StatelessWidget {
         _buildPortfolioSelector(context, state, size),
         SizedBox(height: size.height * 0.015),
 
-        // Varlık İsmi Input
+        // Varlık İsmi Input - Controller kullan
         _buildLabeledInput(
           context,
           label: 'Varlık Adı',
           hint: 'Örn: Altın Gram',
-          initialValue: state.assetName,
+          controller: _assetNameController,
           onChanged: (value) {
             context.read<AddAssetBloc>().add(UpdateAssetName(assetName: value));
           },
@@ -448,11 +481,12 @@ class AddAssetPage extends StatelessWidget {
         ),
         SizedBox(height: size.height * 0.015),
 
+        // Miktar Input - Controller kullan
         _buildLabeledInput(
           context,
           label: 'Miktar',
           hint: '0.0',
-          initialValue: state.quantity == 0 ? '' : state.quantity.toString(),
+          controller: _quantityController,
           onChanged: (value) {
             final quantity = double.tryParse(value) ?? 0.0;
             context.read<AddAssetBloc>().add(UpdateQuantity(quantity: quantity));
@@ -462,11 +496,12 @@ class AddAssetPage extends StatelessWidget {
         ),
         SizedBox(height: size.height * 0.015),
 
+        // Birim Fiyat Input - Controller kullan
         _buildLabeledInput(
           context,
           label: 'Birim Fiyat (Opsiyonel)',
           hint: '0.0',
-          initialValue: state.purchasePrice == 0 ? '' : state.purchasePrice.toString(),
+          controller: _purchasePriceController,
           onChanged: (value) {
             final price = double.tryParse(value) ?? 0.0;
             context.read<AddAssetBloc>().add(UpdatePurchasePrice(price: price));
@@ -476,40 +511,6 @@ class AddAssetPage extends StatelessWidget {
         ),
         SizedBox(height: size.height * 0.015),
 
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'Miktar Ayarla',
-              style: TextStyle(
-                fontSize: size.width * 0.035,
-                color: Colors.grey.shade600,
-              ),
-            ),
-            Row(
-              children: [
-                _buildCircularButton(
-                  icon: Icons.remove,
-                  onPressed: () {
-                    final newQuantity = state.quantity > 1 ? state.quantity - 1.0 : 0.0;
-                    context.read<AddAssetBloc>().add(UpdateQuantity(quantity: newQuantity));
-                  },
-                  size: size,
-                ),
-                SizedBox(width: size.width * 0.03),
-                _buildCircularButton(
-                  icon: Icons.add,
-                  onPressed: () {
-                    context.read<AddAssetBloc>().add(
-                      UpdateQuantity(quantity: state.quantity + 1.0),
-                    );
-                  },
-                  size: size,
-                ),
-              ],
-            ),
-          ],
-        ),
       ],
     );
   }
@@ -592,7 +593,7 @@ class AddAssetPage extends StatelessWidget {
       BuildContext context, {
         required String label,
         required String hint,
-        required String initialValue,
+        required TextEditingController controller,
         required Function(String) onChanged,
         required Size size,
         bool isNumeric = true,
@@ -609,7 +610,7 @@ class AddAssetPage extends StatelessWidget {
         ),
         SizedBox(height: size.height * 0.008),
         TextField(
-          controller: TextEditingController(text: initialValue),
+          controller: controller,
           keyboardType: isNumeric
               ? const TextInputType.numberWithOptions(decimal: true)
               : TextInputType.text,

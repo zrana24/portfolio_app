@@ -38,6 +38,7 @@ class HomeError extends HomeState {
 }
 
 class HomeLoaded extends HomeState {
+  final int portfolioId;  // ← YENİ: Asset detail için gerekli
   final double totalValue;
   final double totalProfitLoss;
   final double totalPnLPercent;
@@ -45,6 +46,7 @@ class HomeLoaded extends HomeState {
   final List<CategoryDistribution> categoryDistribution;
 
   const HomeLoaded({
+    required this.portfolioId,  // ← YENİ
     required this.totalValue,
     required this.totalProfitLoss,
     required this.totalPnLPercent,
@@ -54,6 +56,7 @@ class HomeLoaded extends HomeState {
 
   @override
   List<Object?> get props => [
+    portfolioId,  // ← YENİ
     totalValue,
     totalProfitLoss,
     totalPnLPercent,
@@ -64,18 +67,22 @@ class HomeLoaded extends HomeState {
 
 // Varlık modeli
 class AssetItem {
+  final int id;  // ← YENİ: Asset detail için gerekli
   final String symbol;
   final String name;
   final double quantity;
+  final double purchasePrice;  // ← YENİ: Asset detail için gerekli
   final double currentPrice;
   final double currentValue;
   final double profitLoss;
   final double pnlPercent;
 
   const AssetItem({
+    required this.id,  // ← YENİ
     required this.symbol,
     required this.name,
     required this.quantity,
+    required this.purchasePrice,  // ← YENİ
     required this.currentPrice,
     required this.currentValue,
     required this.profitLoss,

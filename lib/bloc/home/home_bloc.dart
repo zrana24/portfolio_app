@@ -39,9 +39,11 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       if (data['assets'] != null && data['assets'] is List) {
         for (var item in data['assets']) {
           assetsList.add(AssetItem(
+            id: item['id'] ?? 0,  // ← YENİ
             symbol: item['symbol']?.toString() ?? '---',
             name: item['name']?.toString() ?? item['symbol']?.toString() ?? 'Varlık',
             quantity: _safeToDouble(item['quantity']),
+            purchasePrice: _safeToDouble(item['purchase_price']),  // ← YENİ
             currentPrice: _safeToDouble(item['current_price']),
             currentValue: _safeToDouble(item['current_value']),
             profitLoss: _safeToDouble(item['profit_loss']),
@@ -65,6 +67,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
 
       // Başarılı yükleme
       emit(HomeLoaded(
+        portfolioId: data['portfolio_id'] ?? 0,  // ← YENİ
         totalValue: _safeToDouble(data['total_current_value']),
         totalProfitLoss: _safeToDouble(data['total_profit_loss']),
         totalPnLPercent: _safeToDouble(data['total_pnl_percent']),
