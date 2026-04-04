@@ -117,9 +117,6 @@ class RegisterPage extends StatelessWidget {
                       height: 56,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(16),
-                        gradient: const LinearGradient(
-                          colors: [Colors.blueAccent, Colors.blue],
-                        ),
                         boxShadow: [
                           BoxShadow(
                             color: Colors.blue.withOpacity(0.3),
@@ -154,7 +151,7 @@ class RegisterPage extends StatelessWidget {
                           ));
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.transparent,
+                          backgroundColor: const Color(0xFF1A0B52),
                           shadowColor: Colors.transparent,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16),
@@ -187,7 +184,7 @@ class RegisterPage extends StatelessWidget {
                       child: const Text(
                         "Giriş Yapın",
                         style: TextStyle(
-                          color: Colors.blueAccent,
+                          color: const Color(0xFF1A0B52),
                           fontWeight: FontWeight.bold,
                         ),
                       ),

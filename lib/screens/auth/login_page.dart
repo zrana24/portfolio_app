@@ -137,7 +137,7 @@ class _LoginPageState extends State<LoginPage> {
                           }
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.transparent,
+                          backgroundColor: const Color(0xFF1A0B52),
                           shadowColor: Colors.transparent,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16),
@@ -170,7 +170,7 @@ class _LoginPageState extends State<LoginPage> {
                       child: const Text(
                         "Kayıt Olun",
                         style: TextStyle(
-                          color: Colors.blueAccent,
+                          color: const Color(0xFF1A0B52),
                           fontWeight: FontWeight.bold,
                         ),
                       ),
