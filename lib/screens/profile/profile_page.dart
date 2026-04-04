@@ -42,7 +42,7 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> _launchWhatsApp() async {
-    const phoneNumber = '905XXXXXXXXX'; // WhatsApp telefon numaranızı buraya yazın
+    const phoneNumber = '+905323253588';
     const message = 'Merhaba, yardıma ihtiyacım var.';
     final url = Uri.parse('https://wa.me/$phoneNumber?text=${Uri.encodeComponent(message)}');
 
@@ -58,130 +58,6 @@ class _ProfilePageState extends State<ProfilePage> {
         );
       }
     }
-  }
-
-  void _showAboutDialog() {
-    final size = MediaQuery.of(context).size;
-
-    showDialog(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(size.width * 0.05),
-        ),
-        title: Row(
-          children: [
-            Icon(
-              Icons.info_outline_rounded,
-              color: primaryPurple,
-              size: size.width * 0.07,
-            ),
-            SizedBox(width: size.width * 0.03),
-            const Text(
-              'Hakkımızda',
-              style: TextStyle(
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ],
-        ),
-        content: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'Cebeci Kıymetli Madenler',
-                style: TextStyle(
-                  fontSize: size.width * 0.045,
-                  fontWeight: FontWeight.w700,
-                  color: primaryPurple,
-                ),
-              ),
-              SizedBox(height: size.height * 0.015),
-              Text(
-                'Portföy yönetimi ve kıymetli maden takibi için geliştirilmiş modern bir platformdur.',
-                style: TextStyle(
-                  fontSize: size.width * 0.038,
-                  color: const Color(0xFF6B7280),
-                  height: 1.5,
-                ),
-              ),
-              SizedBox(height: size.height * 0.02),
-              Divider(color: Colors.grey.shade200),
-              SizedBox(height: size.height * 0.02),
-              _buildInfoRow(Icons.pin_drop_outlined, 'Adres', 'Konya, Türkiye', size),
-              SizedBox(height: size.height * 0.012),
-              _buildInfoRow(Icons.email_outlined, 'E-posta', 'info@cebecikiymetlimadenler.com', size),
-              SizedBox(height: size.height * 0.012),
-              _buildInfoRow(Icons.phone_outlined, 'Telefon', '+90 XXX XXX XX XX', size),
-              SizedBox(height: size.height * 0.02),
-              Divider(color: Colors.grey.shade200),
-              SizedBox(height: size.height * 0.015),
-              Text(
-                'Versiyon 1.0.0',
-                style: TextStyle(
-                  fontSize: size.width * 0.032,
-                  color: Colors.grey.shade500,
-                ),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: Text(
-              'Kapat',
-              style: TextStyle(
-                color: primaryPurple,
-                fontSize: size.width * 0.04,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildInfoRow(IconData icon, String label, String value, Size size) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Icon(
-          icon,
-          size: size.width * 0.045,
-          color: const Color(0xFF6B7280),
-        ),
-        SizedBox(width: size.width * 0.025),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: size.width * 0.032,
-                  color: const Color(0xFF9CA3AF),
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              SizedBox(height: size.height * 0.002),
-              Text(
-                value,
-                style: TextStyle(
-                  fontSize: size.width * 0.036,
-                  color: const Color(0xFF1A1A1A),
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
   }
 
   @override
@@ -287,7 +163,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       _buildMenuButton(
                         "Hakkımızda",
                         Icons.info_outline_rounded,
-                        _showAboutDialog,
+                            () => Navigator.pushNamed(context, AppRoutes.about), // Burayı değiştirin
                         size,
                       ),
                       SizedBox(height: size.height * 0.015),
