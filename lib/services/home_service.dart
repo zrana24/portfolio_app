@@ -51,121 +51,61 @@ class HomeService {
       throw Exception('Token bulunamadı. Lütfen giriş yapın.');
     }
 
-    print('============================================');
-    print('🚀 [getPortfolioSummary] BAŞLANGIÇ');
-    print('============================================');
-
     try {
-      // İlk önce portföy listesini al
-      print('📡 [Step 1] Portföy listesi alınıyor...');
-      print('URL: ${ApiUrls.portfolios}');
+      print('📡 [getPortfolioSummary] Yeni mobil özet endpoint çağrılıyor...');
+      print('URL: ${ApiUrls.mobilePortfolioSummary}');
 
-      final portfoliosResponse = await http.get(
-        Uri.parse(ApiUrls.portfolios),
+      final response = await http.get(
+        Uri.parse(ApiUrls.mobilePortfolioSummary),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
-      ).timeout(
-        const Duration(seconds: 10),
-        onTimeout: () {
-          throw Exception('İstek zaman aşımına uğradı. İnternet bağlantınızı kontrol edin.');
-        },
-      );
+      ).timeout(const Duration(seconds: 10));
 
-      print('📥 [Step 1] Portföy Listesi Response');
-      print('Status Code: ${portfoliosResponse.statusCode}');
-      print('Response Body: ${portfoliosResponse.body}');
-      print('--------------------------------------------');
-
-      if (portfoliosResponse.statusCode == 401) {
-        throw Exception('Oturum süresi dolmuş. Lütfen tekrar giriş yapın.');
-      }
-
-      if (portfoliosResponse.statusCode != 200) {
-        throw Exception('Portföyler yüklenemedi: ${portfoliosResponse.statusCode}');
-      }
-
-      final portfoliosData = json.decode(portfoliosResponse.body);
-
-      if (portfoliosData['data'] == null ||
-          (portfoliosData['data'] is List && portfoliosData['data'].isEmpty)) {
-        print('⚠️ [getPortfolioSummary] Portföy bulunamadı, data null veya boş');
-        print('============================================');
-        return {'data': null};
-      }
-
-      // İlk portföyün detayını al
-      final firstPortfolio = portfoliosData['data'][0];
-      final portfolioId = firstPortfolio['portfolio_id'] ?? firstPortfolio['id'];
-
-      print('📡 [Step 2] Portföy detayı alınıyor...');
-      print('Portfolio ID: $portfolioId');
-      print('Portfolio Name: ${firstPortfolio['name']}');
-      print('URL: ${ApiUrls.portfolioDetail(portfolioId)}');
-
-      final detailResponse = await http.get(
-        Uri.parse(ApiUrls.portfolioDetail(portfolioId)),
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-      ).timeout(
-        const Duration(seconds: 10),
-        onTimeout: () {
-          throw Exception('İstek zaman aşımına uğradı. İnternet bağlantınızı kontrol edin.');
-        },
-      );
-
-      print('📥 [Step 2] Portföy Detay Response');
-      print('Status Code: ${detailResponse.statusCode}');
-      print('Response Body: ${detailResponse.body}');
-      print('============================================');
-
-      if (detailResponse.statusCode == 200) {
-        final responseData = json.decode(detailResponse.body);
-
-        // Detaylı veri analizi
-        if (responseData['data'] != null) {
-          final data = responseData['data'];
-          print('📊 [VERİ ANALİZİ]');
-          print('  - Portfolio ID: ${data['portfolio_id']}');
-          print('  - Name: ${data['name']}');
-          print('  - Total Invested: ${data['total_invested']}');
-          print('  - Total Current Value: ${data['total_current_value']}');
-          print('  - Total Profit/Loss: ${data['total_profit_loss']}');
-          print('  - Total PnL %: ${data['total_pnl_percent']}');
-          print('  - Asset Count: ${data['asset_count']}');
-
-          if (data['assets'] != null && data['assets'] is List) {
-            print('  - Assets (${data['assets'].length} adet):');
-            for (var asset in data['assets']) {
-              print('      * ${asset['symbol']}: ${asset['quantity']} x ${asset['current_price']} = ${asset['current_value']} ₺');
-              print('        PnL: ${asset['profit_loss']} (${asset['pnl_percent']}%)');
-              print('        Daily Change: ${asset['daily_change']} (${asset['daily_change_percent']}%)');
-            }
-          }
-
-          if (data['category_distribution'] != null && data['category_distribution'] is List) {
-            print('  - Category Distribution:');
-            for (var cat in data['category_distribution']) {
-              print('      * ${cat['label']}: ${cat['percentage']}% (${cat['current_value']} ₺)');
-            }
-          }
-          print('============================================');
-        }
-
-        return responseData;
-      } else if (detailResponse.statusCode == 401) {
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else if (response.statusCode == 401) {
         throw Exception('Oturum süresi dolmuş. Lütfen tekrar giriş yapın.');
       } else {
-        throw Exception('Portföy detayı yüklenemedi: ${detailResponse.statusCode}');
+        throw Exception('Özet yüklenemedi: ${response.statusCode}');
       }
     } catch (e) {
       print('❌ [getPortfolioSummary] HATA: $e');
-      print('============================================');
+      rethrow;
+    }
+  }
+
+  static Future<Map<String, dynamic>> getPortfolioChart({String period = '1d'}) async {
+    final token = await TokenService.getToken();
+
+    if (token == null || token.isEmpty) {
+      throw Exception('Token bulunamadı. Lütfen giriş yapın.');
+    }
+
+    try {
+      print('📡 [getPortfolioChart] Yeni mobil grafik endpoint çağrılıyor...');
+      print('URL: ${ApiUrls.mobilePortfolioChart}?period=$period');
+
+      final response = await http.get(
+        Uri.parse('${ApiUrls.mobilePortfolioChart}?period=$period'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+      ).timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else if (response.statusCode == 401) {
+        throw Exception('Oturum süresi dolmuş. Lütfen tekrar giriş yapın.');
+      } else {
+        throw Exception('Grafik verisi yüklenemedi: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('❌ [getPortfolioChart] HATA: $e');
       rethrow;
     }
   }

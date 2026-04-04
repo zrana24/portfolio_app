@@ -16,43 +16,63 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     try {
       // ✅ TOKEN KONTROLÜ - Token yoksa API çağrısı yapma
       final isLoggedIn = await AuthService().isLoggedIn();
-
       if (!isLoggedIn) {
-        print('DEBUG: Token yok, direkt empty state döndürülüyor');
         emit(const HomeEmpty());
         return;
       }
 
-      // Token varsa API çağrısı yap
-      final detailResponse = await HomeService.getPortfolioSummary();
+      // Token varsa özet ve grafik verilerini paralel çek
+      final responses = await Future.wait([
+        HomeService.getPortfolioSummary(),
+        HomeService.getPortfolioChart(),
+      ]);
 
-      // Response kontrolü
-      if (detailResponse == null || detailResponse['data'] == null) {
-        print('DEBUG: API Response veya Data null geldi');
+      final summaryResponse = responses[0];
+      final chartResponse = responses[1];
+
+      if (summaryResponse == null || summaryResponse['data'] == null) {
         emit(const HomeEmpty());
         return;
       }
 
-      final data = detailResponse['data'];
+      final data = summaryResponse['data'];
+      final List<dynamic> chartDataList = chartResponse['data'] is List ? chartResponse['data'] : [];
+
+      // Grafik verilerini sembol bazlı eşleştirmek için bir map oluştur
+      final Map<String, dynamic> symbolCharts = {};
+      for (var chartItem in chartDataList) {
+        if (chartItem['symbol'] != null) {
+          symbolCharts[chartItem['symbol']] = chartItem;
+        }
+      }
 
       final List<AssetItem> assetsList = [];
-      if (data['assets'] != null && data['assets'] is List) {
-        for (var item in data['assets']) {
+      if (data['all_assets'] != null && data['all_assets'] is List) {
+        for (var item in data['all_assets']) {
+          print('🔍 ASSET KEYS DEBUG: ${item.keys.toList()}');
+          print('🔍 ASSET DATA DEBUG: $item');
+          final symbol = item['symbol']?.toString() ?? '';
+          
+          // ID'yi sırasıyla kontrol et: id, portfolio_asset_id, asset_id
+          final assetId = item['id'] ?? item['portfolio_asset_id'] ?? item['asset_id'] ?? 0;
+          
           assetsList.add(AssetItem(
-            id: item['id'] ?? 0,  // ← YENİ
-            symbol: item['symbol']?.toString() ?? '---',
-            name: item['name']?.toString() ?? item['symbol']?.toString() ?? 'Varlık',
+            id: _safeToInt(assetId),
+            portfolioId: _safeToInt(item['portfolio_id']),
+            portfolioName: item['portfolio_name']?.toString(),
+            symbol: symbol,
+            name: item['name']?.toString() ?? symbol ?? 'Varlık',
             quantity: _safeToDouble(item['quantity']),
-            purchasePrice: _safeToDouble(item['purchase_price']),  // ← YENİ
+            purchasePrice: _safeToDouble(item['purchase_price']),
             currentPrice: _safeToDouble(item['current_price']),
             currentValue: _safeToDouble(item['current_value']),
             profitLoss: _safeToDouble(item['profit_loss']),
             pnlPercent: _safeToDouble(item['pnl_percent']),
+            chartData: symbolCharts[symbol], // Eşleşen grafik verisini ekle
           ));
         }
       }
 
-      // ✅ KATEGORİLERİ İŞLE
       final List<CategoryDistribution> categoryList = [];
       if (data['category_distribution'] != null && data['category_distribution'] is List) {
         for (var cat in data['category_distribution']) {
@@ -65,9 +85,8 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
         }
       }
 
-      // Başarılı yükleme
       emit(HomeLoaded(
-        portfolioId: data['portfolio_id'] ?? 0,  // ← YENİ
+        portfolioId: data['portfolio_id'] ?? 0,
         totalValue: _safeToDouble(data['total_current_value']),
         totalProfitLoss: _safeToDouble(data['total_profit_loss']),
         totalPnLPercent: _safeToDouble(data['total_pnl_percent']),
@@ -99,5 +118,15 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       return double.tryParse(value.replaceAll(',', '.')) ?? 0.0;
     }
     return 0.0;
+  }
+
+  int _safeToInt(dynamic value) {
+    if (value == null) return 0;
+    if (value is int) return value;
+    if (value is double) return value.toInt();
+    if (value is String) {
+      return int.tryParse(value) ?? 0;
+    }
+    return 0;
   }
 }

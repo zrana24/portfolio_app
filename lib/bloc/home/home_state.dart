@@ -38,55 +38,64 @@ class HomeError extends HomeState {
 }
 
 class HomeLoaded extends HomeState {
-  final int portfolioId;  // ← YENİ: Asset detail için gerekli
+  final int portfolioId;
   final double totalValue;
   final double totalProfitLoss;
   final double totalPnLPercent;
   final List<AssetItem> assets;
   final List<CategoryDistribution> categoryDistribution;
+  final Map<String, dynamic>? totalChartData; // Opsiyonel: Gelecekte toplam grafik için
 
   const HomeLoaded({
-    required this.portfolioId,  // ← YENİ
+    required this.portfolioId,
     required this.totalValue,
     required this.totalProfitLoss,
     required this.totalPnLPercent,
     required this.assets,
     required this.categoryDistribution,
+    this.totalChartData,
   });
 
   @override
   List<Object?> get props => [
-    portfolioId,  // ← YENİ
+    portfolioId,
     totalValue,
     totalProfitLoss,
     totalPnLPercent,
     assets,
     categoryDistribution,
+    totalChartData,
   ];
 }
 
 // Varlık modeli
 class AssetItem {
-  final int id;  // ← YENİ: Asset detail için gerekli
+  final int id;
+  final int portfolioId; // Yeni: Hangi portföye ait olduğu
+  final String? portfolioName; // Yeni: Portföy adı
   final String symbol;
   final String name;
   final double quantity;
-  final double purchasePrice;  // ← YENİ: Asset detail için gerekli
+  final double purchasePrice;
   final double currentPrice;
   final double currentValue;
   final double profitLoss;
   final double pnlPercent;
+  final Map<String, dynamic>? chartData;
 
   const AssetItem({
-    required this.id,  // ← YENİ
+    required this.id,
+    required this.portfolioId,
+    this.portfolioName,
     required this.symbol,
     required this.name,
     required this.quantity,
-    required this.purchasePrice,  // ← YENİ
+    required this.purchasePrice,
     required this.currentPrice,
     required this.currentValue,
     required this.profitLoss,
     required this.pnlPercent,
+    this.chartData,
   });
 }
 

@@ -10,6 +10,7 @@ import '../../widgets/ads_banner_widget.dart';
 import '../../services/auth_service.dart';
 import '../auth/login_page.dart';
 import '../addPortfolio/assetDetail_page.dart';
+import '../../services/portfolio_services.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -21,6 +22,10 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   bool _isLoggedIn = false;
   bool _isCheckingAuth = true;
+  String? _expandedAssetKey; // Yeni: Hangi varlığın açık olduğunu tutar (Unique key)
+  bool _isSavingAsset = false; // Yeni: Güncelleme sırasında loading göstermek için
+
+  final PortfolioService _portfolioService = PortfolioService();
 
   @override
   void initState() {
@@ -194,20 +199,9 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildMainContent(HomeLoaded state, Size size) {
-    // Toplam değeri hesapla (TL bazında)
     final totalValue = state.totalValue;
     final totalProfitLoss = state.totalProfitLoss;
     final totalPnLPercent = state.totalPnLPercent;
-
-    // Günlük değişim için ilk varlığın değerini kullan (veya 0)
-    double dailyChangeTotal = 0;
-    double dailyChangePercentTotal = 0;
-    if (state.assets.isNotEmpty) {
-      // İlk varlığın günlük değişimini kullan
-      // Not: API'den daily_change gelmiyorsa 0 olarak kalır
-      dailyChangeTotal = state.assets.first.profitLoss; // Geçici çözüm
-      dailyChangePercentTotal = state.assets.first.pnlPercent;
-    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -217,7 +211,7 @@ class _HomePageState extends State<HomePage> {
           SizedBox(height: size.height * 0.05),
         ],
 
-        _buildSectionTitle("Portföyler Toplamı", size, hasArrows: true),
+        _buildSectionTitle("Varlıklar Toplamı", size, hasArrows: true),
         Text(
           "${totalValue.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')} ₺",
           style: TextStyle(
@@ -291,26 +285,14 @@ class _HomePageState extends State<HomePage> {
         if (state.assets.isNotEmpty) ...[
           _buildSectionTitle("Varlıklarım", size, hasSort: true),
           SizedBox(height: size.height * 0.02),
-
-          ...state.assets.map((asset) => Padding(
-            padding: EdgeInsets.only(bottom: size.height * 0.015),
-            child: _contentCard(
-              asset.name,
-              asset.currentValue.toStringAsFixed(0),
-              "${asset.profitLoss >= 0 ? '+' : ''}${asset.profitLoss.toStringAsFixed(0)}",
-              "${asset.pnlPercent >= 0 ? '+' : ''}%${asset.pnlPercent.toStringAsFixed(1).replaceAll('.', ',')}",
-              asset.pnlPercent,
-              size,
-              // Asset detail için gerekli parametreler (state'de varsa)
-              portfolioId: state.portfolioId,  // HomeState'e eklenecek
-              assetId: asset.id,               // Asset modelinde id olmalı
-              symbol: asset.symbol,
-              quantity: asset.quantity,
-              purchasePrice: asset.purchasePrice,
-              currentPrice: asset.currentPrice,
-              currentValue: asset.currentValue,
-            ),
-          )),
+          ...state.assets.asMap().entries.map((entry) {
+            final index = entry.key;
+            final asset = entry.value;
+            return Padding(
+              padding: EdgeInsets.only(bottom: size.height * 0.015),
+              child: _expandableContentCard(asset, size, index),
+            );
+          }),
         ],
 
         // Portföy bilgisi (eğer varsa farklı bir yapıda)
@@ -370,17 +352,22 @@ class _HomePageState extends State<HomePage> {
   }
 
   Color _getCategoryColor(String category) {
-    switch (category) {
-      case 'doviz':
-        return const Color(0xFFFFD700);
-      case 'emtia':
-        return const Color(0xFF00C4B4);
-      case 'hisse':
-        return const Color(0xFF6366F1);
-      case 'kripto':
-        return const Color(0xFFF59E0B);
+    switch (category.toLowerCase()) {
+      case 'doviz': return const Color(0xFFFFD700);
+      case 'altin': return const Color(0xFFEAB308);
+      case 'emtia': return const Color(0xFF0D9488);
+      case 'parite': return const Color(0xFF2563EB);
+      case 'hisse': return const Color(0xFF6366F1);
+      case 'kripto': return const Color(0xFFF59E0B);
+      case 'nakit': return const Color(0xFF22C55E);
       default:
-        return Colors.grey;
+        final int hash = category.hashCode.abs();
+        final List<Color> fallbackColors = [
+          const Color(0xFFEC4899), const Color(0xFFA855F7), 
+          const Color(0xFF06B6D4), const Color(0xFFF97316),
+          const Color(0xFF14B8A6), const Color(0xFF6366F1)
+        ];
+        return fallbackColors[hash % fallbackColors.length];
     }
   }
 
@@ -448,133 +435,226 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _contentCard(
-      String title,
-      String value,
-      String diff,
-      String perc,
-      double percValue,
-      Size size, {
-        int? portfolioId,
-        int? assetId,
-        String? symbol,
-        double? quantity,
-        double? purchasePrice,
-        double? currentPrice,
-        double? currentValue,
-      }) {
-    final isPositive = percValue >= 0;
+  Widget _expandableContentCard(AssetItem asset, Size size, int index) {
+    final String uniqueKey = "${asset.portfolioId}_${asset.id}_$index";
+    final bool isExpanded = _expandedAssetKey == uniqueKey;
+    final bool isPositive = asset.pnlPercent >= 0;
 
-    // Eğer gerekli parametreler varsa tıklanabilir yap
-    final isClickable = portfolioId != null &&
-        assetId != null &&
-        symbol != null &&
-        quantity != null &&
-        purchasePrice != null &&
-        currentPrice != null &&
-        currentValue != null;
-
-    Widget cardContent = Container(
-      padding: EdgeInsets.all(size.width * 0.05),
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
       decoration: BoxDecoration(
         color: const Color(0xFFF3F4F6),
         borderRadius: BorderRadius.circular(size.width * 0.06),
       ),
       child: Column(
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                title,
-                style: TextStyle(
-                  color: Colors.grey,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 1.1,
-                  fontSize: size.width * 0.035,
-                ),
-              ),
-              Row(
+          // Ana Kart Başlığı
+          InkWell(
+            onTap: () {
+              setState(() {
+                if (_expandedAssetKey == uniqueKey) {
+                  _expandedAssetKey = null;
+                } else {
+                  _expandedAssetKey = uniqueKey;
+                }
+              });
+            },
+            borderRadius: BorderRadius.circular(size.width * 0.06),
+            child: Padding(
+              padding: EdgeInsets.all(size.width * 0.05),
+              child: Column(
                 children: [
-                  Text(
-                    "$value ₺",
-                    style: TextStyle(
-                      fontSize: size.width * 0.045,
-                      fontWeight: FontWeight.bold,
-                    ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        asset.name,
+                        style: TextStyle(
+                          color: const Color(0xFF1A1A1A),
+                          fontWeight: FontWeight.bold,
+                          fontSize: size.width * 0.04,
+                        ),
+                      ),
+                      Row(
+                        children: [
+                          Text(
+                            "${asset.currentValue.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')} ₺",
+                            style: TextStyle(
+                              fontSize: size.width * 0.045,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          SizedBox(width: size.width * 0.02),
+                          Icon(
+                            isExpanded
+                                ? Icons.keyboard_arrow_up
+                                : Icons.keyboard_arrow_down,
+                            size: size.width * 0.06,
+                            color: Colors.black54,
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
-                  SizedBox(width: size.width * 0.02),
-                  Icon(
-                    isPositive
-                        ? Icons.keyboard_arrow_up
-                        : Icons.keyboard_arrow_down,
-                    size: size.width * 0.05,
+                  SizedBox(height: size.height * 0.005),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Text(
+                        "${asset.profitLoss >= 0 ? '+' : ''}${asset.profitLoss.toStringAsFixed(0)} ₺",
+                        style: TextStyle(
+                          color: isPositive
+                              ? Colors.green.shade400
+                              : Colors.red.shade400,
+                          fontWeight: FontWeight.w500,
+                          fontSize: size.width * 0.035,
+                        ),
+                      ),
+                      SizedBox(width: size.width * 0.03),
+                      Text(
+                        "%${asset.pnlPercent.toStringAsFixed(1).replaceAll('.', ',')}",
+                        style: TextStyle(
+                          color: Colors.grey,
+                          fontWeight: FontWeight.w500,
+                          fontSize: size.width * 0.035,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
-            ],
+            ),
           ),
-          SizedBox(height: size.height * 0.01),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              Text(
-                diff,
-                style: TextStyle(
-                  color: isPositive
-                      ? Colors.green.shade400
-                      : Colors.red.shade400,
-                  fontWeight: FontWeight.w500,
-                  fontSize: size.width * 0.035,
-                ),
+
+          // Genişleyen Düzenleme Bölümü
+          if (isExpanded)
+            Padding(
+              padding: EdgeInsets.fromLTRB(
+                  size.width * 0.05, 0, size.width * 0.05, size.width * 0.05),
+              child: Column(
+                children: [
+                  const Divider(),
+                  SizedBox(height: size.height * 0.015),
+                  
+                  // Detay Bilgileri
+                  _buildExpandableRow("Miktar", asset.quantity.toString(), size),
+                  _buildExpandableRow("Alış Fiyatı", "${asset.purchasePrice.toStringAsFixed(2)} ₺", size),
+                  _buildExpandableRow("Güncel Fiyat", "${asset.currentPrice.toStringAsFixed(2)} ₺", size),
+                  
+                  SizedBox(height: size.height * 0.02),
+                  
+                  // Kaydet (Düzenle) Butonu
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () => _navigateToDetail(asset),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF1A1060),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: const Text("Düzenle"),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-              SizedBox(width: size.width * 0.03),
-              Text(
-                perc,
-                style: TextStyle(
-                  color: Colors.grey,
-                  fontWeight: FontWeight.w500,
-                  fontSize: size.width * 0.035,
-                ),
-              ),
-            ],
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildExpandableRow(String label, String value, Size size) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: TextStyle(color: Colors.grey, fontSize: size.width * 0.035)),
+          Text(value, style: TextStyle(fontWeight: FontWeight.bold, fontSize: size.width * 0.035)),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _navigateToDetail(AssetItem asset) async {
+    final result = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AssetDetailPage(
+          portfolioId: asset.portfolioId,
+          assetId: asset.id,
+          assetName: asset.name,
+          symbol: asset.symbol,
+          quantity: asset.quantity,
+          purchasePrice: asset.purchasePrice,
+          currentPrice: asset.currentPrice,
+          currentValue: asset.currentValue,
+          profitLoss: asset.profitLoss,
+          pnlPercent: asset.pnlPercent,
+        ),
+      ),
+    );
+
+    // Eğer değişiklik yapıldıysa (true dönerse) sayfayı yenile
+    if (result == true && mounted) {
+      context.read<HomeBloc>().add(LoadHomeData());
+    }
+  }
+
+  Future<void> _confirmDeleteAsset(AssetItem asset) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Varlığı Sil"),
+        content: const Text("Bu varlığı portföyünüzden kaldırmak istediğinize emin misiniz?"),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text("İptal")),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true), 
+            child: Text("Sil", style: TextStyle(color: Colors.red.shade400))
           ),
         ],
       ),
     );
 
-    if (!isClickable) {
-      return cardContent;
-    }
-
-    return GestureDetector(
-      onTap: () async {
-        final result = await Navigator.push<bool>(
-          context,
-          MaterialPageRoute(
-            builder: (context) => AssetDetailPage(
-              portfolioId: portfolioId!,
-              assetId: assetId!,
-              assetName: title,
-              symbol: symbol!,
-              quantity: quantity!,
-              purchasePrice: purchasePrice!,
-              currentPrice: currentPrice!,
-              currentValue: currentValue!,
-              profitLoss: double.parse(
-                diff.replaceAll('+', '').replaceAll(',', '').replaceAll(' ₺', ''),
-              ),
-              pnlPercent: percValue,
-            ),
-          ),
-        );
-
-        // Eğer değişiklik yapıldıysa (true dönerse) sayfayı yenile
-        if (result == true && mounted) {
+    if (confirmed == true) {
+      setState(() => _isSavingAsset = true);
+      try {
+        await _portfolioService.deleteAsset(portfolioId: asset.portfolioId, assetId: asset.id);
+        if (mounted) {
+          setState(() {
+            _isSavingAsset = false;
+            _expandedAssetKey = null;
+          });
           context.read<HomeBloc>().add(LoadHomeData());
         }
-      },
-      child: cardContent,
+      } catch (e) {
+        if (mounted) {
+          setState(() => _isSavingAsset = false);
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Hata: $e"), backgroundColor: Colors.red));
+        }
+      }
+    }
+  }
+
+  Widget _badge({required Widget child, required Size size}) {
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: size.width * 0.04, vertical: size.height * 0.01,
+      ),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF3F4F6),
+        borderRadius: BorderRadius.circular(size.width * 0.05),
+      ),
+      child: child,
     );
   }
 
@@ -725,19 +805,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _badge({required Widget child, required Size size}) {
-    return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: size.width * 0.04,
-        vertical: size.height * 0.01,
-      ),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF3F4F6),
-        borderRadius: BorderRadius.circular(size.width * 0.05),
-      ),
-      child: child,
-    );
-  }
 
   Widget _circularIcon(IconData icon, Size size) {
     return Container(
@@ -747,6 +814,95 @@ class _HomePageState extends State<HomePage> {
         shape: BoxShape.circle,
       ),
       child: Icon(icon, size: size.width * 0.045, color: Colors.black87),
+    );
+  }
+
+  @override
+  void dispose() {
+    _portfolioService.dispose();
+    super.dispose();
+  }
+
+  Widget _contentCard(
+    String title,
+    String value,
+    String profit,
+    String pnl,
+    double pnlPercent,
+    Size size,
+  ) {
+    final bool isPositive = pnlPercent >= 0;
+    return Container(
+      padding: EdgeInsets.all(size.width * 0.05),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF3F4F6),
+        borderRadius: BorderRadius.circular(size.width * 0.06),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: EdgeInsets.all(size.width * 0.03),
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Icons.account_balance_wallet_outlined,
+                    size: size.width * 0.06, color: const Color(0xFF1A0B52)),
+              ),
+              SizedBox(width: size.width * 0.04),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                        fontSize: size.width * 0.035, color: Colors.grey),
+                  ),
+                  Text(
+                    "$value ₺",
+                    style: TextStyle(
+                        fontSize: size.width * 0.045,
+                        fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                "$profit ₺",
+                style: TextStyle(
+                  fontSize: size.width * 0.04,
+                  fontWeight: FontWeight.bold,
+                  color: isPositive ? Colors.green : Colors.red,
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: isPositive
+                      ? Colors.green.withOpacity(0.1)
+                      : Colors.red.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  pnl,
+                  style: TextStyle(
+                    fontSize: size.width * 0.03,
+                    fontWeight: FontWeight.bold,
+                    color: isPositive ? Colors.green : Colors.red,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
@@ -832,7 +988,7 @@ class EmptyDonutPainter extends CustomPainter {
 class DonutChartPainter extends CustomPainter {
   final List<CategoryDistribution> categories;
 
-  DonutChartPainter({required this.categories});
+  DonutChartPainter({required this.categories}) : super();
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -845,20 +1001,25 @@ class DonutChartPainter extends CustomPainter {
     );
 
     double startAngle = -math.pi / 2;
+    const double gap = 0.05; // Dilimler arası boşluk miktarı
 
     for (var category in categories) {
+      final sweepAngle = 2 * math.pi * (category.percentage / 100);
+      
+      // Çok küçük dilimler için boşluğu ayarla
+      double adjustedSweep = sweepAngle - gap;
+      if (adjustedSweep < 0.05) adjustedSweep = sweepAngle * 0.8;
+
       final paint = Paint()
         ..color = _getCategoryColor(category.category)
         ..style = PaintingStyle.stroke
         ..strokeWidth = strokeWidth
-        ..strokeCap = StrokeCap.round;
-
-      final sweepAngle = 2 * math.pi * (category.percentage / 100);
+        ..strokeCap = StrokeCap.butt;
 
       canvas.drawArc(
         rect,
-        startAngle,
-        sweepAngle - 0.02,
+        startAngle + (gap / 2), // Boşluğun yarısı kadar ileriden başla
+        adjustedSweep,
         false,
         paint,
       );
@@ -868,17 +1029,22 @@ class DonutChartPainter extends CustomPainter {
   }
 
   Color _getCategoryColor(String category) {
-    switch (category) {
-      case 'doviz':
-        return const Color(0xFFFFD700);
-      case 'emtia':
-        return const Color(0xFF00C4B4);
-      case 'hisse':
-        return const Color(0xFF6366F1);
-      case 'kripto':
-        return const Color(0xFFF59E0B);
+    switch (category.toLowerCase()) {
+      case 'doviz': return const Color(0xFFFFD700);
+      case 'altin': return const Color(0xFFEAB308);
+      case 'emtia': return const Color(0xFF0D9488);
+      case 'parite': return const Color(0xFF2563EB);
+      case 'hisse': return const Color(0xFF6366F1);
+      case 'kripto': return const Color(0xFFF59E0B);
+      case 'nakit': return const Color(0xFF22C55E);
       default:
-        return Colors.grey;
+        final int hash = category.hashCode.abs();
+        final List<Color> fallbackColors = [
+          const Color(0xFFEC4899), const Color(0xFFA855F7), 
+          const Color(0xFF06B6D4), const Color(0xFFF97316),
+          const Color(0xFF14B8A6), const Color(0xFF6366F1)
+        ];
+        return fallbackColors[hash % fallbackColors.length];
     }
   }
 

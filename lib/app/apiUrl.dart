@@ -21,6 +21,9 @@ class ApiUrls {
 
   static const String portfolios = "$baseUrl/portfolios";
   static const String portfolioSummary = "$baseUrl/portfolios/summary";
+  static const String mobilePortfolioSummary = "$baseUrl/mobile/portfolio/summary";
+  static const String mobilePortfolioChart = "$baseUrl/mobile/portfolio/chart";
+  static String mobilePortfolioDetailChart(int id) => "$baseUrl/mobile/portfolio/$id/chart";
   static String portfolioDetail(int id) => "$baseUrl/portfolios/$id";
   static String portfolioAssets(int id) => "$baseUrl/portfolios/$id/assets";
   static String portfolioAssetDetail(int portfolioId, int assetId) =>

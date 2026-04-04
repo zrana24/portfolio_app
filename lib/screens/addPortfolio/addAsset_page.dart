@@ -56,14 +56,21 @@ class _AddAssetPageState extends State<AddAssetPage> {
           print('📱 AddAsset State Değişti: ${state.runtimeType}');
 
           // State değiştiğinde controller'ları güncelle
+          // State değiştiğinde controller'ları sadece değer farklıysa güncelle
           if (state is AddAssetLoaded) {
             if (_assetNameController.text != state.assetName) {
               _assetNameController.text = state.assetName;
             }
-            if (_quantityController.text != (state.quantity == 0 ? '' : state.quantity.toString())) {
+            
+            // Miktar kontrolü: Sayısal değer aynıysa metni değiştirme (örn: 30 ve 30.0 aynıdır)
+            final currentQuantity = double.tryParse(_quantityController.text) ?? 0;
+            if (currentQuantity != state.quantity) {
               _quantityController.text = state.quantity == 0 ? '' : state.quantity.toString();
             }
-            if (_purchasePriceController.text != (state.purchasePrice == 0 ? '' : state.purchasePrice.toString())) {
+
+            // Fiyat kontrolü: Sayısal değer aynıysa metni değiştirme
+            final currentPrice = double.tryParse(_purchasePriceController.text) ?? 0;
+            if (currentPrice != state.purchasePrice) {
               _purchasePriceController.text = state.purchasePrice == 0 ? '' : state.purchasePrice.toString();
             }
           }

@@ -38,7 +38,7 @@ class _AssetDetailPageState extends State<AssetDetailPage> {
   final TextEditingController _quantityController = TextEditingController();
   final TextEditingController _purchasePriceController = TextEditingController();
 
-  bool _isEditing = false;
+  bool _isEditing = true; // Doğrudan düzenleme modunda açılması için true yapıldı
   bool _isLoading = false;
 
   @override
@@ -84,20 +84,12 @@ class _AssetDetailPageState extends State<AssetDetailPage> {
                     ),
                   ),
                   SizedBox(width: size.width * 0.03),
-                  // Edit/Save Button
+                  // Save Button (Always in edit mode now)
                   IconButton(
-                    onPressed: _isLoading ? null : () {
-                      if (_isEditing) {
-                        _saveChanges();
-                      } else {
-                        setState(() {
-                          _isEditing = true;
-                        });
-                      }
-                    },
-                    icon: Icon(
-                      _isEditing ? Icons.save : Icons.edit,
-                      color: const Color(0xFF1A0B52),
+                    onPressed: _isLoading ? null : _saveChanges,
+                    icon: const Icon(
+                      Icons.save,
+                      color: Color(0xFF1A0B52),
                     ),
                   ),
                 ],
@@ -112,9 +104,11 @@ class _AssetDetailPageState extends State<AssetDetailPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Current Stats Card
-                    _buildStatsCard(size),
-                    SizedBox(height: size.height * 0.03),
+                    // Current Stats Card (Only visible when NOT editing, but now always hidden or simplified)
+                    if (!_isEditing) ...[
+                      _buildStatsCard(size),
+                      SizedBox(height: size.height * 0.03),
+                    ],
 
                     // Edit Form (visible when editing)
                     if (_isEditing) ...[
