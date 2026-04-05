@@ -88,9 +88,9 @@ class _HomePageState extends State<HomePage> {
                             padding: EdgeInsets.symmetric(
                               vertical: size.height * 0.02,
                             ),
-                            child: const SizedBox(
+                            /*child: const SizedBox(
                               child: AdsBannerWidget(key: Key('home_middle_ad')),
-                            ),
+                            ),*/
                           ),
 
                         if (state is HomeLoading)
@@ -105,14 +105,13 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
 
-                  // Token yoksa ve empty state ise bottom reklam gösterme
                   if (!(!_isLoggedIn && state is HomeEmpty))
                     SliverToBoxAdapter(
                       child: Padding(
                         padding: EdgeInsets.symmetric(
                           vertical: size.height * 0.02,
                         ),
-                        child: const AdsBannerWidget(key: Key('home_bottom_ad')),
+                        //child: const AdsBannerWidget(key: Key('home_bottom_ad')),
                       ),
                     ),
 
@@ -621,7 +620,7 @@ class _HomePageState extends State<HomePage> {
         // Üst reklam (Her durumda göster)
         const Padding(
           padding: EdgeInsets.symmetric(vertical: 12.0),
-          child: AdsBannerWidget(key: Key('empty_state_top_ad')),
+          //child: AdsBannerWidget(key: Key('empty_state_top_ad')),
         ),
 
         SizedBox(height: size.height * 0.02),
@@ -680,7 +679,7 @@ class _HomePageState extends State<HomePage> {
           // Alt reklam (Giriş yapmamış kullanıcılar için)
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 12.0),
-            child: AdsBannerWidget(key: Key('empty_state_bottom_ad')),
+            //child: AdsBannerWidget(key: Key('empty_state_bottom_ad')),
           ),
         ]
         else ...[
@@ -698,7 +697,7 @@ class _HomePageState extends State<HomePage> {
           // Alt reklam (Giriş yapmış ama portföyü olmayan kullanıcılar için)
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 12.0),
-            child: AdsBannerWidget(key: Key('empty_state_bottom_ad')),
+            //child: AdsBannerWidget(key: Key('empty_state_bottom_ad')),
           ),
         ],
         SizedBox(height: size.height * 0.02),

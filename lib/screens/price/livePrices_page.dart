@@ -114,10 +114,10 @@ class _LivePricesView extends StatelessWidget {
                               SizedBox(height: size.height * 0.018),
                               _buildUpdateRow(state, size, isTablet, isDesktop),
 
-                              SizedBox(height: size.height * 0.012),
+                              /*SizedBox(height: size.height * 0.012),
                               AdsBannerWidget(
                                 onAdLoadStateChanged: onTopAdLoadStateChanged,
-                              ),
+                              ),*/
                               SizedBox(height: size.height * 0.012),
 
                               _buildBody(context, state, size, isTablet, isDesktop),
@@ -127,10 +127,10 @@ class _LivePricesView extends StatelessWidget {
                                   state is LivePricesError)
                                 _buildInfoCard(size, isTablet, isDesktop),
 
-                              SizedBox(height: size.height * 0.012),
+                              /*SizedBox(height: size.height * 0.012),
                               AdsBannerWidget(
                                 onAdLoadStateChanged: onBottomAdLoadStateChanged,
-                              ),
+                              ),*/
 
                               SizedBox(
                                 height: size.height * 0.082 +

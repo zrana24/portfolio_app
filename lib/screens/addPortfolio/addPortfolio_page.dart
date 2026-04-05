@@ -137,8 +137,8 @@ class _AddPortfolioPageState extends State<AddPortfolioPage> {
           SizedBox(height: size.height * 0.02),
 
           // Üst Reklam
-          const AdsBannerWidget(),
-          SizedBox(height: size.height * 0.02),
+          //const AdsBannerWidget(),
+          //SizedBox(height: size.height * 0.02),
 
           // Portföy Seç Bölümü
           Padding(
@@ -201,8 +201,8 @@ class _AddPortfolioPageState extends State<AddPortfolioPage> {
           SizedBox(height: size.height * 0.02),
 
           // Alt Reklam
-          const AdsBannerWidget(),
-          SizedBox(height: size.height * 0.02),
+          //const AdsBannerWidget(),
+          //SizedBox(height: size.height * 0.02),
         ],
       ),
     );
