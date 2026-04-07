@@ -126,7 +126,7 @@ class _NewsViewState extends State<_NewsView> {
                                 horizontal: size.width * 0.06,
                                 vertical: size.height * 0.012,
                               ),
-                              //child: AdsBannerWidget(),
+                              child: AdsBannerWidget(),
                             ),
                           ),
 
@@ -274,7 +274,7 @@ class _NewsViewState extends State<_NewsView> {
             horizontal: size.width * 0.06,
             vertical: size.height * 0.012,
           ),
-          //child: AdsBannerWidget(),
+          child: AdsBannerWidget(),
         ),
       ),
 
@@ -446,6 +446,7 @@ class _NewsViewState extends State<_NewsView> {
       context,
       MaterialPageRoute(
         builder: (_) => NewsDetailPage(article: article),
+        settings: const RouteSettings(name: '/news-detail'),
       ),
     );
   }

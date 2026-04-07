@@ -22,8 +22,8 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   bool _isLoggedIn = false;
   bool _isCheckingAuth = true;
-  String? _expandedAssetKey; // Yeni: Hangi varlığın açık olduğunu tutar (Unique key)
-  bool _isSavingAsset = false; // Yeni: Güncelleme sırasında loading göstermek için
+  String? _expandedAssetKey;
+  bool _isSavingAsset = false;
 
   final PortfolioService _portfolioService = PortfolioService();
 
@@ -82,15 +82,14 @@ class _HomePageState extends State<HomePage> {
                         SizedBox(height: size.height * 0.006),
                         _buildHeader(size),
 
-                        // Token yoksa ve empty state ise reklam gösterme (aşağıda göstereceğiz)
                         if (!(!_isLoggedIn && state is HomeEmpty))
                           Padding(
                             padding: EdgeInsets.symmetric(
                               vertical: size.height * 0.02,
                             ),
-                            /*child: const SizedBox(
+                            child: const SizedBox(
                               child: AdsBannerWidget(key: Key('home_middle_ad')),
-                            ),*/
+                            ),
                           ),
 
                         if (state is HomeLoading)
@@ -111,7 +110,7 @@ class _HomePageState extends State<HomePage> {
                         padding: EdgeInsets.symmetric(
                           vertical: size.height * 0.02,
                         ),
-                        //child: const AdsBannerWidget(key: Key('home_bottom_ad')),
+                        child: const AdsBannerWidget(key: Key('home_bottom_ad')),
                       ),
                     ),
 
@@ -224,7 +223,6 @@ class _HomePageState extends State<HomePage> {
           spacing: size.width * 0.02,
           runSpacing: size.height * 0.01,
           children: [
-            // Toplam K/Z gösterimi
             _badge(
               size: size,
               child: Row(
@@ -251,7 +249,6 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
 
-            // Toplam K/Z % gösterimi
             _badge(
               size: size,
               child: Row(
@@ -271,7 +268,6 @@ class _HomePageState extends State<HomePage> {
         ),
         SizedBox(height: size.height * 0.04),
 
-        // Varlık listesi (İçerik)
         if (state.assets.isNotEmpty) ...[
           _buildSectionTitle("İçerik", size, hasSort: true),
           SizedBox(height: size.height * 0.02),
@@ -285,7 +281,6 @@ class _HomePageState extends State<HomePage> {
           }),
         ],
 
-        // Portföy bilgisi (eğer varsa farklı bir yapıda)
         if (state.assets.isEmpty && state.totalValue > 0) ...[
           _buildSectionTitle("Portföy Özeti", size, hasSort: true),
           SizedBox(height: size.height * 0.02),
@@ -410,16 +405,6 @@ class _HomePageState extends State<HomePage> {
               fontSize: size.width * 0.05,
             ),
           ),
-          if (hasArrows)
-            Row(
-              children: [
-                Icon(Icons.chevron_left,
-                    color: Colors.grey.shade300, size: size.width * 0.06),
-                Icon(Icons.chevron_right,
-                    color: Colors.black87, size: size.width * 0.06),
-              ],
-            ),
-          if (hasSort) _circularIcon(Icons.swap_vert, size),
         ],
       ),
     );
@@ -439,7 +424,6 @@ class _HomePageState extends State<HomePage> {
       ),
       child: Column(
         children: [
-          // Ana Kart Başlığı
           InkWell(
             onTap: () {
               setState(() {
@@ -517,7 +501,6 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
 
-          // Genişleyen Düzenleme Bölümü
           if (isExpanded)
             Padding(
               padding: EdgeInsets.fromLTRB(
@@ -527,14 +510,12 @@ class _HomePageState extends State<HomePage> {
                   const Divider(),
                   SizedBox(height: size.height * 0.015),
                   
-                  // Detay Bilgileri
                   _buildExpandableRow("Miktar", asset.quantity.toString(), size),
                   _buildExpandableRow("Alış Fiyatı", "${asset.purchasePrice.toStringAsFixed(2)} ₺", size),
                   _buildExpandableRow("Güncel Fiyat", "${asset.currentPrice.toStringAsFixed(2)} ₺", size),
                   
                   SizedBox(height: size.height * 0.02),
                   
-                  // Kaydet (Düzenle) Butonu
                   Row(
                     children: [
                       Expanded(
@@ -590,6 +571,7 @@ class _HomePageState extends State<HomePage> {
           profitLoss: asset.profitLoss,
           pnlPercent: asset.pnlPercent,
         ),
+        settings: const RouteSettings(name: '/asset-detail'),
       ),
     );
 
@@ -617,10 +599,9 @@ class _HomePageState extends State<HomePage> {
       children: [
         SizedBox(height: size.height * 0.02),
 
-        // Üst reklam (Her durumda göster)
         const Padding(
           padding: EdgeInsets.symmetric(vertical: 12.0),
-          //child: AdsBannerWidget(key: Key('empty_state_top_ad')),
+          child: AdsBannerWidget(key: Key('empty_state_top_ad')),
         ),
 
         SizedBox(height: size.height * 0.02),
@@ -676,10 +657,9 @@ class _HomePageState extends State<HomePage> {
 
           SizedBox(height: size.height * 0.03),
 
-          // Alt reklam (Giriş yapmamış kullanıcılar için)
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 12.0),
-            //child: AdsBannerWidget(key: Key('empty_state_bottom_ad')),
+            child: AdsBannerWidget(key: Key('empty_state_bottom_ad')),
           ),
         ]
         else ...[
@@ -694,10 +674,9 @@ class _HomePageState extends State<HomePage> {
 
           SizedBox(height: size.height * 0.03),
 
-          // Alt reklam (Giriş yapmış ama portföyü olmayan kullanıcılar için)
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 12.0),
-            //child: AdsBannerWidget(key: Key('empty_state_bottom_ad')),
+            child: AdsBannerWidget(key: Key('empty_state_bottom_ad')),
           ),
         ],
         SizedBox(height: size.height * 0.02),
@@ -954,12 +933,11 @@ class DonutChartPainter extends CustomPainter {
     );
 
     double startAngle = -math.pi / 2;
-    const double gap = 0.05; // Dilimler arası boşluk miktarı
+    const double gap = 0.05;
 
     for (var category in categories) {
       final sweepAngle = 2 * math.pi * (category.percentage / 100);
       
-      // Çok küçük dilimler için boşluğu ayarla
       double adjustedSweep = sweepAngle - gap;
       if (adjustedSweep < 0.05) adjustedSweep = sweepAngle * 0.8;
 
@@ -971,7 +949,7 @@ class DonutChartPainter extends CustomPainter {
 
       canvas.drawArc(
         rect,
-        startAngle + (gap / 2), // Boşluğun yarısı kadar ileriden başla
+        startAngle + (gap / 2),
         adjustedSweep,
         false,
         paint,

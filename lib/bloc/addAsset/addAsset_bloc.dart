@@ -36,10 +36,9 @@ class AddAssetBloc extends Bloc<AddAssetEvent, AddAssetState> {
     emit(AddAssetLoading());
 
     try {
-      // Paralel olarak tüm verileri yükle
       final results = await Future.wait([
         _portfolioService.getPortfolios(),
-        _commodityService.fetchCommodities(), // Tüm commodity listesini çek
+        _commodityService.fetchCommodities(),
         _portfolioService.getPriceHistory(symbol: symbol, period: '1d'),
       ]);
 
@@ -47,7 +46,6 @@ class AddAssetBloc extends Bloc<AddAssetEvent, AddAssetState> {
       final commodities = results[1] as List<CommodityItem>;
       final priceHistory = results[2] as PriceHistory;
 
-      // Symbol'e göre commodity bul
       CommodityItem? commodity;
       try {
         commodity = commodities.firstWhere((c) => c.symbol == symbol);
@@ -56,11 +54,9 @@ class AddAssetBloc extends Bloc<AddAssetEvent, AddAssetState> {
         return;
       }
 
-      // Portföy yoksa yeni portföy oluştur
       Portfolio defaultPortfolio;
 
       if (portfolios.isEmpty) {
-        // Hiç portfolio yoksa ilk portfolio'yu oluştur
         final newPortfolio = await _portfolioService.createPortfolio(
           name: portfolioName ?? 'Ana Portföyüm',
           currency: 'TRY',
@@ -68,37 +64,31 @@ class AddAssetBloc extends Bloc<AddAssetEvent, AddAssetState> {
         );
         portfolios = await _portfolioService.getPortfolios();
 
-        // Yeni oluşturulan portföyü seç
         try {
           defaultPortfolio = portfolios.firstWhere((p) => p.id == newPortfolio.id);
         } catch (e) {
           defaultPortfolio = portfolios.last;
         }
       } else if (portfolioId != null) {
-        // portfolioId verilmişse (AddPortfolio'dan yeni oluşturulup gelindiyse) o portfolio'yu seç
         try {
           defaultPortfolio = portfolios.firstWhere((p) => p.id == portfolioId);
         } catch (e) {
-          // Bulunamazsa ilk portfolio'yu seç
           defaultPortfolio = portfolios.first;
         }
       } else if (portfolioName != null) {
-        // portfolioName verilmişse yeni portfolio oluştur (eski akış)
         final newPortfolio = await _portfolioService.createPortfolio(
-          name: portfolioName!, // null check
+          name: portfolioName!,
           currency: 'TRY',
           isDefault: false,
         );
         portfolios = await _portfolioService.getPortfolios();
 
-        // Yeni oluşturulan portföyü seç
         try {
           defaultPortfolio = portfolios.firstWhere((p) => p.id == newPortfolio.id);
         } catch (e) {
           defaultPortfolio = portfolios.last;
         }
       } else {
-        // Varsayılan portföyü seç
         try {
           defaultPortfolio = portfolios.firstWhere((p) => p.isDefault);
         } catch (e) {
@@ -118,7 +108,7 @@ class AddAssetBloc extends Bloc<AddAssetEvent, AddAssetState> {
         quantity: 0,
         purchasePrice: commodity.bid,
         notes: '',
-        assetName: commodity.name, // Başlangıçta commodity adını kullan
+        assetName: commodity.name,
       ));
     } catch (e) {
       emit(AddAssetError(message: e.toString()));
@@ -183,7 +173,6 @@ class AddAssetBloc extends Bloc<AddAssetEvent, AddAssetState> {
 
     final currentState = state as AddAssetLoaded;
 
-    // Validasyon
     if (currentState.quantity <= 0) {
       emit(AddAssetError(message: 'Miktar 0\'dan büyük olmalıdır'));
       emit(currentState);
@@ -205,13 +194,6 @@ class AddAssetBloc extends Bloc<AddAssetEvent, AddAssetState> {
     emit(AddAssetSaving());
 
     try {
-      print('🚀 VARLIK EKLEME BAŞLADI');
-      print('Portfolio ID: ${currentState.selectedPortfolio.id}');
-      print('Symbol: $symbol');
-      print('Quantity: ${currentState.quantity}');
-      print('Purchase Price: ${currentState.purchasePrice}');
-      print('Asset Name: ${currentState.assetName}');
-
       await _portfolioService.addAssetToPortfolio(
         portfolioId: currentState.selectedPortfolio.id,
         symbol: symbol,
@@ -221,7 +203,6 @@ class AddAssetBloc extends Bloc<AddAssetEvent, AddAssetState> {
         assetName: currentState.assetName,
       );
 
-      print('✅ VARLIK BAŞARIYLA EKLENDİ');
       emit(AddAssetSuccess());
     } catch (e) {
       print('❌ VARLIK EKLEME HATASI: $e');

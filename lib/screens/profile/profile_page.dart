@@ -42,7 +42,7 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> _launchWhatsApp() async {
-    const phoneNumber = '+905323253588';
+    const phoneNumber = '+905300929388';
     const message = 'Merhaba, yardıma ihtiyacım var.';
     final url = Uri.parse('https://wa.me/$phoneNumber?text=${Uri.encodeComponent(message)}');
 
@@ -116,22 +116,20 @@ class _ProfilePageState extends State<ProfilePage> {
             }
           },
           builder: (context, state) {
-            if (state is ProfileUnauthenticated) {
+            bool isLoggedIn = _email.isNotEmpty && state is! ProfileUnauthenticated;
+
+            if (state is ProfileLoading && _email.isEmpty) {
               return Column(
                 children: [
                   const CebeciAppBar(),
-                  Expanded(child: _buildNotLoggedInState(size)),
+                  const Expanded(
+                    child: Center(
+                      child: CircularProgressIndicator(color: Color(0xFF1A0B52)),
+                    ),
+                  ),
                 ],
               );
             }
-
-            if (state is ProfileLoading && _email.isEmpty) {
-              return const Center(
-                child: CircularProgressIndicator(color: Color(0xFF1A0B52)),
-              );
-            }
-
-            bool isLoggedIn = _email.isNotEmpty;
 
             return CustomScrollView(
               physics: const BouncingScrollPhysics(),
@@ -143,27 +141,37 @@ class _ProfilePageState extends State<ProfilePage> {
                   sliver: SliverList(
                     delegate: SliverChildListDelegate([
                       SizedBox(height: size.height * 0.03),
-                      _buildInfoTile("AD SOYAD", _nameController, Icons.person_outline, size),
-                      SizedBox(height: size.height * 0.015),
-                      _buildInfoTile("E-POSTA", TextEditingController(text: _email), Icons.mail_outline, size, isLocked: true),
-                      SizedBox(height: size.height * 0.015),
-                      _buildInfoTile("TELEFON", _phoneController, Icons.phone_android_outlined, size),
-                      SizedBox(height: size.height * 0.03),
 
-                      _buildSectionTitle("Ayarlar", size),
-                      SizedBox(height: size.height * 0.012),
-                      _buildMenuButton(
-                        "Şifre Değiştir",
-                        Icons.lock_outline_rounded,
-                            () => Navigator.pushNamed(context, AppRoutes.changePassword),
-                        size,
-                      ),
-                      SizedBox(height: size.height * 0.015),
+                      if (!isLoggedIn) ...[
+                        _buildLoginPrompt(size),
+                        SizedBox(height: size.height * 0.04),
+                      ],
+
+                      if (isLoggedIn) ...[
+                        _buildInfoTile("AD SOYAD", _nameController, Icons.person_outline, size),
+                        SizedBox(height: size.height * 0.015),
+                        _buildInfoTile("E-POSTA", TextEditingController(text: _email), Icons.mail_outline, size, isLocked: true),
+                        SizedBox(height: size.height * 0.015),
+                        _buildInfoTile("TELEFON", _phoneController, Icons.phone_android_outlined, size),
+                        SizedBox(height: size.height * 0.03),
+                        _buildSectionTitle("Ayarlar", size),
+                        SizedBox(height: size.height * 0.012),
+                        _buildMenuButton(
+                          "Şifre Değiştir",
+                          Icons.lock_outline_rounded,
+                              () => Navigator.pushNamed(context, AppRoutes.changePassword),
+                          size,
+                        ),
+                        SizedBox(height: size.height * 0.015),
+                      ],
+
+                      if (!isLoggedIn) _buildSectionTitle("Bilgi", size),
+                      if (!isLoggedIn) SizedBox(height: size.height * 0.012),
 
                       _buildMenuButton(
                         "Hakkımızda",
                         Icons.info_outline_rounded,
-                            () => Navigator.pushNamed(context, AppRoutes.about), // Burayı değiştirin
+                            () => Navigator.pushNamed(context, AppRoutes.about),
                         size,
                       ),
                       SizedBox(height: size.height * 0.015),
@@ -177,7 +185,9 @@ class _ProfilePageState extends State<ProfilePage> {
                       ),
 
                       SizedBox(height: size.height * 0.04),
-                      _buildLogoutButton(size),
+
+                      if (isLoggedIn) _buildLogoutButton(size),
+
                       SizedBox(height: size.height * 0.095 + bottomPadding),
                     ]),
                   ),
@@ -190,56 +200,102 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _buildNotLoggedInState(Size size) {
-    return Center(
-      child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: size.width * 0.1),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.account_circle_outlined,
-              size: size.width * 0.25,
-              color: Colors.grey.shade300,
-            ),
-            SizedBox(height: size.height * 0.025),
-            Text(
-              "Profilinizi görüntülemek için\nlütfen giriş yapın.",
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: size.width * 0.04,
-                color: const Color(0xFF6B7280),
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            SizedBox(height: size.height * 0.04),
-            SizedBox(
-              width: size.width * 0.6,
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.pushNamed(context, AppRoutes.login);
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF1A0B52),
-                  foregroundColor: Colors.white,
-                  padding: EdgeInsets.symmetric(vertical: size.height * 0.018),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(size.width * 0.03),
-                  ),
-                  elevation: 0,
-                ),
-                child: Text(
-                  'Giriş Yap',
-                  style: TextStyle(
-                    fontSize: size.width * 0.04,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ),
-          ],
+  Widget _buildLoginPrompt(Size size) {
+    return Container(
+      padding: EdgeInsets.all(size.width * 0.05),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(size.width * 0.04),
+        border: Border.all(
+          color: Colors.grey.withOpacity(0.3),
+          width: 1,
         ),
       ),
+      child: Column(
+        children: [
+          Icon(
+            Icons.account_circle_outlined,
+            size: size.width * 0.15,
+            color: primaryPurple.withOpacity(0.7),
+          ),
+          SizedBox(height: size.height * 0.02),
+          Text(
+            "Profilinizi Görüntüleyin",
+            style: TextStyle(
+              fontSize: size.width * 0.045,
+              fontWeight: FontWeight.w700,
+              color: primaryPurple,
+            ),
+          ),
+          SizedBox(height: size.height * 0.01),
+          Text(
+            "Portföyünüzü yönetmek ve kişisel bilgilerinizi düzenlemek için giriş yapın",
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: size.width * 0.035,
+              color: const Color(0xFF6B7280),
+              fontWeight: FontWeight.w500,
+              height: 1.4,
+            ),
+          ),
+          SizedBox(height: size.height * 0.025),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () {
+                Navigator.pushNamed(context, AppRoutes.login);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF1A0B52),
+                foregroundColor: Colors.white,
+                padding: EdgeInsets.symmetric(vertical: size.height * 0.018),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(size.width * 0.03),
+                ),
+                elevation: 0,
+              ),
+              child: Text(
+                'Giriş Yap',
+                style: TextStyle(
+                  fontSize: size.width * 0.04,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFeatureItem({
+    required IconData icon,
+    required String text,
+    required Size size,
+  }) {
+    return Row(
+      children: [
+        Container(
+          padding: EdgeInsets.all(size.width * 0.02),
+          decoration: BoxDecoration(
+            color: primaryPurple.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(size.width * 0.02),
+          ),
+          child: Icon(
+            icon,
+            size: size.width * 0.04,
+            color: primaryPurple,
+          ),
+        ),
+        SizedBox(width: size.width * 0.03),
+        Text(
+          text,
+          style: TextStyle(
+            fontSize: size.width * 0.036,
+            color: const Color(0xFF374151),
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
     );
   }
 

@@ -309,9 +309,9 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  /*SizedBox(height: size.height * 0.015),
+                  SizedBox(height: size.height * 0.015),
 
-                  AdsBannerWidget(),*/
+                  AdsBannerWidget(),
 
                   SizedBox(height: size.height * 0.012),
 
@@ -468,9 +468,9 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
                       ),
                     ),
 
-                  /*SizedBox(height: size.height * 0.035),
+                  SizedBox(height: size.height * 0.035),
 
-                  AdsBannerWidget(),*/
+                  AdsBannerWidget(),
 
                   SizedBox(height: size.height * 0.035),
 
@@ -519,6 +519,7 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
         context,
         MaterialPageRoute(
           builder: (_) => NewsDetailPage(article: article),
+          settings: const RouteSettings(name: '/news-detail'),
         ),
       ),
       child: Container(

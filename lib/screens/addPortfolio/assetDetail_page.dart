@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../services/portfolio_services.dart';
 import '../../widgets/back_button.dart';
+import '../../widgets/ads_banner_widget.dart';
 
 class AssetDetailPage extends StatefulWidget {
   final int portfolioId;
@@ -63,6 +64,7 @@ class _AssetDetailPageState extends State<AssetDetailPage> {
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
       body: SafeArea(
+        bottom: false,
         child: Column(
           children: [
             _buildHeader(size),
@@ -73,16 +75,24 @@ class _AssetDetailPageState extends State<AssetDetailPage> {
                   size.width * 0.05,
                   size.width * 0.05,
                   size.width * 0.05,
-                  size.width * 0.05 + bottomPadding,
+                  size.width * 0.05,
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    const AdsBannerWidget(),
+                    SizedBox(height: size.height * 0.025),
+
                     _buildSummarySection(size),
                     SizedBox(height: size.height * 0.025),
                     _buildEditSection(size),
                     SizedBox(height: size.height * 0.025),
                     _buildActionButtons(size),
+                    SizedBox(height: size.height * 0.025),
+
+                    const AdsBannerWidget(),
+
+                    SizedBox(height: bottomPadding + size.height * 0.02),
                   ],
                 ),
               ),
@@ -202,32 +212,6 @@ class _AssetDetailPageState extends State<AssetDetailPage> {
           ],
         ),
       ],
-    );
-  }
-
-  Widget _buildDetailRow(String label, String value, Size size) {
-    return Padding(
-      padding: EdgeInsets.only(top: size.height * 0.012),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: size.width * 0.035,
-              color: const Color(0xFF6B7280),
-            ),
-          ),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: size.width * 0.038,
-              fontWeight: FontWeight.w600,
-              color: const Color(0xFF1A1A1A),
-            ),
-          ),
-        ],
-      ),
     );
   }
 

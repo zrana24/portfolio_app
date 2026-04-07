@@ -6,6 +6,8 @@ import '../../bloc/addAsset/addAsset_bloc.dart';
 import '../../bloc/addAsset/addAsset_event.dart';
 import '../../bloc/addAsset/addAsset_state.dart';
 import '../../widgets/back_button.dart';
+import '../../widgets/ads_banner_widget.dart';
+import '../../services/portfolio_services.dart';
 import '../../app/routes.dart';
 
 class AddAssetPage extends StatefulWidget {
@@ -31,6 +33,10 @@ class _AddAssetPageState extends State<AddAssetPage> {
   final TextEditingController _quantityController = TextEditingController();
   final TextEditingController _purchasePriceController = TextEditingController();
 
+  String _selectedPeriod = '1w';
+  PriceHistory? _currentPriceHistory;
+  bool _isLoadingChart = false;
+
   @override
   void dispose() {
     _assetNameController.dispose();
@@ -39,9 +45,41 @@ class _AddAssetPageState extends State<AddAssetPage> {
     super.dispose();
   }
 
+  Future<void> _changePeriod(String newPeriod) async {
+    if (_selectedPeriod == newPeriod || _isLoadingChart) return;
+
+    setState(() {
+      _selectedPeriod = newPeriod;
+      _isLoadingChart = true;
+    });
+
+    try {
+      final portfolioService = PortfolioService();
+      final newPriceHistory = await portfolioService.getPriceHistory(
+        symbol: widget.symbol,
+        period: newPeriod,
+      );
+
+      setState(() {
+        _currentPriceHistory = newPriceHistory;
+      });
+
+      portfolioService.dispose();
+    } catch (e) {
+      print('Period değiştirme hatası: $e');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoadingChart = false;
+        });
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
+    final bottomPadding = MediaQuery.of(context).padding.bottom;
 
     return BlocProvider(
       create: (context) => AddAssetBloc(
@@ -64,6 +102,10 @@ class _AddAssetPageState extends State<AddAssetPage> {
             final currentPrice = double.tryParse(_purchasePriceController.text) ?? 0;
             if (currentPrice != state.purchasePrice) {
               _purchasePriceController.text = state.purchasePrice == 0 ? '' : state.purchasePrice.toString();
+            }
+
+            if (_currentPriceHistory == null) {
+              _currentPriceHistory = state.priceHistory;
             }
           }
 
@@ -100,12 +142,13 @@ class _AddAssetPageState extends State<AddAssetPage> {
         child: Scaffold(
           backgroundColor: const Color(0xFFF8F9FA),
           body: SafeArea(
+            bottom: false,
             child: BlocBuilder<AddAssetBloc, AddAssetState>(
               builder: (context, state) {
                 if (state is AddAssetLoading) {
                   return const Center(child: CircularProgressIndicator(color: Color(0xFF1A0B52)));
                 } else if (state is AddAssetLoaded) {
-                  return _buildContent(context, state, size);
+                  return _buildContent(context, state, size, bottomPadding);
                 } else if (state is AddAssetSaving) {
                   return const Center(child: CircularProgressIndicator(color: Color(0xFF1A0B52)));
                 } else if (state is AddAssetError) {
@@ -213,7 +256,7 @@ class _AddAssetPageState extends State<AddAssetPage> {
     );
   }
 
-  Widget _buildContent(BuildContext context, AddAssetLoaded state, Size size) {
+  Widget _buildContent(BuildContext context, AddAssetLoaded state, Size size, double bottomPadding) {
     return Column(
       children: [
         _buildAppBar(context, state.name, size),
@@ -223,12 +266,16 @@ class _AddAssetPageState extends State<AddAssetPage> {
             padding: EdgeInsets.all(size.width * 0.05),
             child: Column(
               children: [
+                const AdsBannerWidget(),
+                SizedBox(height: size.height * 0.02),
                 _buildPriceSection(state, size),
                 SizedBox(height: size.height * 0.02),
                 _buildInputSection(context, state, size),
                 SizedBox(height: size.height * 0.02),
                 _buildSaveButton(context, state, size),
                 SizedBox(height: size.height * 0.02),
+                const AdsBannerWidget(),
+                SizedBox(height: bottomPadding + size.height * 0.02),
               ],
             ),
           ),
@@ -239,6 +286,7 @@ class _AddAssetPageState extends State<AddAssetPage> {
 
   Widget _buildPriceSection(AddAssetLoaded state, Size size) {
     final isPositive = state.dailyChange >= 0;
+    final displayHistory = _currentPriceHistory ?? state.priceHistory;
 
     return Container(
       padding: EdgeInsets.all(size.width * 0.04),
@@ -251,6 +299,7 @@ class _AddAssetPageState extends State<AddAssetPage> {
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -271,53 +320,121 @@ class _AddAssetPageState extends State<AddAssetPage> {
                       color: const Color(0xFF1A1A1A),
                     ),
                   ),
+                  SizedBox(height: size.height * 0.008),
+                  Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: size.width * 0.025,
+                      vertical: size.height * 0.005,
+                    ),
+                    decoration: BoxDecoration(
+                      color: isPositive ? Colors.green.shade50 : Colors.red.shade50,
+                      borderRadius: BorderRadius.circular(size.width * 0.015),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          isPositive ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded,
+                          size: size.width * 0.03,
+                          color: isPositive ? Colors.green.shade600 : Colors.red.shade600,
+                        ),
+                        SizedBox(width: size.width * 0.008),
+                        Text(
+                          '${isPositive ? '+' : ''}${state.dailyChange.toStringAsFixed(2)}%',
+                          style: TextStyle(
+                            fontSize: size.width * 0.028,
+                            fontWeight: FontWeight.w600,
+                            color: isPositive ? Colors.green.shade600 : Colors.red.shade600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
               ),
-              Container(
-                padding: EdgeInsets.symmetric(
-                  horizontal: size.width * 0.03,
-                  vertical: size.height * 0.006,
-                ),
-                decoration: BoxDecoration(
-                  color: isPositive ? Colors.green.shade50 : Colors.red.shade50,
-                  borderRadius: BorderRadius.circular(size.width * 0.02),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      isPositive ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded,
-                      size: size.width * 0.035,
-                      color: isPositive ? Colors.green.shade600 : Colors.red.shade600,
-                    ),
-                    SizedBox(width: size.width * 0.01),
-                    Text(
-                      '${isPositive ? '+' : ''}${state.dailyChange.toStringAsFixed(2)}%',
-                      style: TextStyle(
-                        fontSize: size.width * 0.032,
-                        fontWeight: FontWeight.w600,
-                        color: isPositive ? Colors.green.shade600 : Colors.red.shade600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              _buildPeriodDropdown(size),
             ],
           ),
-
           SizedBox(height: size.height * 0.02),
-
           SizedBox(
-            height: size.height * 0.15,
-            child: _buildLineChart(state, size, isPositive),
+            height: size.height * 0.25,
+            child: _isLoadingChart
+                ? const Center(
+              child: CircularProgressIndicator(
+                color: Color(0xFF1A0B52),
+                strokeWidth: 2,
+              ),
+            )
+                : _buildLineChart(displayHistory, size, isPositive),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildLineChart(AddAssetLoaded state, Size size, bool isPositive) {
-    if (state.priceHistory.chart.data.isEmpty) {
+  Widget _buildPeriodDropdown(Size size) {
+    final periodLabels = {
+      '1d': 'Son 1 Gün',
+      '1w': 'Son 7 Gün',
+      '1m': 'Son 1 Ay',
+    };
+
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: size.width * 0.025,
+        vertical: size.height * 0.003,
+      ),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8F9FA),
+        borderRadius: BorderRadius.circular(size.width * 0.02),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: _selectedPeriod,
+          icon: Icon(
+            Icons.keyboard_arrow_down_rounded,
+            size: size.width * 0.04,
+            color: const Color(0xFF6B7280),
+          ),
+          elevation: 4,
+          style: TextStyle(
+            fontSize: size.width * 0.032,
+            fontWeight: FontWeight.w500,
+            color: const Color(0xFF1A1A1A),
+          ),
+          dropdownColor: Colors.white,
+          borderRadius: BorderRadius.circular(size.width * 0.03),
+          isDense: true,
+          onChanged: (String? newValue) {
+            if (newValue != null) {
+              _changePeriod(newValue);
+            }
+          },
+          items: [
+            {'value': '1d', 'label': 'Son 1 Gün'},
+            {'value': '1w', 'label': 'Son 7 Gün'},
+            {'value': '1m', 'label': 'Son 1 Ay'},
+          ].map<DropdownMenuItem<String>>((period) {
+            return DropdownMenuItem<String>(
+              value: period['value'],
+              child: Text(
+                period['label']!,
+                style: TextStyle(
+                  fontSize: size.width * 0.032,
+                  fontWeight: FontWeight.w500,
+                  color: const Color(0xFF1A1A1A),
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLineChart(PriceHistory priceHistory, Size size, bool isPositive) {
+    if (priceHistory.chart.data.isEmpty) {
       return Center(
         child: Text(
           'Grafik verisi yok',
@@ -330,29 +447,31 @@ class _AddAssetPageState extends State<AddAssetPage> {
     }
 
     final spots = <FlSpot>[];
-    for (int i = 0; i < state.priceHistory.chart.data.length; i++) {
-      spots.add(FlSpot(i.toDouble(), state.priceHistory.chart.data[i]));
+    for (int i = 0; i < priceHistory.chart.data.length; i++) {
+      spots.add(FlSpot(i.toDouble(), priceHistory.chart.data[i]));
     }
 
     final minY = spots.map((e) => e.y).reduce((a, b) => a < b ? a : b);
     final maxY = spots.map((e) => e.y).reduce((a, b) => a > b ? a : b);
+    final rangeY = maxY - minY;
 
     return LineChart(
       LineChartData(
         gridData: FlGridData(
           show: true,
           drawVerticalLine: false,
+          horizontalInterval: rangeY / 4,
           getDrawingHorizontalLine: (value) {
             return FlLine(
-              color: const Color(0xFFF3F4F6),
+              color: const Color(0xFFE5E7EB),
               strokeWidth: 1,
             );
           },
         ),
         titlesData: const FlTitlesData(show: false),
         borderData: FlBorderData(show: false),
-        minY: minY * 0.998,
-        maxY: maxY * 1.002,
+        minY: minY - (rangeY * 0.05),
+        maxY: maxY + (rangeY * 0.05),
         lineBarsData: [
           LineChartBarData(
             spots: spots,
@@ -364,15 +483,12 @@ class _AddAssetPageState extends State<AddAssetPage> {
             dotData: FlDotData(
               show: true,
               getDotPainter: (spot, percent, barData, index) {
-                if (index == spots.length - 1) {
-                  return FlDotCirclePainter(
-                    radius: 4,
-                    color: Colors.white,
-                    strokeWidth: 2.5,
-                    strokeColor: isPositive ? Colors.green.shade600 : Colors.red.shade600,
-                  );
-                }
-                return FlDotCirclePainter(radius: 0, color: Colors.transparent);
+                return FlDotCirclePainter(
+                  radius: 3,
+                  color: Colors.white,
+                  strokeWidth: 2,
+                  strokeColor: isPositive ? Colors.green.shade600 : Colors.red.shade600,
+                );
               },
             ),
             belowBarData: BarAreaData(
@@ -381,13 +497,74 @@ class _AddAssetPageState extends State<AddAssetPage> {
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  (isPositive ? Colors.green.shade600 : Colors.red.shade600).withOpacity(0.15),
+                  (isPositive ? Colors.green.shade600 : Colors.red.shade600).withOpacity(0.2),
                   (isPositive ? Colors.green.shade600 : Colors.red.shade600).withOpacity(0.0),
                 ],
               ),
             ),
           ),
         ],
+        lineTouchData: LineTouchData(
+          enabled: true,
+          touchTooltipData: LineTouchTooltipData(
+            getTooltipColor: (touchedSpot) => const Color(0xFF1A1A1A).withOpacity(0.9),
+            tooltipRoundedRadius: 8,
+            tooltipPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            getTooltipItems: (List<LineBarSpot> touchedSpots) {
+              return touchedSpots.map((LineBarSpot touchedSpot) {
+                final index = touchedSpot.x.toInt();
+                String timeLabel = '';
+
+                if (index < priceHistory.points.length) {
+                  try {
+                    final pointTime = DateTime.parse(priceHistory.points[index].time);
+
+                    if (_selectedPeriod == '1d') {
+                      timeLabel = '${pointTime.hour.toString().padLeft(2, '0')}:${pointTime.minute.toString().padLeft(2, '0')}';
+                    } else if (_selectedPeriod == '1w') {
+                      timeLabel = '${pointTime.day}/${pointTime.month} ${pointTime.hour.toString().padLeft(2, '0')}:${pointTime.minute.toString().padLeft(2, '0')}';
+                    } else if (_selectedPeriod == '1m' || _selectedPeriod == '3m') {
+                      timeLabel = '${pointTime.day}/${pointTime.month}/${pointTime.year}';
+                    }
+                  } catch (e) {
+                    timeLabel = '';
+                  }
+                }
+
+                return LineTooltipItem(
+                  '₺${touchedSpot.y.toStringAsFixed(2)}\n$timeLabel',
+                  TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                    fontSize: size.width * 0.032,
+                  ),
+                );
+              }).toList();
+            },
+          ),
+          getTouchedSpotIndicator: (LineChartBarData barData, List<int> spotIndexes) {
+            return spotIndexes.map((index) {
+              return TouchedSpotIndicatorData(
+                FlLine(
+                  color: isPositive ? Colors.green.shade600 : Colors.red.shade600,
+                  strokeWidth: 2,
+                  dashArray: [5, 5],
+                ),
+                FlDotData(
+                  show: true,
+                  getDotPainter: (spot, percent, barData, index) {
+                    return FlDotCirclePainter(
+                      radius: 6,
+                      color: Colors.white,
+                      strokeWidth: 3,
+                      strokeColor: isPositive ? Colors.green.shade600 : Colors.red.shade600,
+                    );
+                  },
+                ),
+              );
+            }).toList();
+          },
+        ),
       ),
     );
   }
@@ -507,7 +684,6 @@ class _AddAssetPageState extends State<AddAssetPage> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Drag handle
             Container(
               margin: EdgeInsets.only(top: size.height * 0.015),
               width: size.width * 0.12,
@@ -517,8 +693,6 @@ class _AddAssetPageState extends State<AddAssetPage> {
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
-
-            // Başlık
             Padding(
               padding: EdgeInsets.only(
                 top: size.height * 0.02,
@@ -545,8 +719,6 @@ class _AddAssetPageState extends State<AddAssetPage> {
                 ],
               ),
             ),
-
-            // Scrollable portföy listesi
             Flexible(
               child: ListView.builder(
                 shrinkWrap: true,
@@ -644,8 +816,6 @@ class _AddAssetPageState extends State<AddAssetPage> {
                 },
               ),
             ),
-
-            // Alt padding
             SizedBox(height: size.height * 0.025),
           ],
         ),

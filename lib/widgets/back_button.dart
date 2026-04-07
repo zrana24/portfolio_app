@@ -10,7 +10,15 @@ class BackButtonWidget extends StatelessWidget {
     final size = MediaQuery.of(context).size;
 
     return GestureDetector(
-      onTap: onTap ?? () => Navigator.of(context).pop(),
+      onTap: () {
+        if (onTap != null) {
+          onTap!();
+        } else {
+          if (Navigator.of(context).canPop()) {
+            Navigator.of(context).pop();
+          }
+        }
+      },
       child: Container(
         padding: EdgeInsets.all(size.width * 0.025),
         decoration: BoxDecoration(

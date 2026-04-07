@@ -178,7 +178,6 @@ class PortfolioService {
     String? assetName,
   }) async {
     try {
-      print('📡 API Çağrısı Başlıyor...');
       print('URL: ${ApiUrls.portfolioAssets(portfolioId)}');
 
       final token = await TokenService.getToken();
@@ -195,8 +194,6 @@ class PortfolioService {
         if (assetName != null) 'asset_name': assetName,
       };
 
-      print('📤 Request Body: ${jsonEncode(body)}');
-
       final response = await _client.post(
         Uri.parse(ApiUrls.portfolioAssets(portfolioId)),
         headers: {
@@ -207,18 +204,15 @@ class PortfolioService {
         body: jsonEncode(body),
       ).timeout(_timeout);
 
-      print('📥 Response Status: ${response.statusCode}');
-      print('📥 Response Body: ${response.body}');
-
       if (response.statusCode == 201 || response.statusCode == 200) {
-        print('✅ API Başarılı - Varlık eklendi');
+        print('API Başarılı - Varlık eklendi');
         return;
       } else if (response.statusCode == 422) {
         final jsonData = json.decode(response.body);
         final errors = jsonData['errors'] as Map<String, dynamic>?;
         if (errors != null && errors.isNotEmpty) {
           final errorMessage = errors.values.first[0];
-          print('❌ Validation Error: $errorMessage');
+          print('Validation Error: $errorMessage');
           throw errorMessage;
         }
         throw PortfolioServiceException('Varlık eklenemedi');
@@ -230,7 +224,7 @@ class PortfolioService {
         throw PortfolioServiceException('Varlık eklenemedi (Kod: ${response.statusCode})');
       }
     } catch (e) {
-      print('❌ Catch Error: $e');
+      print('Catch Error: $e');
       if (e is PortfolioServiceException) rethrow;
       throw PortfolioServiceException('Beklenmeyen hata: $e');
     }
@@ -261,7 +255,6 @@ class PortfolioService {
     }
   }
 
-  // YENİ: Portfolio summary'den tüm verileri al
   Future<Map<String, dynamic>> fetchPortfolioSummary() async {
     try {
       final token = await TokenService.getToken();
@@ -292,7 +285,6 @@ class PortfolioService {
     }
   }
 
-  // YENİ: Varlık detayını getir
   Future<Map<String, dynamic>> getAssetDetail({
     required int portfolioId,
     required int assetId,
@@ -328,19 +320,15 @@ class PortfolioService {
     }
   }
 
-  // GÜNCELLENDİ: asset_id kullanılıyor
   Future<void> updateAsset({
     required int portfolioId,
-    required int assetId, // all_assets içindeki asset_id
+    required int assetId,
     required double quantity,
     required double purchasePrice,
     String? purchaseDate,
     String? notes,
   }) async {
     try {
-      print('📡 Update Asset API Çağrısı...');
-      print('URL: ${ApiUrls.portfolioAssetDetail(portfolioId, assetId)}');
-
       final token = await TokenService.getToken();
       if (token == null) {
         throw PortfolioServiceException('Token bulunamadı');
@@ -353,8 +341,6 @@ class PortfolioService {
         if (notes != null) 'notes': notes,
       };
 
-      print('📤 Request Body: ${jsonEncode(body)}');
-
       final response = await _client.put(
         Uri.parse(ApiUrls.portfolioAssetDetail(portfolioId, assetId)),
         headers: {
@@ -365,40 +351,40 @@ class PortfolioService {
         body: jsonEncode(body),
       ).timeout(_timeout);
 
-      print('📥 Response Status: ${response.statusCode}');
-      print('📥 Response Body: ${response.body}');
-
       if (response.statusCode == 200) {
-        print('✅ Varlık güncellendi');
         return;
-      } else if (response.statusCode == 422) {
+      }
+      else if (response.statusCode == 422) {
         final jsonData = json.decode(response.body);
         final errors = jsonData['errors'] as Map<String, dynamic>?;
         if (errors != null && errors.isNotEmpty) {
           throw errors.values.first[0];
         }
         throw PortfolioServiceException('Varlık güncellenemedi');
-      } else if (response.statusCode == 404) {
-        throw PortfolioServiceException('Varlık bulunamadı');
-      } else if (response.statusCode == 401) {
-        throw PortfolioServiceException('Oturum süreniz dolmuş');
-      } else {
-        throw PortfolioServiceException('Varlık güncellenemedi (Kod: ${response.statusCode})');
       }
-    } catch (e) {
-      print('❌ Update Asset Error: $e');
+      else if (response.statusCode == 404) {
+        throw PortfolioServiceException('Varlık bulunamadı');
+      }
+      else if (response.statusCode == 401) {
+        throw PortfolioServiceException('Oturum süreniz dolmuş');
+      }
+      else {
+        throw PortfolioServiceException('Varlık güncellenemedi');
+      }
+    }
+    catch (e) {
+      print('Update Error: $e');
       if (e is PortfolioServiceException) rethrow;
       throw PortfolioServiceException('Beklenmeyen hata: $e');
     }
   }
 
-  // GÜNCELLENDİ: asset_id kullanılıyor
   Future<void> deleteAsset({
     required int portfolioId,
-    required int assetId, // all_assets içindeki asset_id
+    required int assetId,
   }) async {
     try {
-      print('📡 Delete Asset API Çağrısı...');
+      print('Delete Asset API Çağrısı...');
       print('URL: ${ApiUrls.portfolioAssetDetail(portfolioId, assetId)}');
 
       final token = await TokenService.getToken();
@@ -415,11 +401,7 @@ class PortfolioService {
         },
       ).timeout(_timeout);
 
-      print('📥 Response Status: ${response.statusCode}');
-      print('📥 Response Body: ${response.body}');
-
       if (response.statusCode == 200 || response.statusCode == 204) {
-        print('✅ Varlık silindi');
         return;
       } else if (response.statusCode == 404) {
         throw PortfolioServiceException('Varlık bulunamadı');
@@ -431,7 +413,7 @@ class PortfolioService {
         throw PortfolioServiceException('Varlık silinemedi (Kod: ${response.statusCode})');
       }
     } catch (e) {
-      print('❌ Delete Asset Error: $e');
+      print('Delete Asset Error: $e');
       if (e is PortfolioServiceException) rethrow;
       throw PortfolioServiceException('Beklenmeyen hata: $e');
     }

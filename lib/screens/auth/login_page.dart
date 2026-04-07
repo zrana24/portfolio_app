@@ -4,6 +4,7 @@ import '../../bloc/auth/auth_bloc.dart';
 import '../../bloc/auth/auth_event.dart';
 import '../../bloc/auth/auth_state.dart';
 import '../../app/routes.dart';
+import '../../widgets/back_button.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -24,13 +25,23 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
+  void _handleBack() {
+    if (Navigator.of(context).canPop()) {
+      Navigator.of(context).pop();
+    } else {
+      Navigator.pushReplacementNamed(context, AppRoutes.profile);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+
     return PopScope(
       canPop: false,
       onPopInvoked: (didPop) {
         if (!didPop) {
-          Navigator.pushReplacementNamed(context, AppRoutes.home);
+          _handleBack();
         }
       },
       child: Scaffold(
@@ -50,130 +61,140 @@ class _LoginPageState extends State<LoginPage> {
             }
           },
           child: SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const SizedBox(height: 60),
-                  const Text(
-                    "Hoş Geldiniz",
-                    style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF1A1A1A),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  const Text(
-                    "Yatırım portföyünüzü yönetmek için giriş yapın",
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.grey,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 50),
-
-                  _buildTextField(
-                    controller: emailController,
-                    label: "E-posta",
-                    icon: Icons.email_outlined,
-                    keyboardType: TextInputType.emailAddress,
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  _buildPasswordField(
-                    controller: passwordController,
-                    label: "Şifre",
-                    icon: Icons.lock_outline,
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  const SizedBox(height: 30),
-
-                  BlocBuilder<AuthBloc, AuthState>(
-                    builder: (context, state) {
-                      if (state is AuthLoading) {
-                        return const Center(child: CircularProgressIndicator());
-                      }
-
-                      return Container(
-                        width: double.infinity,
-                        height: 56,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(16),
-                          gradient: const LinearGradient(
-                            colors: [Colors.blueAccent, Colors.blue],
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.blue.withOpacity(0.3),
-                              blurRadius: 12,
-                              offset: const Offset(0, 6),
-                            ),
-                          ],
-                        ),
-                        child: ElevatedButton(
-                          onPressed: () {
-                            if (emailController.text.isNotEmpty &&
-                                passwordController.text.isNotEmpty) {
-                              context.read<AuthBloc>().add(
-                                LoginSubmitted(
-                                  emailController.text,
-                                  passwordController.text,
-                                ),
-                              );
-                            } else {
-                              _showWarning(context, "Lütfen tüm alanları doldurun");
-                            }
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF1A0B52),
-                            shadowColor: Colors.transparent,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                          ),
-                          child: const Text(
-                            "Giriş Yap",
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-
-                  const SizedBox(height: 30),
-
-                  Row(
+            child: Stack(
+              children: [
+                SingleChildScrollView(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
+                      SizedBox(height: size.height * 0.08),
                       const Text(
-                        "Hesabınız yok mu? ",
-                        style: TextStyle(color: Colors.black54),
-                      ),
-                      TextButton(
-                        onPressed: () => Navigator.pushNamed(context, AppRoutes.register),
-                        child: const Text(
-                          "Kayıt Olun",
-                          style: TextStyle(
-                            color: const Color(0xFF1A0B52),
-                            fontWeight: FontWeight.bold,
-                          ),
+                        "Hoş Geldiniz",
+                        style: TextStyle(
+                          fontSize: 32,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF1A1A1A),
                         ),
                       ),
+                      const SizedBox(height: 12),
+                      const Text(
+                        "Yatırım portföyünüzü yönetmek için giriş yapın",
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.grey,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 50),
+
+                      _buildTextField(
+                        controller: emailController,
+                        label: "E-posta",
+                        icon: Icons.email_outlined,
+                        keyboardType: TextInputType.emailAddress,
+                      ),
+
+                      const SizedBox(height: 20),
+
+                      _buildPasswordField(
+                        controller: passwordController,
+                        label: "Şifre",
+                        icon: Icons.lock_outline,
+                      ),
+
+                      const SizedBox(height: 12),
+
+                      const SizedBox(height: 30),
+
+                      BlocBuilder<AuthBloc, AuthState>(
+                        builder: (context, state) {
+                          if (state is AuthLoading) {
+                            return const Center(child: CircularProgressIndicator());
+                          }
+
+                          return Container(
+                            width: double.infinity,
+                            height: 56,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(16),
+                              gradient: const LinearGradient(
+                                colors: [Colors.blueAccent, Colors.blue],
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.blue.withOpacity(0.3),
+                                  blurRadius: 12,
+                                  offset: const Offset(0, 6),
+                                ),
+                              ],
+                            ),
+                            child: ElevatedButton(
+                              onPressed: () {
+                                if (emailController.text.isNotEmpty &&
+                                    passwordController.text.isNotEmpty) {
+                                  context.read<AuthBloc>().add(
+                                    LoginSubmitted(
+                                      emailController.text,
+                                      passwordController.text,
+                                    ),
+                                  );
+                                } else {
+                                  _showWarning(context, "Lütfen tüm alanları doldurun");
+                                }
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF1A0B52),
+                                shadowColor: Colors.transparent,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                              ),
+                              child: const Text(
+                                "Giriş Yap",
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+
+                      const SizedBox(height: 30),
+
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Text(
+                            "Hesabınız yok mu? ",
+                            style: TextStyle(color: Colors.black54),
+                          ),
+                          TextButton(
+                            onPressed: () => Navigator.pushNamed(context, AppRoutes.register),
+                            child: const Text(
+                              "Kayıt Olun",
+                              style: TextStyle(
+                                color: Color(0xFF1A0B52),
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
                     ],
                   ),
-                  const SizedBox(height: 20),
-                ],
-              ),
+                ),
+
+                Positioned(
+                  top: size.height * 0.02,
+                  left: size.width * 0.04,
+                  child: BackButtonWidget(onTap: _handleBack),
+                ),
+              ],
             ),
           ),
         ),

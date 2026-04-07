@@ -100,7 +100,6 @@ class _AddPortfolioPageState extends State<AddPortfolioPage> {
         vertical: size.height * 0.02,
       ),
       decoration: const BoxDecoration(
-        //color: Colors.white,
         boxShadow: [
           BoxShadow(
             color: Color(0x0A000000),
@@ -129,18 +128,16 @@ class _AddPortfolioPageState extends State<AddPortfolioPage> {
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
       padding: EdgeInsets.only(
-        bottom: size.height * 0.095 + bottomPadding, // navbar + padding için yer
+        bottom: size.height * 0.095 + bottomPadding,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(height: size.height * 0.02),
 
-          // Üst Reklam
-          //const AdsBannerWidget(),
-          //SizedBox(height: size.height * 0.02),
+          const AdsBannerWidget(),
+          SizedBox(height: size.height * 0.02),
 
-          // Portföy Seç Bölümü
           Padding(
             padding: EdgeInsets.symmetric(horizontal: size.width * 0.05),
             child: Column(
@@ -200,9 +197,8 @@ class _AddPortfolioPageState extends State<AddPortfolioPage> {
 
           SizedBox(height: size.height * 0.02),
 
-          // Alt Reklam
-          //const AdsBannerWidget(),
-          //SizedBox(height: size.height * 0.02),
+          const AdsBannerWidget(),
+          SizedBox(height: size.height * 0.02),
         ],
       ),
     );
@@ -282,7 +278,6 @@ class _AddPortfolioPageState extends State<AddPortfolioPage> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Handle bar
             Container(
               margin: EdgeInsets.only(top: size.height * 0.015),
               width: size.width * 0.12,
@@ -293,7 +288,6 @@ class _AddPortfolioPageState extends State<AddPortfolioPage> {
               ),
             ),
 
-            // Başlık
             Padding(
               padding: EdgeInsets.only(
                 top: size.height * 0.02,
@@ -321,7 +315,6 @@ class _AddPortfolioPageState extends State<AddPortfolioPage> {
               ),
             ),
 
-            // Portföy Listesi
             Flexible(
               child: ListView(
                 shrinkWrap: true,
@@ -350,7 +343,6 @@ class _AddPortfolioPageState extends State<AddPortfolioPage> {
               ),
             ),
 
-            // Yeni Portföy Oluştur Butonu
             Padding(
               padding: EdgeInsets.only(
                 left: size.width * 0.05,
@@ -469,7 +461,6 @@ class _AddPortfolioPageState extends State<AddPortfolioPage> {
                 ),
               ),
             ),
-            // Güncelle butonu
             GestureDetector(
               onTap: () {
                 Navigator.pop(context);
@@ -491,7 +482,6 @@ class _AddPortfolioPageState extends State<AddPortfolioPage> {
               ),
             ),
             SizedBox(width: size.width * 0.015),
-            // Sil butonu
             GestureDetector(
               onTap: () {
                 Navigator.pop(context);
@@ -982,6 +972,7 @@ class _AddPortfolioPageState extends State<AddPortfolioPage> {
           name: commodity.name,
           portfolioId: _selectedPortfolio!.id,
         ),
+        settings: const RouteSettings(name: '/add-asset'),
       ),
     );
   }

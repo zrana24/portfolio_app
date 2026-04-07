@@ -5,6 +5,7 @@ import '../screens/news/news_page.dart';
 import '../screens/addPortfolio/addPortfolio_page.dart';
 import '../screens/profile/profile_page.dart';
 import '../services/auth_service.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
 
 class AuthCache {
   static bool? isLoggedIn;
@@ -26,12 +27,10 @@ class CebeciBottomNav extends StatefulWidget {
 
 class _CebeciBottomNavState extends State<CebeciBottomNav> {
   bool _isLoggedIn = AuthCache.isLoggedIn ?? false;
-  int _itemCount = 3;
 
   @override
   void initState() {
     super.initState();
-    _itemCount = _isLoggedIn ? 5 : 3;
     _checkLoginStatus();
   }
 
@@ -41,14 +40,18 @@ class _CebeciBottomNavState extends State<CebeciBottomNav> {
     if (mounted && _isLoggedIn != loggedIn) {
       setState(() {
         _isLoggedIn = loggedIn;
-        _itemCount = loggedIn ? 5 : 3;
       });
     }
   }
 
-  void _navigateWithoutAnimation(BuildContext context, Widget page) {
+  void _navigateWithoutAnimation(BuildContext context, Widget page, String routeName) {
+    FirebaseAnalytics.instance.logScreenView(
+      screenName: routeName,
+      screenClass: 'CebeciBottomNav',
+    );
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(
+        settings: RouteSettings(name: routeName),
         pageBuilder: (context, animation, secondaryAnimation) => page,
         transitionDuration: Duration.zero,
         reverseTransitionDuration: Duration.zero,
@@ -56,20 +59,46 @@ class _CebeciBottomNavState extends State<CebeciBottomNav> {
     );
   }
 
+  // Sabit index'li navigation data
   List<Map<String, dynamic>> _getNavData() {
-    List<Map<String, dynamic>> items = [
-      {'label': ' Canlı Fiyatlar', 'icon': Icons.bar_chart_rounded, 'page':
-      const LivePricesPage()},
-      {'label': 'Haberler', 'icon': Icons.newspaper_rounded, 'page': const NewsPage()},
-      {'label': 'Portföy', 'icon': Icons.pie_chart_rounded, 'page': const HomePage()},
+    return [
+      {
+        'index': 0,
+        'label': 'Canlı Fiyatlar',
+        'icon': Icons.bar_chart_rounded,
+        'page': const LivePricesPage(),
+        'route': '/livePrices',
+      },
+      {
+        'index': 1,
+        'label': 'Haberler',
+        'icon': Icons.newspaper_rounded,
+        'page': const NewsPage(),
+        'route': '/news',
+      },
+      {
+        'index': 2,
+        'label': 'Portföy',
+        'icon': Icons.pie_chart_rounded,
+        'page': const HomePage(),
+        'route': '/home',
+      },
+      if (_isLoggedIn)
+        {
+          'index': 3,
+          'label': 'Portföy Ekle',
+          'icon': Icons.add_circle_outline,
+          'page': const AddPortfolioPage(),
+          'route': '/add',
+        },
+      {
+        'index': 4,
+        'label': 'Profil',
+        'icon': Icons.person_outline,
+        'page': const ProfilePage(),
+        'route': '/profile',
+      },
     ];
-
-    if (_isLoggedIn) {
-      items.add({'label': 'Portföy Ekle', 'icon': Icons.add_circle_outline, ''
-          'page': const AddPortfolioPage()});
-      items.add({'label': 'Profil', 'icon': Icons.person_outline, 'page': const ProfilePage()});
-    }
-    return items;
   }
 
   @override
@@ -87,9 +116,7 @@ class _CebeciBottomNavState extends State<CebeciBottomNav> {
         top: false,
         child: Padding(
           padding: EdgeInsets.fromLTRB(horizontalPadding, 8, horizontalPadding, bottomPadding),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeInOut,
+          child: Container(
             height: barHeight,
             decoration: BoxDecoration(
               color: Colors.white,
@@ -106,28 +133,30 @@ class _CebeciBottomNavState extends State<CebeciBottomNav> {
               borderRadius: BorderRadius.circular(barHeight / 2),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: List.generate(navData.length, (index) {
-                  final isActive = index == widget.currentIndex;
+                children: navData.map((item) {
+                  final itemIndex = item['index'] as int;
+                  final isActive = itemIndex == widget.currentIndex;
+
                   return Flexible(
                     flex: 1,
                     child: GestureDetector(
                       behavior: HitTestBehavior.opaque,
                       onTap: () {
-                        if (widget.onTap != null) widget.onTap!(index);
+                        if (widget.onTap != null) widget.onTap!(itemIndex);
                         if (isActive) return;
 
-                        _navigateWithoutAnimation(context, navData[index]['page']);
+                        _navigateWithoutAnimation(context, item['page'], item['route']);
                       },
                       child: _NavItemWidget(
-                        label: navData[index]['label'],
-                        icon: navData[index]['icon'],
+                        label: item['label'],
+                        icon: item['icon'],
                         isActive: isActive,
                         size: size,
-                        itemCount: _itemCount,
+                        itemCount: navData.length,
                       ),
                     ),
                   );
-                }),
+                }).toList(),
               ),
             ),
           ),
@@ -166,9 +195,7 @@ class _NavItemWidget extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         mainAxisSize: MainAxisSize.min,
         children: [
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            curve: Curves.easeInOut,
+          Container(
             padding: EdgeInsets.symmetric(
               horizontal: itemCount == 5 ? 8 : 10,
               vertical: 4,
