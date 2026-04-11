@@ -1,30 +1,20 @@
 import 'dart:io';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class AdsService {
+
   static String get bannerAdUnitId {
     if (Platform.isAndroid) {
-      return 'ca-app-pub-3940256099942544/6300978111';
+      return dotenv.env['ADMOB_BANNER_ANDROID']!;
     } else if (Platform.isIOS) {
-      return 'ca-app-pub-3940256099942544/2934735716';
+      return dotenv.env['ADMOB_BANNER_IOS']!;
     }
     throw UnsupportedError('Unsupported platform');
   }
 
-  static String get interstitialAdUnitId {
-    if (Platform.isAndroid) {
-      return 'ca-app-pub-3940256099942544/1033173712';
-    } else if (Platform.isIOS) {
-      return 'ca-app-pub-3940256099942544/4411468910';
-    }
-    throw UnsupportedError('Unsupported platform');
-  }
+  static String get androidAppId =>
+      dotenv.env['ADMOB_APP_ID_ANDROID']!;
 
-  static String get rewardedAdUnitId {
-    if (Platform.isAndroid) {
-      return 'ca-app-pub-3940256099942544/5224354917';
-    } else if (Platform.isIOS) {
-      return 'ca-app-pub-3940256099942544/1712485313';
-    }
-    throw UnsupportedError('Unsupported platform');
-  }
+  static String get iosAppId =>
+      dotenv.env['ADMOB_APP_ID_IOS']!;
 }

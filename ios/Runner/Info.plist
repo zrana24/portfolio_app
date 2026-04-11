@@ -44,7 +44,7 @@
 	<key>FacebookAdvertiserIDCollectionEnabled</key>
 	<true/>
 	<key>GADApplicationIdentifier</key>
-	<string>ca-app-pub-3940256099942544~1458002511</string>
+    <string>ca-app-pub-4102270696794281~6588056310</string>
 	<key>LSApplicationQueriesSchemes</key>
 	<array>
 		<string>https</string>
