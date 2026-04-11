@@ -10,14 +10,9 @@ class MetaEventsService {
 
   Future<void> initialize() async {
     if (Platform.isIOS) {
-      var status = await AppTrackingTransparency.trackingAuthorizationStatus;
+      final status = await AppTrackingTransparency.trackingAuthorizationStatus;
       if (status == TrackingStatus.notDetermined) {
-        status = await AppTrackingTransparency.requestTrackingAuthorization();
-      }
-      if (status == TrackingStatus.authorized) {
-        await _fbAppEvents.setAdvertiserTrackingEnabled(true);
-      } else {
-        await _fbAppEvents.setAdvertiserTrackingEnabled(false);
+        await AppTrackingTransparency.requestTrackingAuthorization();
       }
     }
 
