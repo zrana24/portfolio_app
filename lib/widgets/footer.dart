@@ -5,7 +5,7 @@ import '../screens/news/news_page.dart';
 import '../screens/addPortfolio/addPortfolio_page.dart';
 import '../screens/profile/profile_page.dart';
 import '../services/auth_service.dart';
-import 'package:firebase_analytics/firebase_analytics.dart';
+
 
 class AuthCache {
   static bool? isLoggedIn;
@@ -45,10 +45,7 @@ class _CebeciBottomNavState extends State<CebeciBottomNav> {
   }
 
   void _navigateWithoutAnimation(BuildContext context, Widget page, String routeName) {
-    FirebaseAnalytics.instance.logScreenView(
-      screenName: routeName,
-      screenClass: 'CebeciBottomNav',
-    );
+
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(
         settings: RouteSettings(name: routeName),
