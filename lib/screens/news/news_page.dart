@@ -80,27 +80,23 @@ class _NewsViewState extends State<_NewsView> {
       bottomNavigationBar: const CebeciBottomNav(currentIndex: 1),
       body: SafeArea(
         bottom: false,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const CebeciAppBar(),
-            Expanded(
-              child: BlocBuilder<NewsBloc, NewsState>(
-                builder: (context, state) {
-                  return RefreshIndicator(
-                    color: _primary,
-                    onRefresh: () async {
-                      context.read<NewsBloc>().add(const RefreshNews());
-                      await context
-                          .read<NewsBloc>()
-                          .stream
-                          .firstWhere((s) => s is NewsLoaded || s is NewsError);
-                    },
-                    child: CustomScrollView(
-                      physics: const AlwaysScrollableScrollPhysics(
-                          parent: BouncingScrollPhysics()),
-                      slivers: [
-                        SliverToBoxAdapter(
+        child: BlocBuilder<NewsBloc, NewsState>(
+          builder: (context, state) {
+            return RefreshIndicator(
+              color: _primary,
+              onRefresh: () async {
+                context.read<NewsBloc>().add(const RefreshNews());
+                await context
+                    .read<NewsBloc>()
+                    .stream
+                    .firstWhere((s) => s is NewsLoaded || s is NewsError);
+              },
+              child: CustomScrollView(
+                physics: const AlwaysScrollableScrollPhysics(
+                    parent: BouncingScrollPhysics()),
+                slivers: [
+                  const SliverToBoxAdapter(child: CebeciAppBar()),
+                  SliverToBoxAdapter(
                           child: Padding(
                             padding: EdgeInsets.symmetric(
                                 horizontal: size.width * 0.06,
@@ -139,11 +135,8 @@ class _NewsViewState extends State<_NewsView> {
                                 child: _buildError(context, size, state.message)),
                       ],
                     ),
-                  );
-                },
-              ),
-            ),
-          ],
+            );
+          },
         ),
       ),
     );
@@ -264,9 +257,31 @@ class _NewsViewState extends State<_NewsView> {
           ),
         ),
 
-      ...grouped.entries.map(
-            (entry) => _buildSection(context, entry.key, entry.value, size),
-      ),
+      if (state.featured.isNotEmpty && grouped.isNotEmpty)
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: size.width * 0.06,
+              vertical: size.height * 0.015,
+            ),
+            child: AdsBannerWidget(),
+          ),
+        ),
+
+      for (int i = 0; i < grouped.keys.length; i++) ...[
+        _buildSection(context, grouped.keys.elementAt(i), grouped.values.elementAt(i), size),
+        if (i < grouped.keys.length - 1)
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.only(
+                left: size.width * 0.06,
+                right: size.width * 0.06,
+                bottom: size.height * 0.02,
+              ),
+              child: AdsBannerWidget(),
+            ),
+          ),
+      ],
 
       SliverToBoxAdapter(
         child: Padding(

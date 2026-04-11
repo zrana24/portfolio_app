@@ -56,7 +56,6 @@ class _CebeciBottomNavState extends State<CebeciBottomNav> {
     );
   }
 
-  // Sabit index'li navigation data
   List<Map<String, dynamic>> _getNavData() {
     return [
       {
@@ -83,7 +82,7 @@ class _CebeciBottomNavState extends State<CebeciBottomNav> {
       if (_isLoggedIn)
         {
           'index': 3,
-          'label': 'Portföy Ekle',
+          'label': 'Ekle',
           'icon': Icons.add_circle_outline,
           'page': const AddPortfolioPage(),
           'route': '/add',

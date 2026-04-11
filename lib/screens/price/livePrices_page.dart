@@ -77,34 +77,30 @@ class _LivePricesView extends StatelessWidget {
         backgroundColor: Colors.white,
         extendBody: true,
         bottomNavigationBar: const CebeciBottomNav(currentIndex: 0),
-        body: Column(
-          children: [
-            SafeArea(
-              bottom: false,
-              child: const CebeciAppBar(),
-            ),
-            Expanded(
-              child: BlocConsumer<LivePricesBloc, LivePricesState>(
-                listener: (context, state) {},
-                builder: (context, state) {
-                  return RefreshIndicator(
-                    color: _primary,
-                    onRefresh: () async {
-                      context
-                          .read<LivePricesBloc>()
-                          .add(const RefreshLivePrices());
-                      await context
-                          .read<LivePricesBloc>()
-                          .stream
-                          .firstWhere((s) =>
-                      s is LivePricesLoaded || s is LivePricesError);
-                    },
-                    child: CustomScrollView(
-                      physics: const AlwaysScrollableScrollPhysics(
-                        parent: BouncingScrollPhysics(),
-                      ),
-                      slivers: [
-                        SliverPadding(
+        body: SafeArea(
+          bottom: false,
+          child: BlocConsumer<LivePricesBloc, LivePricesState>(
+            listener: (context, state) {},
+            builder: (context, state) {
+              return RefreshIndicator(
+                color: _primary,
+                onRefresh: () async {
+                  context
+                      .read<LivePricesBloc>()
+                      .add(const RefreshLivePrices());
+                  await context
+                      .read<LivePricesBloc>()
+                      .stream
+                      .firstWhere((s) =>
+                  s is LivePricesLoaded || s is LivePricesError);
+                },
+                child: CustomScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(
+                    parent: BouncingScrollPhysics(),
+                  ),
+                  slivers: [
+                    const SliverToBoxAdapter(child: CebeciAppBar()),
+                    SliverPadding(
                           padding: EdgeInsets.symmetric(
                               horizontal: isDesktop ? 80 : (isTablet ? 40 : size.width * 0.06)),
                           sliver: SliverList(
@@ -147,10 +143,8 @@ class _LivePricesView extends StatelessWidget {
                 },
               ),
             ),
-          ],
-        ),
-      ),
-    );
+          ),
+        );
   }
 
   Widget _buildBody(BuildContext context, LivePricesState state, Size size, bool isTablet, bool isDesktop) {

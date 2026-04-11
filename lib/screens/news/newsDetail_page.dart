@@ -466,6 +466,41 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
                           fontWeight: FontWeight.w400,
                         ),
                       ),
+                    )
+                  else
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        ShimmerBox(
+                          width: double.infinity,
+                          height: size.height * 0.015,
+                          borderRadius: 6,
+                        ),
+                        SizedBox(height: size.height * 0.008),
+                        ShimmerBox(
+                          width: double.infinity,
+                          height: size.height * 0.015,
+                          borderRadius: 6,
+                        ),
+                        SizedBox(height: size.height * 0.008),
+                        ShimmerBox(
+                          width: size.width * 0.8,
+                          height: size.height * 0.015,
+                          borderRadius: 6,
+                        ),
+                        SizedBox(height: size.height * 0.012),
+                        ShimmerBox(
+                          width: double.infinity,
+                          height: size.height * 0.015,
+                          borderRadius: 6,
+                        ),
+                        SizedBox(height: size.height * 0.008),
+                        ShimmerBox(
+                          width: size.width * 0.6,
+                          height: size.height * 0.015,
+                          borderRadius: 6,
+                        ),
+                      ],
                     ),
 
                   SizedBox(height: size.height * 0.035),
