@@ -7,11 +7,14 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 
 import 'services/push_notification_service.dart';
+import 'services/meta_events_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
 
+
+  await MetaEventsService.instance.initialize();
 
   final pushService = PushNotificationService();
   await pushService.initialize();
