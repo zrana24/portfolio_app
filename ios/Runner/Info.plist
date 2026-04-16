@@ -59,6 +59,8 @@
 	<true/>
 	<key>NSUserTrackingUsageDescription</key>
 	<string>Bu uygulama size daha iyi reklam deneyimi sunmak için izleme verisini kullanır.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Uygulama özellikleri ve hizmetlerin doğru çalışabilmesi için konum erişimi gereklidir.</string>
 	<key>SKAdNetworkItems</key>
 	<array>
 		<dict>
